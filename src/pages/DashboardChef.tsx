@@ -21,11 +21,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useToast } from "@/hooks/use-toast";
 import chefProfile from "@/assets/chef-roberto.jpg";
 import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
 import { clearSession, loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
+import { listKitchenOrders, normalizeKitchenOrderStatusLabel, type KitchenOrder } from "@/services/kitchenOrderService";
 
 const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "https://tyt-api.vercel.app/").replace(/\/+$/, "");
 
@@ -72,13 +74,11 @@ const ChefMenu = () => {
         navigate('/servicos-ativos');
         break;
       case 'pagamentos':
-        navigate('/meus-pagamentos');
         break;
       case 'editar-cadastro':
         navigate('/editar-cadastro-chef');
         break;
       case 'guia':
-        // TODO: Navigate to chef guide page
         break;
       case 'ajuda':
         window.open('https://wa.me/5511999999999', '_blank');
@@ -146,6 +146,7 @@ const ChefMenu = () => {
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-base hover:bg-gray-100"
+                  disabled
                   onClick={() => handleMenuAction('pagamentos')}
                 >
                   <DollarSign className="w-5 h-5 mr-3" />
@@ -170,6 +171,7 @@ const ChefMenu = () => {
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-base hover:bg-gray-100"
+                  disabled
                   onClick={() => handleMenuAction('guia')}
                 >
                   <BookOpen className="w-5 h-5 mr-3" />
@@ -209,7 +211,9 @@ const ChefMenu = () => {
 
 const DashboardChef = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [chefUser, setChefUser] = useState<Record<string, unknown> | null>(null);
+  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
 
   // Function to get greeting based on time
   const getTimeBasedGreeting = () => {
@@ -242,18 +246,45 @@ const DashboardChef = () => {
       .catch(() => { });
   }, []);
 
+  useEffect(() => {
+    const session = loadSession();
+    if (!session?.token) return;
+    listKitchenOrders({ token: session.token })
+      .then((data) => {
+        const orders = Array.isArray(data) ? data : (data as { orders?: unknown })?.orders;
+        if (Array.isArray(orders)) setKitchenOrders(orders as KitchenOrder[]);
+      })
+      .catch((err) => {
+        console.error("Falha ao carregar pedidos:", err);
+        toast({
+          variant: "destructive",
+          title: "Não foi possível carregar seus serviços",
+          description: "Tente novamente em instantes.",
+        });
+      });
+  }, []);
+
   const chefName = (chefUser?.nome as string | undefined) ?? (chefUser?.name as string | undefined) ?? "Chef";
   const chefFirstName = chefName.split(" ")[0] ?? "Chef";
   const chefPhotoUrl = getUserPhotoUrl(chefUser ?? undefined);
 
-  // Mock stats
-  const stats = {
-    servicosRealizados: 47,
-    agendados: 12,
-    aguardandoAprovacao: 3,
-    pendenteComprovante: 2,
-    avaliacaoMedia: 4.75
-  };
+  const stats = useMemo(() => {
+    const orders = kitchenOrders;
+    const byStatus: Record<string, number> = {};
+    orders.forEach((order) => {
+      const status = normalizeKitchenOrderStatusLabel(order);
+      const current = typeof byStatus[status] === "number" ? byStatus[status] : 0;
+      byStatus[status] = current + 1;
+    });
+
+    return {
+      servicosRealizados: byStatus.concluido ?? 0,
+      agendados: orders.length,
+      aguardandoAprovacao: byStatus.pendente ?? 0,
+      pendenteComprovante: 0,
+      avaliacaoMedia: 0,
+    };
+  }, [kitchenOrders]);
 
   const handleNavigateToAgenda = (filter?: string) => {
     navigate('/agenda-chef', { state: { filter, scrollTo: 'proximos-compromissos' } });
@@ -301,6 +332,7 @@ const DashboardChef = () => {
       description: "Finalize seus serviços",
       onClick: () => handleNavigateToAgenda("pendentes"),
       color: "from-red-500 to-red-600",
+      disabled: true,
     },
     {
       icon: Settings,
@@ -315,6 +347,7 @@ const DashboardChef = () => {
       description: "Gerencie seus pagamentos",
       onClick: handleNavigateToPagamentos,
       color: "from-teal-500 to-teal-600",
+      disabled: true,
     },
     {
       icon: BookOpen,
@@ -322,6 +355,7 @@ const DashboardChef = () => {
       description: "Consulte o guia",
       onClick: () => { },
       color: "from-indigo-500 to-indigo-600",
+      disabled: true,
     },
     {
       icon: LogOut,
@@ -389,8 +423,12 @@ const DashboardChef = () => {
           {actionButtons.map((button, index) => (
             <Card
               key={index}
-              className="bg-white border border-gray-200 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
-              onClick={button.onClick}
+              className={
+                button.disabled
+                  ? "bg-white border border-gray-200 opacity-50 cursor-not-allowed"
+                  : "bg-white border border-gray-200 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+              }
+              onClick={button.disabled ? undefined : button.onClick}
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">

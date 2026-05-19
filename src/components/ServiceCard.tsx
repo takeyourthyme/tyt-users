@@ -14,12 +14,12 @@ interface ServiceCardProps {
   clickable?: boolean;
 }
 
-const ServiceCard = ({ 
-  title, 
-  description, 
-  icon, 
-  variant, 
-  onClick, 
+const ServiceCard = ({
+  title,
+  description,
+  icon,
+  variant,
+  onClick,
   className = "",
   buttonText,
   clickable = false
@@ -50,7 +50,7 @@ const ServiceCard = ({
   };
 
   return (
-    <Card 
+    <Card
       className={`${getCardStyle()} transition-all duration-300 ${clickable ? "cursor-pointer transform hover:-translate-y-1" : variant === "accent" ? "cursor-default" : "cursor-pointer transform hover:-translate-y-1"} ${className}`}
       onClick={clickable ? onClick : (variant === "accent" ? undefined : onClick)}
     >
@@ -58,13 +58,13 @@ const ServiceCard = ({
         <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm">
           {icon}
         </div>
-        
+
         <div className="flex-1 space-y-2">
           <h3 className="text-h4 font-semibold">{title}</h3>
           <p className="text-body opacity-90 leading-relaxed">{description}</p>
         </div>
-        
-        <Button 
+
+        <Button
           variant={getButtonVariant()}
           size="lg"
           className="w-full group"
@@ -75,7 +75,7 @@ const ServiceCard = ({
             if (variant === "primary") {
               onClick();
             } else if (variant === "secondary") {
-              window.open("https://takeyourthy.me/", "_blank");
+              window.open("https://takeyourthyme.com.br/", "_blank");
             } else if (variant === "accent") {
               onClick();
             }

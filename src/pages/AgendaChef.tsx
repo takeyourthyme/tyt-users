@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Calendar, 
@@ -28,10 +28,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import chefProfile from "@/assets/chef-roberto.jpg";
 import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
 import mariaProfile from "@/assets/maria-profile.jpg";
+import { loadSession } from "@/services/authService";
+import {
+  getKitchenOrderClient,
+  getKitchenOrderDate,
+  getKitchenOrderLocation,
+  getKitchenOrderTime,
+  listKitchenOrders,
+  normalizeKitchenOrderStatusLabel,
+  normalizeKitchenOrderTypeLabel,
+  type KitchenOrder,
+} from "@/services/kitchenOrderService";
 
 // Chef Menu Component
 const ChefMenu = ({ hasActiveFilter = false, onGoAgenda }: { hasActiveFilter?: boolean; onGoAgenda?: () => void }) => {
@@ -199,6 +211,7 @@ const ChefMenu = ({ hasActiveFilter = false, onGoAgenda }: { hasActiveFilter?: b
 const AgendaChef = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -218,6 +231,7 @@ const AgendaChef = () => {
   });
   const [sectionTitle, setSectionTitle] = useState("Próximos Compromissos");
   const [hasActiveFilter, setHasActiveFilter] = useState(false);
+  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
 
   // Reset to default agenda and scroll
   const handleGoAgenda = () => {
@@ -282,120 +296,52 @@ const AgendaChef = () => {
     }
   }, [location]);
 
-  // Mock agenda data for current month, with multiple days having events
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth(); // current month (0-based)
+  React.useEffect(() => {
+    const session = loadSession();
+    if (!session?.token) return;
+    listKitchenOrders({ token: session.token })
+      .then((data) => {
+        const orders = Array.isArray(data) ? data : (data as { orders?: unknown })?.orders;
+        if (Array.isArray(orders)) setKitchenOrders(orders as KitchenOrder[]);
+      })
+      .catch((err) => {
+        console.error("Falha ao carregar pedidos:", err);
+        toast({
+          variant: "destructive",
+          title: "Não foi possível carregar seus serviços",
+          description: "Tente novamente em instantes.",
+        });
+      });
+  }, []);
+
+  const fallbackClientPhoto = mariaProfile;
   const toYMD = (d: Date) => format(d, "yyyy-MM-dd");
 
-  // Create profile photos for different clients
-  const clientPhotos = {
-    male: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    female: mariaProfile
-  };
+  const agendaItems = useMemo(() => {
+    return kitchenOrders
+      .map((order) => {
+        const idRaw = order.id as number | string | undefined;
+        const id = typeof idRaw === "number" ? idRaw : Number(idRaw);
+        const dateObj = getKitchenOrderDate(order);
+        const date = dateObj ? toYMD(dateObj) : toYMD(new Date());
+        const time = getKitchenOrderTime(order);
+        const client = getKitchenOrderClient(order, fallbackClientPhoto);
+        const type = normalizeKitchenOrderTypeLabel(order);
+        const status = normalizeKitchenOrderStatusLabel(order);
+        const location = getKitchenOrderLocation(order) || "—";
 
-  const agendaItems = [
-    {
-      id: 1,
-      type: "Cozinha Semanal",
-      date: toYMD(new Date(y, m, 5)),
-      time: "10:00",
-      duration: "2h",
-      location: "Pinheiros - São Paulo - SP",
-      client: { name: "Carlos Lima", photo: clientPhotos.male, phone: "(11) 66666-6666", gender: "male" },
-      status: "confirmado",
-    },
-    {
-      id: 2,
-      type: "Evento",
-      date: toYMD(new Date(y, m, 9)),
-      time: "19:00",
-      duration: "5h",
-      location: "Moema - São Paulo - SP",
-      client: { name: "João Santos", photo: clientPhotos.male, phone: "(11) 88888-8888", gender: "male" },
-      status: "pendente",
-    },
-    {
-      id: 3,
-      type: "Serviço Especial",
-      date: toYMD(new Date(y, m, 12)),
-      time: "12:00",
-      duration: "4h",
-      location: "Jardins - São Paulo - SP",
-      client: { name: "Ana Costa", photo: clientPhotos.female, phone: "(11) 77777-7777", gender: "female" },
-      status: "confirmado",
-    },
-    {
-      id: 4,
-      type: "Cozinha Semanal",
-      date: toYMD(new Date(y, m, 12)),
-      time: "16:00",
-      duration: "2h",
-      location: "Vila Madalena - São Paulo - SP",
-      client: { name: "Maria Silva", photo: clientPhotos.female, phone: "(11) 99999-9999", gender: "female" },
-      status: "confirmado",
-    },
-    {
-      id: 5,
-      type: "Evento",
-      date: toYMD(new Date(y, m, 18)),
-      time: "18:00",
-      duration: "4h",
-      location: "Ibirapuera - São Paulo - SP",
-      client: { name: "Patricia Oliveira", photo: clientPhotos.female, phone: "(11) 55555-5555", gender: "female" },
-      status: "confirmado",
-    },
-    {
-      id: 6,
-      type: "Cozinha Semanal",
-      date: toYMD(new Date(y, m, 22)),
-      time: "09:00",
-      duration: "3h",
-      location: "Brooklin - São Paulo - SP",
-      client: { name: "Roberto Ferreira", photo: clientPhotos.male, phone: "(11) 44444-4444", gender: "male" },
-      status: "pendente",
-    },
-    {
-      id: 7,
-      type: "Serviço Especial",
-      date: toYMD(new Date(y, m, 25)),
-      time: "15:00",
-      duration: "3h",
-      location: "Vila Olímpia - São Paulo - SP",
-      client: { name: "Sandra Mendes", photo: clientPhotos.female, phone: "(11) 33333-3333", gender: "female" },
-      status: "confirmado",
-    },
-    {
-      id: 8,
-      type: "Evento",
-      date: toYMD(new Date(y, m, 28)),
-      time: "20:00",
-      duration: "6h",
-      location: "Moema - São Paulo - SP",
-      client: { name: "Fernando Alves", photo: clientPhotos.male, phone: "(11) 22222-2222", gender: "male" },
-      status: "confirmado",
-    },
-    {
-      id: 9,
-      type: "Cozinha Semanal",
-      date: toYMD(new Date(y, m, 30)),
-      time: "11:00",
-      duration: "2h",
-      location: "Perdizes - São Paulo - SP",
-      client: { name: "Lucia Santos", photo: clientPhotos.female, phone: "(11) 11111-1111", gender: "female" },
-      status: "pendente",
-    },
-    {
-      id: 10,
-      type: "Serviço Especial",
-      date: toYMD(new Date(y, m, 15)),
-      time: "14:00",
-      duration: "3h",
-      location: "Itaim Bibi - São Paulo - SP",
-      client: { name: "Ricardo Martins", photo: clientPhotos.male, phone: "(11) 98888-7777", gender: "male" },
-      status: "pendente",
-    },
-  ];
+        return {
+          id: Number.isFinite(id) ? id : Math.floor(Math.random() * 1000000),
+          type,
+          date,
+          time,
+          location,
+          client,
+          status,
+        };
+      })
+      .filter((item) => Boolean(item.id));
+  }, [kitchenOrders]);
 
   // Get events for selected date
   const getEventsForDate = (date: Date) => {
