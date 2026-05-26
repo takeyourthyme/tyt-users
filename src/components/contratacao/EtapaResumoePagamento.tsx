@@ -4,36 +4,44 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, CreditCard, Receipt, User, Info, Home, DollarSign } from "lucide-react";
+import { MapPin, Receipt, User, Info, Home, DollarSign } from "lucide-react";
 import { DadosContratacao } from "@/pages/Contratacao";
-import visaIcon from "@/assets/visa-icon.png";
-import mastercardIcon from "@/assets/mastercard-icon.png";
+import { loadSession } from "@/services/authService";
+import { getUserById } from "@/services/userService";
 
 interface Props {
   dados: DadosContratacao;
   onVoltar: () => void;
-  onConcluir: () => void;
+  onConcluir: (novosDados: Partial<DadosContratacao>) => void;
 }
 
-const cartoesExistentes = [
-  {
-    id: '1',
-    bandeira: 'visa',
-    ultimos4: '4532',
-    titular: 'João Silva'
-  },
-  {
-    id: '2', 
-    bandeira: 'mastercard',
-    ultimos4: '8745',
-    titular: 'João Silva'
-  }
-];
-
 export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConcluir }) => {
+  const getDishName = (dish: unknown, fallback: string) => {
+    if (!dish || typeof dish !== "object") return fallback;
+    const record = dish as Record<string, unknown>;
+    const name = record.nome ?? record.name ?? record.titulo ?? record.title;
+    return typeof name === "string" && name.trim() ? name.trim() : fallback;
+  };
+
+  const getDishPrice = (dish: unknown) => {
+    if (!dish || typeof dish !== "object") return 35;
+    const record = dish as Record<string, unknown>;
+    const price = record.preco ?? record.price ?? record.valor ?? record.value;
+    return typeof price === "number" && Number.isFinite(price) ? price : 35;
+  };
+
+  const getDishDayIndex = (dish: unknown) => {
+    if (!dish || typeof dish !== "object") return undefined;
+    const record = dish as Record<string, unknown>;
+    const raw = record.diaIndex ?? record.dayIndex;
+    if (typeof raw === "number" && Number.isInteger(raw)) return raw;
+    const parsed = typeof raw === "string" ? Number(raw) : NaN;
+    return Number.isInteger(parsed) ? parsed : undefined;
+  };
+
+  const toDigits = (value: string) => value.replace(/\D/g, "");
+
   const [endereco, setEndereco] = useState(dados.endereco || {
     cep: '',
     rua: '',
@@ -43,108 +51,95 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
     cidade: dados.cidade?.split(' - ')[0] || ''
   });
   const [usarEnderecoMesmoCadastro, setUsarEnderecoMesmoCadastro] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState('');
-  const [mostrarNovoCartao, setMostrarNovoCartao] = useState(false);
-  const [novoCartao, setNovoCartao] = useState({
-    numero: '',
-    titular: '',
-    cpf: '',
-    validade: '',
-    cvv: ''
-  });
   const [aceitouTermos, setAceitouTermos] = useState(false);
-  const [processandoPagamento, setProcessandoPagamento] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProfileAddress, setIsLoadingProfileAddress] = useState(false);
   const [errosValidacao, setErrosValidacao] = useState<string[]>([]);
 
   const precoChef = 550;
-  const precoCompras = dados.pratosSelecionados?.reduce((total, prato) => total + (prato.preco || 35), 0) || 210;
+  const selectedDishes: unknown[] = Array.isArray(dados.pratosSelecionados) ? dados.pratosSelecionados : [];
+  const precoCompras = selectedDishes.reduce<number>((total, prato) => total + getDishPrice(prato), 0) || 210;
   const total = precoChef + precoCompras;
 
-  const getBandeiraIcon = (bandeira: string) => {
-    switch (bandeira) {
-      case 'visa':
-        return <img src={visaIcon} alt="Visa" className="h-4 w-4 object-contain" />;
-      case 'mastercard':
-        return <img src={mastercardIcon} alt="Mastercard" className="h-4 w-4 object-contain" />;
-      default:
-        return <img src={visaIcon} alt="Cartão" className="h-4 w-4 object-contain" />;
+  const buscarCEP = async (cep: string) => {
+    const digits = toDigits(cep);
+    if (digits.length !== 8) return;
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = (await response.json()) as { erro?: boolean; logradouro?: string; bairro?: string; localidade?: string };
+      if (data?.erro) return;
+      setEndereco((prev) => ({
+        ...prev,
+        rua: prev.rua || data.logradouro || '',
+        bairro: prev.bairro || data.bairro || '',
+        cidade: prev.cidade || data.localidade || prev.cidade,
+      }));
+    } catch {
+      return;
     }
   };
 
-  const detectarBandeira = (numero: string) => {
-    const limpo = numero.replace(/\D/g, "");
-    if (limpo.startsWith("4")) return "visa";
-    if (limpo.startsWith("5") || limpo.startsWith("2")) return "mastercard";
-    if (limpo.startsWith("3")) return "amex";
-    if (limpo.startsWith("6")) return "elo";
-    return "";
-  };
+  const carregarEnderecoDoPerfil = async () => {
+    const session = loadSession();
+    if (!session?.token || !session.userId) return;
+    try {
+      setIsLoadingProfileAddress(true);
+      const response = await getUserById({ token: session.token, userId: session.userId });
+      const candidate =
+        response && typeof response === "object" && !Array.isArray(response) && (response as Record<string, unknown>).user
+          ? ((response as Record<string, unknown>).user as unknown)
+          : response;
+      if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return;
+      const user = candidate as Record<string, unknown>;
 
-  const formatarNumeroCartao = (numero: string) => {
-    const limpo = numero.replace(/\D/g, "");
-    return limpo.replace(/(\d{4})(?=\d)/g, "$1 ");
-  };
+      const cep = String((user.cep ?? user.codigo_postal ?? user.postal_code ?? "") as string).trim();
+      const rua = String((user.endereco ?? user.rua ?? user.street ?? "") as string).trim();
+      const numero = String((user.numero ?? user.number ?? "") as string).trim();
+      const complemento = String((user.complemento ?? user.complement ?? "") as string).trim();
+      const bairro = String((user.bairro ?? user.district ?? "") as string).trim();
+      const cidade = String((user.cidade ?? user.city ?? "") as string).trim();
 
-  const preencherEnderecoAutomatico = () => {
-    setEndereco({
-      cep: '80010-000',
-      rua: 'Rua XV de Novembro',
-      numero: '123',
-      complemento: 'Apto 45',
-      bairro: 'Centro',
-      cidade: dados.cidade?.split(' - ')[0] || ''
-    });
-  };
-
-  const buscarCEP = async (cep: string) => {
-    if (cep.length === 9) {
-      // Simular busca de CEP
-      setEndereco(prev => ({
+      setEndereco((prev) => ({
         ...prev,
-        rua: 'Rua Exemplo',
-        bairro: 'Bairro Exemplo'
+        cep: cep || prev.cep,
+        rua: rua || prev.rua,
+        numero: numero || prev.numero,
+        complemento: complemento || prev.complemento,
+        bairro: bairro || prev.bairro,
+        cidade: cidade || prev.cidade || dados.cidade?.split(' - ')[0] || '',
       }));
+
+      const shouldFillFromCep = cep && (!(rua || bairro || cidade) || !(rua && bairro && cidade));
+      if (shouldFillFromCep) await buscarCEP(cep);
+    } finally {
+      setIsLoadingProfileAddress(false);
     }
   };
 
   const validarFormulario = () => {
     const erros: string[] = [];
-    
+
     if (!endereco.cep) erros.push('cep');
     if (!endereco.rua) erros.push('rua');
     if (!endereco.numero) erros.push('numero');
     if (!endereco.bairro) erros.push('bairro');
     if (!endereco.cidade) erros.push('cidade');
-    if (!formaPagamento) erros.push('formaPagamento');
     if (!aceitouTermos) erros.push('termos');
-    
-    if (formaPagamento === 'novo-cartao') {
-      if (!novoCartao.numero) erros.push('numeroCartao');
-      if (!novoCartao.titular) erros.push('titularCartao');
-      if (!novoCartao.cpf) erros.push('cpfCartao');
-      if (!novoCartao.validade) erros.push('validadeCartao');
-      if (!novoCartao.cvv) erros.push('cvvCartao');
-    }
-    
+
     return erros;
   };
 
-  const podeProcessarPagamento = () => {
-    return endereco.cep && endereco.rua && endereco.numero && 
-           formaPagamento && aceitouTermos;
-  };
-
-  const processarPagamento = async () => {
+  const concluirSemPagamento = async () => {
     const erros = validarFormulario();
     setErrosValidacao(erros);
-    
+
     if (erros.length > 0) return;
-    
-    setProcessandoPagamento(true);
-    // Simular processamento
-    setTimeout(() => {
-      onConcluir();
-    }, 2000);
+
+    setIsSubmitting(true);
+    onConcluir({
+      endereco,
+      aceitouTermos,
+    });
   };
 
   return (
@@ -169,14 +164,14 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                   {dados.tipoServico === 'servicos-especiais' && 'Serviços Especiais'}
                 </span>
               </div>
-              
+
               {dados.quantidadePessoas && (
                 <div className="flex justify-between">
                   <span>Quantidade de Pessoas:</span>
                   <span className="font-medium">{dados.quantidadePessoas}</span>
                 </div>
               )}
-              
+
               {dados.tamanhoPortacao && (
                 <div className="flex justify-between">
                   <span>Tamanho da Porção:</span>
@@ -199,9 +194,9 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                 {dados.tipoServico === 'cozinha-semanal' && dados.diasEntrega ? (
                   // Agrupar por dia de entrega
                   <div className="space-y-4">
-                    {dados.diasEntrega.map((diaEntrega: {dia: string, periodo: string}, diaIndex: number) => {
-                      const pratosDoDia = dados.pratosSelecionados?.filter((p: any) => p.diaIndex === diaIndex) || [];
-                      
+                    {dados.diasEntrega.map((diaEntrega: { dia: string, periodo: string }, diaIndex: number) => {
+                      const pratosDoDia = (dados.pratosSelecionados || []).filter((p) => getDishDayIndex(p) === diaIndex);
+
                       return (
                         <div key={diaIndex} className="space-y-2">
                           <div className="flex items-center justify-between border-b pb-1">
@@ -209,10 +204,10 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                             <span className="text-xs text-muted-foreground">{pratosDoDia.length} pratos</span>
                           </div>
                           <div className="space-y-1">
-                            {pratosDoDia.map((prato: any, index: number) => (
+                            {pratosDoDia.map((prato, index: number) => (
                               <div key={index} className="flex justify-between text-sm pl-2">
-                                <span>• {prato.nome || `Prato ${index + 1}`}</span>
-                                <span className="text-muted-foreground">R$ {(prato.preco || 35).toFixed(2)}</span>
+                                <span>• {getDishName(prato, `Prato ${index + 1}`)}</span>
+                                <span className="text-muted-foreground">R$ {getDishPrice(prato).toFixed(2)}</span>
                               </div>
                             ))}
                           </div>
@@ -223,10 +218,10 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                 ) : (
                   // Exibição padrão para outros serviços
                   <div className="space-y-2 text-sm">
-                    {dados.pratosSelecionados.map((prato: any, index: number) => (
+                    {dados.pratosSelecionados.map((prato, index: number) => (
                       <div key={index} className="flex justify-between">
-                        <span>{prato.nome || `Prato ${index + 1}`}</span>
-                        <span>R$ {(prato.preco || 35).toFixed(2)}</span>
+                        <span>{getDishName(prato, `Prato ${index + 1}`)}</span>
+                        <span>R$ {getDishPrice(prato).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -290,13 +285,14 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center space-x-2">
-                <Checkbox 
+                <Checkbox
                   id="endereco-cadastro"
                   checked={usarEnderecoMesmoCadastro}
+                  disabled={isLoadingProfileAddress}
                   onCheckedChange={(checked) => {
                     setUsarEnderecoMesmoCadastro(checked as boolean);
                     if (checked) {
-                      preencherEnderecoAutomatico();
+                      void carregarEnderecoDoPerfil();
                     }
                   }}
                 />
@@ -314,7 +310,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                     onChange={(e) => {
                       const newCep = e.target.value;
                       setEndereco(prev => ({ ...prev, cep: newCep }));
-                      buscarCEP(newCep);
+                      void buscarCEP(newCep);
                     }}
                     placeholder="00000-000"
                     className={`text-sm ${errosValidacao.includes('cep') ? 'border-red-500' : ''}`}
@@ -375,138 +371,24 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
             </CardContent>
           </Card>
 
-          {/* Forma de Pagamento */}
+          {/* Pagamento */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className={`flex items-center gap-2 text-lg ${errosValidacao.includes('formaPagamento') ? 'text-red-600' : ''}`}>
-                <CreditCard className="w-5 h-5" />
-                Forma de Pagamento
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Home className="w-5 h-5" />
+                Pagamento
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <RadioGroup value={formaPagamento} onValueChange={setFormaPagamento}>
-                {/* Cartões Existentes */}
-                {cartoesExistentes.map((cartao) => (
-                  <div key={cartao.id} className="flex items-center space-x-3">
-                    <RadioGroupItem value={cartao.id} id={cartao.id} />
-                    <Label
-                      htmlFor={cartao.id}
-                      className="flex-1 cursor-pointer"
-                    >
-                      <div
-                        className={`p-3 border rounded-lg transition-colors ${
-                          formaPagamento === cartao.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {getBandeiraIcon(cartao.bandeira)}
-                            <span className="text-sm">Final {cartao.ultimos4}</span>
-                          </div>
-                          <span className="text-xs text-gray-600">{cartao.titular}</span>
-                        </div>
-                      </div>
-                    </Label>
-                  </div>
-                ))}
-
-                {/* Cadastrar Novo Cartão */}
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value="novo-cartao" id="novo-cartao" />
-                  <Label
-                    htmlFor="novo-cartao"
-                    className="flex-1 cursor-pointer"
-                  >
-                    <div
-                      className={`p-3 border rounded-lg transition-colors ${
-                        formaPagamento === 'novo-cartao' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                      }`}
-                    >
-                      <span className="text-blue-600 text-sm">+ Cadastrar um novo cartão</span>
-                    </div>
-                  </Label>
-                </div>
-              </RadioGroup>
-
-              {/* Formulário Novo Cartão */}
-              {formaPagamento === 'novo-cartao' && (
-                <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <Label htmlFor="numero-cartao" className="text-sm">Número do Cartão</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="numero-cartao"
-                        value={novoCartao.numero}
-                        onChange={(e) => {
-                          const formatted = formatarNumeroCartao(e.target.value);
-                          setNovoCartao(prev => ({ ...prev, numero: formatted }));
-                        }}
-                        placeholder="0000 0000 0000 0000"
-                        maxLength={19}
-                        className={`text-sm ${errosValidacao.includes('numeroCartao') ? 'border-red-500' : ''}`}
-                      />
-                      {detectarBandeira(novoCartao.numero) && (
-                        <div className="w-8 h-5 flex items-center justify-center">
-                          {getBandeiraIcon(detectarBandeira(novoCartao.numero))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="titular-cartao" className="text-sm">Nome do Titular</Label>
-                      <Input
-                        id="titular-cartao"
-                        value={novoCartao.titular}
-                        onChange={(e) => setNovoCartao(prev => ({ ...prev, titular: e.target.value }))}
-                        placeholder="Nome como está no cartão"
-                        className={`text-sm ${errosValidacao.includes('titularCartao') ? 'border-red-500' : ''}`}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cpf-cartao" className="text-sm">CPF do Titular</Label>
-                      <Input
-                        id="cpf-cartao"
-                        value={novoCartao.cpf}
-                        onChange={(e) => setNovoCartao(prev => ({ ...prev, cpf: e.target.value }))}
-                        placeholder="000.000.000-00"
-                        className={`text-sm ${errosValidacao.includes('cpfCartao') ? 'border-red-500' : ''}`}
-                        inputMode="numeric"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="validade" className="text-sm">Validade</Label>
-                      <Input
-                        id="validade"
-                        value={novoCartao.validade}
-                        onChange={(e) => setNovoCartao(prev => ({ ...prev, validade: e.target.value }))}
-                        placeholder="MM/AA"
-                        className={`text-sm ${errosValidacao.includes('validadeCartao') ? 'border-red-500' : ''}`}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cvv" className="text-sm">CVV</Label>
-                      <Input
-                        id="cvv"
-                        value={novoCartao.cvv}
-                        onChange={(e) => setNovoCartao(prev => ({ ...prev, cvv: e.target.value }))}
-                        placeholder="000"
-                        className={`text-sm ${errosValidacao.includes('cvvCartao') ? 'border-red-500' : ''}`}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+              <p className="text-sm text-muted-foreground">
+                Pagamento ainda não está disponível. Você pode concluir a contratação e o pagamento será habilitado em breve.
+              </p>
             </CardContent>
           </Card>
 
           {/* Termos */}
           <div className="flex items-center space-x-2">
-            <Checkbox 
+            <Checkbox
               id="aceitar-termos"
               checked={aceitouTermos}
               onCheckedChange={(checked) => setAceitouTermos(checked as boolean)}
@@ -527,13 +409,13 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
         <Button variant="outline" onClick={onVoltar} className="text-sm">
           Voltar
         </Button>
-        <Button 
-          onClick={processarPagamento}
-          disabled={processandoPagamento}
+        <Button
+          onClick={() => void concluirSemPagamento()}
+          disabled={isSubmitting}
           size="lg"
           className="text-sm"
         >
-          {processandoPagamento ? "Processando..." : "Pagar e Concluir"}
+          {isSubmitting ? "Concluindo..." : "Concluir"}
         </Button>
       </div>
     </div>

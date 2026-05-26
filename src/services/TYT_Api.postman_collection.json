@@ -1,9 +1,9 @@
 {
   "info": {
-    "_postman_id": "8a57e729-c948-4b47-8978-778fa9c0859e",
+    "_postman_id": "00f7bbd5-8f39-46b3-af18-103a35ec71b4",
     "name": "TYT_Api",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "11308205"
+    "_exporter_id": "33900598"
   },
   "item": [
     {
@@ -16,7 +16,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "// chef\r\n/*\r\n{\r\n    \"senha\": \"senhaForte12345\",\r\n    \"email\": \"nicolas.pereira@matilha.digital\"\r\n}\r\n*/\r\n\r\n\r\n//admin\r\n\r\n{\r\n    \"senha\": \"senhaSuperSegura123\",\r\n    \"email\": \"admin@email.com\"\r\n}",
+              "raw": "// chef\r\n/*\r\n{\r\n    \"senha\": \"senhaForte12345\",\r\n    \"email\": \"nicolas.pereira@matilha.digital\"\r\n}\r\n*/\r\n\r\n\r\n//admin\r\n\r\n// {\r\n//     \"senha\": \"senhaSuperSegura123\",\r\n//     \"email\": \"admin@email.com\"\r\n// }\r\n\r\n//Chef Vinicius\r\n\r\n{\r\n    \"senha\": \"Alorromora@1\",\r\n    \"email\": \"viniciuseduardo@outlook.com\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -514,6 +514,26 @@
                 "api",
                 "auth",
                 "reset-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dishes Highlighted",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{URL}}/api/public/dishes/highlighted",
+              "host": [
+                "{{URL}}"
+              ],
+              "path": [
+                "api",
+                "public",
+                "dishes",
+                "highlighted"
               ]
             }
           },
@@ -1078,6 +1098,18 @@
                   "type": "file",
                   "uuid": "21fbab10-5db7-44b8-8673-58cea1505505",
                   "src": "/C:/Users/Nicolas Fernando/Downloads/1.Modelo receita.pdf"
+                },
+                {
+                  "key": "nome_prato",
+                  "value": "Feijoada",
+                  "type": "text",
+                  "uuid": "71b2d996-9e83-4a4c-8a3d-17cff1d6eeea"
+                },
+                {
+                  "key": "destaque_site",
+                  "value": "false",
+                  "type": "text",
+                  "uuid": "9c4247ac-d9a3-4e78-8bf7-8075a7808d87"
                 }
               ]
             },
@@ -1190,6 +1222,18 @@
                   "type": "file",
                   "uuid": "a7f0db8d-a1d8-43dd-a5e1-11550d513871",
                   "src": "/C:/Users/Nicolas Fernando/Downloads/1.Modelo receita.pdf"
+                },
+                {
+                  "key": "destaque_site",
+                  "value": "false",
+                  "type": "text",
+                  "uuid": "bb2fa0cb-80a9-47c0-b0bd-d09956a2db1d"
+                },
+                {
+                  "key": "nome_prato",
+                  "value": "Arroz",
+                  "type": "text",
+                  "uuid": "1332ab02-a92a-41b3-9bc0-30edf86972fa"
                 }
               ]
             },
@@ -2226,7 +2270,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"type\": \"MEAL_PREP\",\n  \"id_pagamento\": \"\",\n  \"event_date\": \"2026-06-01T00:00:00Z\",\n  \"event_time\": \"19:00\",\n  \"people_quantity\": 4,\n  \"city\": \"São Paulo\",\n  \"address\": \"Av. Paulista\",\n  \"number\": \"1000\",\n  \"complement\": \"Apto 101\",\n  \"district\": \"Bela Vista\",\n  \"observations\": \"Nenhuma restrição alimentar\",\n  // \"client_request\": \"Solicitação especial para serviço customizado\"\n  \"dishes\": [\n    {\n      \"dish_id\": 1,\n      \"quantity\": 2\n    }\n  ]\n}",
+              "raw": "{\n  \"type\": \"MEAL_PREP\",\n  \"id_pagamento\": \"\",\n  \"event_date\": \"2026-06-11T00:00:00Z\",\n  \"event_time\": \"19:00\",\n  \"people_quantity\": 4,\n  \"city\": \"São Paulo\",\n  \"address\": \"Av. Paulista\",\n  \"number\": \"1000\",\n  \"complement\": \"Apto 101\",\n  \"district\": \"Bela Vista\",\n  \"observations\": \"Nenhuma restrição alimentar\",\n//   \"client_request\": \"Solicitação especial para serviço customizado\",\n  \"dishes\": [\n    {\n      \"dish_id\": 2,\n      \"quantity\": 2\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2280,6 +2324,51 @@
                 "kitchen-orders",
                 "2",
                 "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Chef",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id_usuario_chef\": 24\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{URL}}/api/kitchen-orders/:hashCodeOrder/assign-chef",
+              "host": [
+                "{{URL}}"
+              ],
+              "path": [
+                "api",
+                "kitchen-orders",
+                ":hashCodeOrder",
+                "assign-chef"
+              ],
+              "variable": [
+                {
+                  "key": "hashCodeOrder",
+                  "value": ""
+                }
               ]
             }
           },
@@ -2873,14 +2962,14 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{URL}}/api/users/10",
+          "raw": "{{URL}}/api/users/13",
           "host": [
             "{{URL}}"
           ],
           "path": [
             "api",
             "users",
-            "10"
+            "13"
           ]
         }
       },
@@ -2925,10 +3014,40 @@
       "response": []
     },
     {
-      "name": "New Request",
+      "name": "Dashboard Overview",
       "request": {
-        "method": "GET",
-        "header": []
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"tempo\": \"mes_atual\",  // \"mes_anterior\" \"ultimos_3\" \"periodo\"\n    // Só considera os campos abaixo se for tempo = periodo\n    \"inicio\":\"2026-05-22\",\n    \"fim\":\"2026-05-22\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/api/dashboard/overview",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "api",
+            "dashboard",
+            "overview"
+          ]
+        }
       },
       "response": []
     }

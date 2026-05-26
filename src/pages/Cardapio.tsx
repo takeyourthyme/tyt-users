@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
+import { loadSession } from "@/services/authService";
+import { listDishes, listHighlightedDishes, normalizeDish, type Dish } from "@/services/dishService";
 
 // Import das imagens geradas
 import yakisobaFrango from "@/assets/yakisoba-frango.jpg";
@@ -29,6 +32,8 @@ interface Prato {
   tiposCozinha: string[];
   favorito: boolean;
 }
+
+const FAVORITES_STORAGE_KEY = "cardapio-favorites";
 
 const DADOS_MOCKADOS: Prato[] = [
   {
@@ -297,6 +302,8 @@ export default function Cardapio() {
   const [pratos, setPratos] = useState<Prato[]>([]);
   const [pratosFiltrados, setPratosFiltrados] = useState<Prato[]>([]);
   const [pesquisa, setPesquisa] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [filtrosAbertos, setFiltrosAbertos] = useState({
     categorias: false,
@@ -313,23 +320,71 @@ export default function Cardapio() {
   });
 
   useEffect(() => {
-    const dadosExistentes = localStorage.getItem('cardapio-pratos');
-    let dadosCarregados: Prato[] = [];
+    const rawFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    const parsedFavorites = (() => {
+      if (!rawFavorites) return [];
+      try {
+        const parsed = JSON.parse(rawFavorites) as unknown;
+        return Array.isArray(parsed) ? (parsed.filter((id) => typeof id === "string") as string[]) : [];
+      } catch {
+        return [];
+      }
+    })();
+    setFavoriteIds(parsedFavorites);
 
-    if (!dadosExistentes) {
-      dadosCarregados = DADOS_MOCKADOS;
-    } else {
-      const existentes = JSON.parse(dadosExistentes);
-      // Sincroniza imagens atualizadas do mock (corrige fotos quebradas)
-      dadosCarregados = existentes.map((p: Prato) => {
-        const atualizado = DADOS_MOCKADOS.find(d => d.id === p.id);
-        return atualizado ? { ...p, foto: atualizado.foto, fotos: atualizado.fotos } : p;
-      });
-    }
+    const session = loadSession();
+    const token = session?.token;
 
-    localStorage.setItem('cardapio-pratos', JSON.stringify(dadosCarregados));
-    setPratos(dadosCarregados);
-    setPratosFiltrados(dadosCarregados);
+    const mapDishToPrato = (dish: Dish): Prato => {
+      const normalized = normalizeDish(dish);
+      const categoria = normalized.categories[0]?.toLowerCase() || "outros";
+      const foto = normalized.photoUrl || "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop";
+      return {
+        id: normalized.id,
+        nome: normalized.name,
+        foto,
+        resumo: normalized.description,
+        descricao: normalized.description,
+        fotos: normalized.photoUrls.length > 0 ? normalized.photoUrls : [foto],
+        categoria,
+        preferencias: normalized.culinaryPreferences.map((p) => p.toLowerCase()),
+        ingredientes: normalized.mainIngredients.map((i) => i.toLowerCase()),
+        tiposCozinha: normalized.cuisineTypes.map((t) => t.toLowerCase()),
+        favorito: parsedFavorites.includes(normalized.id),
+      };
+    };
+
+    const extractList = (data: unknown): Dish[] => {
+      if (Array.isArray(data)) return data as Dish[];
+      if (data && typeof data === "object") {
+        const record = data as Record<string, unknown>;
+        const candidates = [record.pratos, record.dishes, record.items, record.data, record.results];
+        const list = candidates.find((value) => Array.isArray(value));
+        if (Array.isArray(list)) return list as Dish[];
+      }
+      return [];
+    };
+
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const response = token ? await listDishes({ token }) : await listHighlightedDishes();
+        const list = extractList(response);
+        if (list.length === 0) throw new Error("empty");
+
+        const pratosCarregados = list.map(mapDishToPrato).filter((p) => p.id);
+        setPratos(pratosCarregados);
+        setPratosFiltrados(pratosCarregados);
+      } catch {
+        const fallback = DADOS_MOCKADOS.map((p) => ({ ...p, favorito: parsedFavorites.includes(p.id) }));
+        setPratos(fallback);
+        setPratosFiltrados(fallback);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void load();
   }, []);
 
   useEffect(() => {
@@ -337,7 +392,7 @@ export default function Cardapio() {
 
     // Filtro por pesquisa
     if (pesquisa) {
-      resultado = resultado.filter(prato => 
+      resultado = resultado.filter(prato =>
         prato.nome.toLowerCase().includes(pesquisa.toLowerCase()) ||
         prato.resumo.toLowerCase().includes(pesquisa.toLowerCase())
       );
@@ -349,19 +404,19 @@ export default function Cardapio() {
     }
 
     if (filtros.preferencias.length > 0) {
-      resultado = resultado.filter(prato => 
+      resultado = resultado.filter(prato =>
         filtros.preferencias.some(pref => prato.preferencias.includes(pref))
       );
     }
 
     if (filtros.ingredientes.length > 0) {
-      resultado = resultado.filter(prato => 
+      resultado = resultado.filter(prato =>
         filtros.ingredientes.some(ing => prato.ingredientes.includes(ing))
       );
     }
 
     if (filtros.tiposCozinha.length > 0) {
-      resultado = resultado.filter(prato => 
+      resultado = resultado.filter(prato =>
         filtros.tiposCozinha.some(tipo => prato.tiposCozinha.includes(tipo))
       );
     }
@@ -374,11 +429,12 @@ export default function Cardapio() {
   }, [pratos, pesquisa, filtros]);
 
   const toggleFavorito = (pratoId: string) => {
-    const pratosAtualizados = pratos.map(prato => 
-      prato.id === pratoId ? { ...prato, favorito: !prato.favorito } : prato
-    );
-    setPratos(pratosAtualizados);
-    localStorage.setItem('cardapio-pratos', JSON.stringify(pratosAtualizados));
+    setFavoriteIds((prev) => {
+      const next = prev.includes(pratoId) ? prev.filter((id) => id !== pratoId) : [...prev, pratoId];
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(next));
+      setPratos((current) => current.map((prato) => (prato.id === pratoId ? { ...prato, favorito: !prato.favorito } : prato)));
+      return next;
+    });
   };
 
   const toggleFiltro = (tipo: keyof typeof filtros, valor: string) => {
@@ -389,7 +445,7 @@ export default function Cardapio() {
       const currentArray = prev[tipo] as string[];
       return {
         ...prev,
-        [tipo]: currentArray.includes(valor) 
+        [tipo]: currentArray.includes(valor)
           ? currentArray.filter(item => item !== valor)
           : [...currentArray, valor]
       };
@@ -416,8 +472,8 @@ export default function Cardapio() {
       <div className="container mx-auto px-4 py-6">
         {/* Título da página */}
         <div className="flex items-center gap-4 mb-6">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
           >
@@ -457,7 +513,7 @@ export default function Cardapio() {
                     Limpar Filtros
                   </Button>
                 </div>
-                
+
                 {/* Apenas Favoritos - Primeiro */}
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30 border">
                   <Heart className="h-4 w-4 text-red-500" />
@@ -472,7 +528,7 @@ export default function Cardapio() {
                     Apenas favoritos
                   </label>
                 </div>
-                
+
                 <div className="space-y-3">
                   {/* Categorias */}
                   <Collapsible open={filtrosAbertos.categorias} onOpenChange={() => toggleFiltroAberto('categorias')}>
@@ -594,64 +650,90 @@ export default function Cardapio() {
 
         {/* Grid de Pratos */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pratosFiltrados.map(prato => (
-            <Card 
-              key={prato.id} 
-              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => navigate(`/prato/${prato.id}`)}
-            >
-              <div className="p-4">
-                <img 
-                  src={prato.foto} 
-                  alt={prato.nome}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
-                />
-                <div className="space-y-2">
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-semibold text-lg">{prato.nome}</h3>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorito(prato.id);
-                      }}
-                    >
-                      <Heart 
-                        className={`h-4 w-4 ${prato.favorito ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
-                      />
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{prato.resumo}</p>
+          {isLoading
+            ? Array.from({ length: 9 }).map((_, index) => (
+              <Card key={index} className="overflow-hidden">
+                <div className="p-4 space-y-4">
+                  <Skeleton className="w-full h-48" />
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-4 w-full" />
                   <div className="flex items-center justify-between">
-                    {(() => {
-                      const CategoryIcon = CATEGORIAS_ICONES[prato.categoria as keyof typeof CATEGORIAS_ICONES]?.icon;
-                      const categoryColor = CATEGORIAS_ICONES[prato.categoria as keyof typeof CATEGORIAS_ICONES]?.color;
-                      return (
-                        <Badge variant="secondary" className={`text-xs gap-1 font-normal ${categoryColor}`}>
-                          {CategoryIcon && <CategoryIcon className="h-3 w-3" />}
-                          {prato.categoria}
-                        </Badge>
-                      );
-                    })()}
-                    <Button 
-                      className="text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/prato/${prato.id}`);
-                      }}
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      Ver
-                    </Button>
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-8 w-16" />
                   </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))
+            : pratosFiltrados.map(prato => (
+              <Card
+                key={prato.id}
+                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => navigate(`/prato/${prato.id}`)}
+              >
+                <div className="p-4">
+                  <img
+                    src={prato.foto}
+                    alt={prato.nome}
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between">
+                      <h3 className="font-semibold text-lg">{prato.nome}</h3>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorito(prato.id);
+                        }}
+                      >
+                        <Heart
+                          className={`h-4 w-4 ${prato.favorito ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+                        />
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{prato.resumo}</p>
+                    <div className="flex items-center justify-between">
+                      {(() => {
+                        const categoryEntry = CATEGORIAS_ICONES[prato.categoria as keyof typeof CATEGORIAS_ICONES];
+                        const CategoryIcon = categoryEntry?.icon ?? Tag;
+                        const categoryColor = categoryEntry?.color ?? "bg-muted text-foreground border-border";
+                        const extraBadges = [
+                          prato.tiposCozinha?.[0],
+                          prato.preferencias?.[0],
+                        ].filter(Boolean) as string[];
+                        return (
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <Badge variant="secondary" className={`text-xs gap-1 font-normal ${categoryColor}`}>
+                              <CategoryIcon className="h-3 w-3" />
+                              {prato.categoria}
+                            </Badge>
+                            {extraBadges.map((label) => (
+                              <Badge key={label} variant="outline" className="text-xs font-normal">
+                                {label}
+                              </Badge>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                      <Button
+                        className="text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/prato/${prato.id}`);
+                        }}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        Ver
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
         </div>
 
-        {pratosFiltrados.length === 0 && (
+        {!isLoading && pratosFiltrados.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Nenhum prato encontrado com os filtros selecionados.</p>
           </div>

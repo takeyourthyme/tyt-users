@@ -1,30 +1,61 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, type ComponentPropsWithoutRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { isAxiosError } from "axios";
 import InputMask from "react-input-mask";
-import { Camera, MapPin, Check, MessageCircle, AlertTriangle } from "lucide-react";
+import { Camera, MapPin, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { createClientUser } from "@/services/clientService";
 
 // Validation schemas
+const toDigits = (value: string) => value.replace(/\D/g, "");
+
+const validateCpf = (value: string) => {
+  const cpf = toDigits(value);
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+  const calcDigit = (base: string, factor: number) => {
+    let total = 0;
+    for (let i = 0; i < base.length; i += 1) {
+      total += Number(base[i]) * (factor - i);
+    }
+    const remainder = total % 11;
+    return remainder < 2 ? 0 : 11 - remainder;
+  };
+
+  const d1 = calcDigit(cpf.slice(0, 9), 10);
+  const d2 = calcDigit(cpf.slice(0, 9) + String(d1), 11);
+  return cpf.endsWith(`${d1}${d2}`);
+};
+
 const stepASchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   birthDate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Data inválida (dd/mm/aaaa)"),
   email: z.string().email("E-mail inválido"),
   whatsapp: z.string().regex(/^\+55 \(\d{2}\) \d{5}-\d{4}$/, "WhatsApp inválido"),
-  cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF inválido"),
+  cpf: z.string().refine((val) => validateCpf(val), "CPF inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  passwordConfirm: z.string().min(6, "Confirmação de senha é obrigatória"),
+}).superRefine((data, ctx) => {
+  if (data.password !== data.passwordConfirm) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "As senhas não conferem",
+      path: ["passwordConfirm"],
+    });
+  }
 });
 
 const stepBSchema = z.object({
@@ -48,21 +79,18 @@ type StepCData = z.infer<typeof stepCSchema>;
 
 const Cadastro = () => {
   const [currentStep, setCurrentStep] = useState<"A" | "B" | "C">("A");
-  const [show2FA, setShow2FA] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [resendTimer, setResendTimer] = useState(0);
-  const [validatingOTP, setValidatingOTP] = useState(false);
-  const [validationProgress, setValidationProgress] = useState(0);
   const [stepAData, setStepAData] = useState<StepAData | null>(null);
   const [stepBData, setStepBData] = useState<StepBData | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>("");
   const [addressProofPreview, setAddressProofPreview] = useState<string>("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [addressProofFile, setAddressProofFile] = useState<File | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
-  const [showMissingFilesAlert, setShowMissingFilesAlert] = useState(false);
   const [missingFiles, setMissingFiles] = useState<string[]>([]);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -74,6 +102,8 @@ const Cadastro = () => {
       email: "",
       whatsapp: "",
       cpf: "",
+      password: "",
+      passwordConfirm: "",
     },
   });
 
@@ -98,72 +128,16 @@ const Cadastro = () => {
     },
   });
 
-  const startResendTimer = () => {
-    setResendTimer(30);
-    const interval = setInterval(() => {
-      setResendTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
   const onSubmitStepA = async (data: StepAData) => {
     setStepAData(data);
-    setShow2FA(true);
-    startResendTimer();
-    toast({
-      title: "Código enviado",
-      description: "Enviamos um código de verificação para seu WhatsApp",
-    });
-  };
-
-  const validateOTP = async () => {
-    if (otpCode.length !== 6) {
-      toast({
-        title: "Código inválido",
-        description: "Verifique o código de 6 dígitos",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setValidatingOTP(true);
-    setValidationProgress(0);
-
-    // Simulate validation progress
-    const progressInterval = setInterval(() => {
-      setValidationProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return prev + 20;
-      });
-    }, 200);
-
-    // Wait for animation to complete
-    await new Promise(resolve => setTimeout(resolve, 1200));
-
-    setShow2FA(false);
     setCurrentStep("B");
-    setValidatingOTP(false);
-    setValidationProgress(0);
-    
-    toast({
-      title: "Verificação concluída",
-      description: "Agora vamos cadastrar seu endereço",
-    });
   };
 
   const fetchAddressByCEP = async (cep: string) => {
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep.replace("-", "")}/json/`);
       const data = await response.json();
-      
+
       if (!data.erro) {
         formB.setValue("street", data.logradouro || "");
         formB.setValue("neighborhood", data.bairro || "");
@@ -185,50 +159,111 @@ const Cadastro = () => {
   };
 
   const handleFileUpload = (file: File, type: "photo" | "addressProof") => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (type === "photo") {
-        setPhotoPreview(result);
-        formC.setValue("photo", result);
-      } else {
-        setAddressProofPreview(result);
-        formC.setValue("addressProof", result);
-      }
-    };
-    reader.readAsDataURL(file);
+    const previewUrl = URL.createObjectURL(file);
+    if (type === "photo") {
+      setPhotoPreview(previewUrl);
+      setPhotoFile(file);
+      formC.setValue("photo", previewUrl);
+      return;
+    }
+    setAddressProofPreview(previewUrl);
+    setAddressProofFile(file);
+    formC.setValue("addressProof", previewUrl);
+  };
+
+  const parseBirthDateToISOString = (value: string) => {
+    const [day, month, year] = value.split("/").map((v) => Number(v));
+    const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    return utcDate.toISOString();
   };
 
   const onSubmitStepC = async (data: StepCData) => {
     setAttemptedSubmit(true);
-    
-    try {
-      // Simulate account creation with all data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
+    if (!stepAData || !stepBData) {
       toast({
-        title: "Conta criada! Vamos começar.",
-        description: "Bem-vindo ao Take Your Thyme",
-      });
-      
-      navigate("/dashboard-cliente");
-    } catch (error) {
-      toast({
-        title: "Erro ao criar conta",
-        description: "Tente novamente em alguns instantes",
+        title: "Cadastro incompleto",
+        description: "Preencha as etapas anteriores antes de finalizar",
         variant: "destructive",
       });
+      return;
+    }
+
+    const missing: string[] = [];
+    if (!photoFile) missing.push("sua foto");
+    if (!addressProofFile) missing.push("comprovante de endereço");
+    setMissingFiles(missing);
+
+    if (missing.length > 0) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const formData = new FormData();
+      formData.append("nome", stepAData.name.trim());
+      formData.append("cpf", toDigits(stepAData.cpf));
+      formData.append("email", stepAData.email.trim());
+      formData.append("senha", stepAData.password);
+      formData.append("whatsapp", toDigits(stepAData.whatsapp));
+      formData.append("data_nascimento", parseBirthDateToISOString(stepAData.birthDate));
+      formData.append("cep", toDigits(stepBData.cep));
+      formData.append("endereco", stepBData.street.trim());
+      formData.append("numero", stepBData.number.trim());
+      if (stepBData.complement?.trim()) formData.append("complemento", stepBData.complement.trim());
+      formData.append("bairro", stepBData.neighborhood.trim());
+      formData.append("cidade", stepBData.city.trim());
+      formData.append("estado", stepBData.state.trim().toUpperCase());
+
+      if (photoFile) formData.append("foto", photoFile, photoFile.name);
+      if (addressProofFile) formData.append("comprovante_end", addressProofFile, addressProofFile.name);
+
+      await createClientUser(formData);
+
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: "Você já pode fazer login",
+      });
+
+      navigate("/login");
+    } catch (error) {
+      const apiMessage = (() => {
+        if (isAxiosError(error)) {
+          const payload = error.response?.data;
+          if (typeof payload === "string") return payload;
+          if (payload && typeof payload === "object") {
+            const record = payload as Record<string, unknown>;
+            const message = record.message;
+            const err = record.error;
+            if (typeof message === "string") return message;
+            if (typeof err === "string") return err;
+          }
+          return error.message;
+        }
+
+        if (error instanceof Error) return error.message;
+        return "Tente novamente em alguns instantes";
+      })();
+
+      toast({
+        title: "Erro ao criar conta",
+        description: String(apiMessage),
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const onInvalidStepC = (errors: any) => {
+  const onInvalidStepC = (_errors: unknown) => {
     // No validation errors needed since fields are optional
   };
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "user" } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { min: 400 }, height: { min: 400 } }
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -257,14 +292,31 @@ const Cadastro = () => {
       const video = videoRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      
+
       const ctx = canvas.getContext("2d");
       ctx?.drawImage(video, 0, 0);
-      
-      const photoDataUrl = canvas.toDataURL("image/jpeg");
-      setPhotoPreview(photoDataUrl);
-      formC.setValue("photo", photoDataUrl);
-      stopCamera();
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            toast({
+              title: "Erro ao capturar foto",
+              description: "Tente novamente",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          const file = new File([blob], `client-photo-${Date.now()}.jpg`, { type: "image/jpeg" });
+          const previewUrl = URL.createObjectURL(file);
+          setPhotoPreview(previewUrl);
+          setPhotoFile(file);
+          formC.setValue("photo", previewUrl);
+          stopCamera();
+        },
+        "image/jpeg",
+        0.92,
+      );
     }
   };
 
@@ -273,7 +325,7 @@ const Cadastro = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Progress Bar */}
@@ -301,7 +353,7 @@ const Cadastro = () => {
                   Preencha seus dados para criar sua conta
                 </CardDescription>
               </CardHeader>
-              
+
               <CardContent>
                 <Form {...formA}>
                   <form onSubmit={formA.handleSubmit(onSubmitStepA)} className="space-y-4">
@@ -331,7 +383,7 @@ const Cadastro = () => {
                               value={field.value}
                               onChange={field.onChange}
                             >
-                              {(inputProps: any) => (
+                              {(inputProps: ComponentPropsWithoutRef<"input">) => (
                                 <Input {...inputProps} placeholder="dd/mm/aaaa" />
                               )}
                             </InputMask>
@@ -367,7 +419,7 @@ const Cadastro = () => {
                               value={field.value}
                               onChange={field.onChange}
                             >
-                              {(inputProps: any) => (
+                              {(inputProps: ComponentPropsWithoutRef<"input">) => (
                                 <Input {...inputProps} placeholder="+55 (11) 99999-9999" inputMode="tel" />
                               )}
                             </InputMask>
@@ -389,10 +441,43 @@ const Cadastro = () => {
                               value={field.value}
                               onChange={field.onChange}
                             >
-                              {(inputProps: any) => (
+                              {(inputProps: ComponentPropsWithoutRef<"input">) => (
                                 <Input {...inputProps} placeholder="000.000.000-00" inputMode="numeric" />
                               )}
                             </InputMask>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={formA.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Senha</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="Crie uma senha" autoComplete="new-password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={formA.control}
+                      name="passwordConfirm"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirmar senha</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              placeholder="Repita sua senha"
+                              autoComplete="new-password"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -417,7 +502,7 @@ const Cadastro = () => {
                   Informe seu endereço completo
                 </CardDescription>
               </CardHeader>
-              
+
               <CardContent>
                 <Form {...formB}>
                   <form onSubmit={formB.handleSubmit(onSubmitStepB)} className="space-y-4">
@@ -443,7 +528,7 @@ const Cadastro = () => {
                                 }
                               }}
                             >
-                              {(inputProps: any) => (
+                              {(inputProps: ComponentPropsWithoutRef<"input">) => (
                                 <Input {...inputProps} placeholder="00000-000" />
                               )}
                             </InputMask>
@@ -568,7 +653,7 @@ const Cadastro = () => {
                   Envie sua foto e comprovante de endereço
                 </CardDescription>
               </CardHeader>
-              
+
               <CardContent>
                 <Form {...formC}>
                   <form onSubmit={formC.handleSubmit(onSubmitStepC, onInvalidStepC)} className="space-y-6">
@@ -578,7 +663,7 @@ const Cadastro = () => {
                         <Camera className="w-5 h-5 text-primary" />
                         Sua foto
                       </h3>
-                      
+
                       <div className={`relative bg-muted rounded-lg aspect-video overflow-hidden ${attemptedSubmit && !photoPreview ? 'border-2 border-destructive' : ''}`}>
                         {!cameraActive && !photoPreview && (
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -609,7 +694,7 @@ const Cadastro = () => {
                             </div>
                           </div>
                         )}
-                        
+
                         {cameraActive && (
                           <>
                             <video
@@ -629,7 +714,7 @@ const Cadastro = () => {
                             </div>
                           </>
                         )}
-                        
+
                         {photoPreview && (
                           <div className="relative">
                             <img
@@ -642,6 +727,7 @@ const Cadastro = () => {
                                 type="button"
                                 onClick={() => {
                                   setPhotoPreview("");
+                                  setPhotoFile(null);
                                   formC.setValue("photo", "");
                                   startCamera();
                                 }}
@@ -663,7 +749,7 @@ const Cadastro = () => {
                         <MapPin className="w-5 h-5 text-primary" />
                         Comprovante de endereço
                       </h3>
-                      
+
                       <div className={`border-2 border-dashed rounded-lg p-6 ${attemptedSubmit && !addressProofPreview ? 'border-destructive bg-destructive/5' : 'border-muted-foreground/25'}`}>
                         {!addressProofPreview ? (
                           <div className="text-center">
@@ -707,6 +793,7 @@ const Cadastro = () => {
                                 size="sm"
                                 onClick={() => {
                                   setAddressProofPreview("");
+                                  setAddressProofFile(null);
                                   formC.setValue("addressProof", "");
                                 }}
                               >
@@ -738,8 +825,8 @@ const Cadastro = () => {
                       >
                         Voltar
                       </Button>
-                      <Button type="submit" className="flex-1" size="lg">
-                        Criar minha conta
+                      <Button type="submit" className="flex-1" size="lg" disabled={isSubmitting}>
+                        {isSubmitting ? "Criando..." : "Criar minha conta"}
                       </Button>
                     </div>
                   </form>
@@ -759,95 +846,6 @@ const Cadastro = () => {
         </div>
       </main>
 
-      {/* 2FA Modal */}
-      <Dialog open={show2FA} onOpenChange={setShow2FA}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <MessageCircle className="w-8 h-8 text-green-600" />
-              </div>
-            </div>
-            <DialogTitle className="text-center">Verificação WhatsApp</DialogTitle>
-            <DialogDescription className="text-center">
-              Enviamos um código de 6 dígitos para seu WhatsApp.
-              Digite o código abaixo para continuar.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <InputOTP value={otpCode} onChange={setOtpCode} maxLength={6}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-            
-            <div className="relative">
-              <Button 
-                onClick={validateOTP} 
-                className="w-full relative overflow-hidden"
-                size="lg"
-                disabled={validatingOTP}
-              >
-                {/* Progress overlay */}
-                <div 
-                  className="absolute inset-0 bg-green-600 transition-all duration-200 ease-out"
-                  style={{
-                    width: `${validationProgress}%`,
-                    opacity: validatingOTP ? 1 : 0
-                  }}
-                />
-                
-                {/* Button content */}
-                <span className="relative z-10 flex items-center justify-center">
-                  {validatingOTP ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Validando...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Validar
-                    </>
-                  )}
-                </span>
-              </Button>
-            </div>
-            
-            <div className="text-center">
-              {resendTimer > 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Reenviar código em {resendTimer}s
-                </p>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={validatingOTP}
-                  onClick={() => {
-                    startResendTimer();
-                    toast({
-                      title: "Código reenviado",
-                      description: "Enviamos um novo código para seu WhatsApp",
-                    });
-                  }}
-                >
-                  Reenviar código
-                </Button>
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
       <Footer />
     </div>
   );

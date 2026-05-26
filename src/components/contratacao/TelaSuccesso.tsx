@@ -6,10 +6,10 @@ import { CheckCircle } from "lucide-react";
 interface Props {
   onIrDashboard: () => void;
   tipoServico?: 'cozinha-semanal' | 'eventos' | 'servicos-especiais' | '';
+  codigoReferencia?: string;
 }
 
-export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico }) => {
-  const codigoReferencia = "TYT" + Math.random().toString(36).substr(2, 9).toUpperCase();
+export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codigoReferencia }) => {
   const isServicoEspecial = tipoServico === 'servicos-especiais';
 
   return (
@@ -46,7 +46,7 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico }) =>
               Código de Referência:
             </p>
             <p className="text-lg font-mono font-bold text-gray-900">
-              {codigoReferencia}
+              {codigoReferencia || "—"}
             </p>
           </div>
 
@@ -68,8 +68,8 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico }) =>
             ) : (
               <>
                 <p>
-                  Seu pagamento foi processado com sucesso e nossa equipe entrará em contato
-                  para confirmar os detalhes finais.
+                  Sua contratação foi registrada com sucesso e nossa equipe entrará em contato
+                  para confirmar os detalhes finais e o pagamento.
                 </p>
                 <p>
                   Você pode acompanhar o status do seu serviço no seu dashboard.

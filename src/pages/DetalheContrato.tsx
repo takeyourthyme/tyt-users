@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,21 +8,52 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ChevronDown, ChevronUp, Calendar, MapPin, Clock, DollarSign, User, Phone, Mail, CreditCard, Receipt, Star, ChefHat, Utensils, Calendar as CalendarIcon, AlertTriangle, Heart, MessageCircle, CheckCircle, PlayCircle, PartyPopper, Users, ShoppingCart, PauseCircle } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Calendar, MapPin, Clock, DollarSign, User, Phone, Mail, CreditCard, Receipt, Star, ChefHat, Utensils, Calendar as CalendarIcon, AlertTriangle, AlertCircle, Heart, MessageCircle, CheckCircle, PlayCircle, PartyPopper, Users, ShoppingCart, PauseCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/AppHeader";
+import mariaProfile from "@/assets/maria-profile.jpg";
 import chefRoberto from "@/assets/chef-roberto.jpg";
 import visaIcon from "@/assets/visa-icon.png";
 import mastercardIcon from "@/assets/mastercard-icon.png";
 import { addWeeks, addMonths, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { loadSession } from "@/services/authService";
+import {
+  cancelKitchenOrder,
+  getKitchenOrderDate,
+  getKitchenOrderLocation,
+  getKitchenOrderTime,
+  getKitchenOrderClient,
+  getKitchenOrderByCode,
+  normalizeKitchenOrderStatusLabel,
+  normalizeKitchenOrderTypeLabel,
+  type KitchenOrder,
+} from "@/services/kitchenOrderService";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+const getKitchenOrderCode = (order: KitchenOrder): string => {
+  const candidates = [
+    order.code,
+    order.codigo,
+    order.order_code,
+    order.orderCode,
+    order.id,
+    order.kitchen_order_id,
+    order.kitchenOrderId,
+  ];
+  const value = candidates.find((item) => typeof item === "string" || typeof item === "number");
+  return value ? String(value) : "";
+};
 
 const DetalheContrato = () => {
   const navigate = useNavigate();
   const { id: contratoId } = useParams();
   const { toast } = useToast();
-  
+  const session = useMemo(() => loadSession(), []);
+  const token = session?.token;
+
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
   const [ordensVisiveis, setOrdensVisiveis] = useState(10);
   const [pauseDuration, setPauseDuration] = useState<string>("");
@@ -33,6 +64,134 @@ const DetalheContrato = () => {
   });
   const [novaAvaliacao, setNovaAvaliacao] = useState<{ rating: number, comentario: string }>({ rating: 0, comentario: "" });
   const [avaliacaoAberta, setAvaliacaoAberta] = useState<number | null>(null);
+
+  const [apiOrder, setApiOrder] = useState<KitchenOrder | null>(null);
+  const [apiLoading, setApiLoading] = useState(false);
+
+  useEffect(() => {
+    if (!token || !contratoId) return;
+    setApiLoading(true);
+    getKitchenOrderByCode({ token, code: contratoId })
+      .then((data) => {
+        if (data && typeof data === "object" && !Array.isArray(data)) {
+          setApiOrder(data as KitchenOrder);
+        }
+      })
+      .catch(() => { })
+      .finally(() => setApiLoading(false));
+  }, [token, contratoId]);
+
+  if (apiOrder) {
+    const code = contratoId ?? getKitchenOrderCode(apiOrder);
+    const type = normalizeKitchenOrderTypeLabel(apiOrder);
+    const status = normalizeKitchenOrderStatusLabel(apiOrder);
+    const date = getKitchenOrderDate(apiOrder);
+    const time = getKitchenOrderTime(apiOrder);
+    const location = getKitchenOrderLocation(apiOrder);
+    const client = getKitchenOrderClient(apiOrder, mariaProfile);
+    const canCancel = status === "pendente" || status === "confirmado";
+
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <AppHeader />
+        <main className="p-4 space-y-6 max-w-4xl mx-auto">
+          <div className="flex items-center gap-4 mb-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/meus-contratos")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1">
+              <div className="flex items-center justify-between gap-3">
+                <h1 className="text-2xl font-bold">{type}</h1>
+                <Badge
+                  variant="outline"
+                  className={status === "pendente" ? "border-orange-300 text-orange-700" : "border-green-300 text-green-700"}
+                >
+                  {status === "pendente" ? <AlertCircle className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
+                  {status === "pendente" ? "Pendente" : status === "confirmado" ? "Confirmado" : status}
+                </Badge>
+              </div>
+              <p className="text-sm text-gray-600">{code ? `Referência: #${code}` : ""}</p>
+            </div>
+          </div>
+
+          <Card className="bg-white">
+            <CardHeader>
+              <CardTitle>Detalhes</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="flex items-start gap-2">
+                <Calendar className="w-4 h-4 mt-0.5 text-gray-500" />
+                <div>
+                  <p className="text-gray-500">Data</p>
+                  <p className="font-medium">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Clock className="w-4 h-4 mt-0.5 text-gray-500" />
+                <div>
+                  <p className="text-gray-500">Horário</p>
+                  <p className="font-medium">{time || "—"}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 mt-0.5 text-gray-500" />
+                <div>
+                  <p className="text-gray-500">Local</p>
+                  <p className="font-medium">{location || "—"}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white">
+            <CardHeader>
+              <CardTitle>Cliente</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center gap-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={client.photo} />
+                <AvatarFallback>{client.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="font-medium">{client.name}</div>
+                <div className="text-sm text-gray-500">—</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => navigate("/meus-contratos")}>
+              Voltar
+            </Button>
+            <Button
+              className="flex-1"
+              variant="destructive"
+              disabled={!canCancel || apiLoading || !token || !code}
+              onClick={async () => {
+                if (!token || !code) return;
+                try {
+                  setApiLoading(true);
+                  await cancelKitchenOrder({ token, code });
+                  toast({ title: "Serviço cancelado", description: "Seu serviço foi cancelado com sucesso." });
+                  navigate("/meus-contratos");
+                } catch {
+                  toast({
+                    title: "Erro ao cancelar",
+                    description: "Tente novamente em alguns instantes.",
+                    variant: "destructive",
+                  });
+                } finally {
+                  setApiLoading(false);
+                }
+              }}
+            >
+              Cancelar serviço
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   // Dados mockados baseados na listagem de contratos
   const dadosListagem = {
@@ -264,9 +423,8 @@ const DetalheContrato = () => {
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`h-5 w-5 cursor-pointer transition-colors ${
-              star <= rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
-            }`}
+            className={`h-5 w-5 cursor-pointer transition-colors ${star <= rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
+              }`}
             onClick={() => onClick && onClick(star)}
           />
         ))}
@@ -288,10 +446,10 @@ const DetalheContrato = () => {
       ...prev,
       [orderId]: { ...novaAvaliacao }
     }));
-    
+
     setNovaAvaliacao({ rating: 0, comentario: "" });
     setAvaliacaoAberta(null);
-    
+
     toast({
       title: "Avaliação enviada!",
       description: "Obrigado pelo seu feedback.",
@@ -343,7 +501,7 @@ const DetalheContrato = () => {
     const returnDate = calculateReturnDate(pauseDuration);
     setPauseModalOpen(false);
     setPauseDuration("");
-    
+
     toast({
       title: "Serviço pausado com sucesso",
       description: `Seu serviço foi pausado. Retorno previsto para ${returnDate}.`,
@@ -353,12 +511,12 @@ const DetalheContrato = () => {
   return (
     <div className="min-h-screen bg-white pt-20">
       <AppHeader />
-      
+
       <div className="container mx-auto px-4 py-6">
         {/* Título da página */}
         <div className="flex items-center gap-4 mb-6">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => navigate("/meus-contratos")}
           >
@@ -482,10 +640,9 @@ const DetalheContrato = () => {
           {contrato.tipo !== "especial" && (
             <Card>
               <CardHeader>
-                <CardTitle className={`flex items-center gap-2 ${
-                  contrato.tipo === "meal-prep" ? "text-green-600" :
+                <CardTitle className={`flex items-center gap-2 ${contrato.tipo === "meal-prep" ? "text-green-600" :
                   contrato.tipo === "evento" ? "text-purple-600" : "text-orange-600"
-                }`}>
+                  }`}>
                   <ChefHat className="h-4 w-4" />
                   Seu Chef
                 </CardTitle>
@@ -500,10 +657,10 @@ const DetalheContrato = () => {
                     <h3 className="font-semibold text-lg">{chef.nome}</h3>
                     <p className="text-gray-600 text-sm">{chef.especialidade}</p>
                     <div className="flex gap-4 mt-2">
-                    <div className="flex items-center gap-1 text-sm text-green-600">
-                      <MessageCircle className="h-4 w-4" />
-                      {chef.telefone}
-                    </div>
+                      <div className="flex items-center gap-1 text-sm text-green-600">
+                        <MessageCircle className="h-4 w-4" />
+                        {chef.telefone}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -524,8 +681,8 @@ const DetalheContrato = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-700">
-                    Para este evento especial, você solicitou um serviço completo incluindo garçons e bartender especializados. 
-                    Precisa de profissionais para servir drinks e coquetéis durante 8 horas de evento, 
+                    Para este evento especial, você solicitou um serviço completo incluindo garçons e bartender especializados.
+                    Precisa de profissionais para servir drinks e coquetéis durante 8 horas de evento,
                     garantindo uma experiência diferenciada para seus convidados.
                   </p>
                 </CardContent>
@@ -560,7 +717,7 @@ const DetalheContrato = () => {
                         <span className="text-gray-900">Inclusos</span>
                       </div>
                     </div>
-                    
+
                     <div className="pt-3 border-t">
                       <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white" size="lg">
                         <CreditCard className="h-4 w-4 mr-2" />
@@ -596,8 +753,8 @@ const DetalheContrato = () => {
           {/* Botões de Ação - Condicionais por tipo de contrato */}
           {contrato.tipo === "meal-prep" && (
             <div className="grid grid-cols-2 gap-4">
-              <Button 
-                className="w-full bg-green-600 hover:bg-green-700 text-white" 
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
                 variant="default"
                 onClick={() => navigate("/contratacao-logado", {
                   state: {
@@ -620,7 +777,7 @@ const DetalheContrato = () => {
                 <Utensils className="h-4 w-4 mr-2" />
                 Selecionar Pratos da Semana
               </Button>
-              
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button className="w-full" variant="outline">
@@ -632,7 +789,7 @@ const DetalheContrato = () => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Descartar esta semana?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Se você desistir dessa semana, seu horário será disponibilizado para outro cliente. 
+                      Se você desistir dessa semana, seu horário será disponibilizado para outro cliente.
                       A próxima data de serviço será <strong>15/02/2024</strong>.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
@@ -644,7 +801,7 @@ const DetalheContrato = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              
+
               <Dialog open={pauseModalOpen} onOpenChange={setPauseModalOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full" variant="outline">
@@ -659,15 +816,15 @@ const DetalheContrato = () => {
                   <div className="space-y-4">
                     <div className="text-sm text-gray-600">
                       <p className="mb-2">
-                        <strong>Atenção:</strong> Ao pausar o serviço, o dia e período que hoje são seus 
+                        <strong>Atenção:</strong> Ao pausar o serviço, o dia e período que hoje são seus
                         serão disponibilizados para outro cliente.
                       </p>
                       <p>
-                        Caso você reative o serviço e o horário já tenha sido ocupado por outro cliente, 
+                        Caso você reative o serviço e o horário já tenha sido ocupado por outro cliente,
                         você precisará escolher outro dia da semana para ser atendido pelos chefs.
                       </p>
                     </div>
-                    
+
                     <div>
                       <label className="text-sm font-medium mb-2 block">
                         Por quanto tempo deseja pausar?
@@ -695,8 +852,8 @@ const DetalheContrato = () => {
                     )}
 
                     <div className="flex gap-3 pt-4">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="flex-1"
                         onClick={() => {
                           setPauseModalOpen(false);
@@ -705,8 +862,8 @@ const DetalheContrato = () => {
                       >
                         Cancelar
                       </Button>
-                      <Button 
-                        className="flex-1" 
+                      <Button
+                        className="flex-1"
                         onClick={handleConfirmPause}
                         disabled={!pauseDuration}
                       >
@@ -716,7 +873,7 @@ const DetalheContrato = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-              
+
               <Button className="w-full" variant="secondary">
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Solicitar Ajuda
@@ -774,12 +931,12 @@ const DetalheContrato = () => {
                             </div>
                           </div>
                         </div>
-                        {expandedOrders.has(ordem.id) ? 
-                          <ChevronUp className="h-4 w-4" /> : 
+                        {expandedOrders.has(ordem.id) ?
+                          <ChevronUp className="h-4 w-4" /> :
                           <ChevronDown className="h-4 w-4" />
                         }
                       </CollapsibleTrigger>
-                      
+
                       <CollapsibleContent className="mt-2 pt-2 border-t border-gray-100">
                         <div className="space-y-3">
                           {/* Lista de Pratos */}
@@ -787,11 +944,10 @@ const DetalheContrato = () => {
                             <h4 className="text-sm font-bold text-gray-800 mb-2">Pratos Selecionados:</h4>
                             <div className="space-y-0 rounded border border-gray-200 overflow-hidden">
                               {ordem.pratos.map((prato, index) => (
-                                <div 
-                                  key={index} 
-                                  className={`px-2 py-1.5 text-xs ${
-                                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                                  }`}
+                                <div
+                                  key={index}
+                                  className={`px-2 py-1.5 text-xs ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                                    }`}
                                 >
                                   {prato.nome}
                                 </div>
@@ -811,8 +967,8 @@ const DetalheContrato = () => {
                                 <span className="text-gray-700">Compras:</span>
                                 <div className="flex items-center gap-2">
                                   {ordem.comprovanteMercado && (
-                                    <Receipt 
-                                      className="h-4 w-4 text-blue-500 cursor-pointer" 
+                                    <Receipt
+                                      className="h-4 w-4 text-blue-500 cursor-pointer"
                                       onClick={() => toast({ title: "Comprovante de compras", description: "Abrindo comprovante..." })}
                                     />
                                   )}
@@ -837,11 +993,10 @@ const DetalheContrato = () => {
                             </div>
                             <div className="rounded border border-gray-200 overflow-hidden">
                               {ordem.lancamentos.map((lancamento, index) => (
-                                <div 
-                                  key={index} 
-                                  className={`px-2 py-2 text-xs ${
-                                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                                  }`}
+                                <div
+                                  key={index}
+                                  className={`px-2 py-2 text-xs ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                                    }`}
                                 >
                                   <div className="flex justify-between items-center mb-1">
                                     <div className="flex items-center gap-1">
@@ -850,9 +1005,8 @@ const DetalheContrato = () => {
                                         {new Date(lancamento.data).toLocaleDateString('pt-BR')}
                                       </span>
                                     </div>
-                                    <span className={`text-xs ${
-                                      lancamento.tipo === 'estorno' ? 'text-green-600' : 'text-gray-900'
-                                    }`}>
+                                    <span className={`text-xs ${lancamento.tipo === 'estorno' ? 'text-green-600' : 'text-gray-900'
+                                      }`}>
                                       {lancamento.tipo === 'estorno' ? '+' : ''}{lancamento.valor}
                                     </span>
                                   </div>
@@ -880,15 +1034,15 @@ const DetalheContrato = () => {
                                   <div className="space-y-2">
                                     <div>
                                       <p className="text-sm font-bold text-gray-800 mb-2">Avalie este serviço:</p>
-                                      {renderStars(novaAvaliacao.rating, (star) => 
+                                      {renderStars(novaAvaliacao.rating, (star) =>
                                         setNovaAvaliacao(prev => ({ ...prev, rating: star }))
                                       )}
                                     </div>
                                     <Textarea
                                       placeholder="Deixe seu comentário (opcional)"
                                       value={novaAvaliacao.comentario}
-                                      onChange={(e) => setNovaAvaliacao(prev => ({ 
-                                        ...prev, comentario: e.target.value 
+                                      onChange={(e) => setNovaAvaliacao(prev => ({
+                                        ...prev, comentario: e.target.value
                                       }))}
                                       className="min-h-16 text-xs"
                                     />
@@ -917,11 +1071,11 @@ const DetalheContrato = () => {
                     </Collapsible>
                   </div>
                 ))}
-                
+
                 {contrato.tipo === "meal-prep" && ordensVisiveis < ordensServico.length && (
                   <div className="flex justify-center pt-3">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       className="text-xs"
                       onClick={() => setOrdensVisiveis(prev => prev + 10)}
@@ -956,7 +1110,7 @@ const DetalheContrato = () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Continuar com o Serviço</AlertDialogCancel>
-                  <AlertDialogAction 
+                  <AlertDialogAction
                     onClick={handleCancelarServico}
                     className="bg-red-600 hover:bg-red-700"
                   >

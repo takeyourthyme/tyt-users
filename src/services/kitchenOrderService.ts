@@ -109,6 +109,29 @@ export async function getKitchenOrderByCode(params: { token: string; code: strin
   return data as unknown;
 }
 
+export type CreateKitchenOrderInput = {
+  token: string;
+  type: string;
+  id_pagamento?: string;
+  event_date: string;
+  event_time: string;
+  people_quantity: number;
+  city: string;
+  address: string;
+  number: string;
+  complement?: string;
+  district: string;
+  observations?: string;
+  client_request?: string;
+  dishes: Array<{ dish_id: number; quantity: number }>;
+};
+
+export async function createKitchenOrder(input: CreateKitchenOrderInput) {
+  const { token, ...payload } = input;
+  const { data } = await apiClient.post("/api/kitchen-orders", payload, createAuthConfig(token));
+  return data as unknown;
+}
+
 export async function updateKitchenOrderStatus(params: { token: string; id: string | number; status: string }) {
   const { data } = await apiClient.put(
     `/api/kitchen-orders/${params.id}/status`,

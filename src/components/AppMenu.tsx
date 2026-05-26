@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut, User, ChefHat, Menu, CreditCard, FileText, MessageCircle, UtensilsCrossed, Clock, Book, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import LogoText from "@/components/LogoText";
 import mariaProfile from "@/assets/maria-profile.jpg";
 import logoCompleta from "@/assets/logo-completa.webp";
+import { clearSession, loadSession } from "@/services/authService";
 
 interface AppMenuProps {
   title?: string;
@@ -14,15 +15,16 @@ interface AppMenuProps {
 export function AppMenu({ title = "Dashboard" }: AppMenuProps) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const session = useMemo(() => loadSession(), []);
 
-  // Mock user data - in real app, this would come from auth context
-  const userData = {
-    firstName: "Maria",
-    fullName: "Maria Silva"
-  };
+  const fullName =
+    (session?.user?.nome as string | undefined) ??
+    (session?.user?.name as string | undefined) ??
+    "Cliente";
 
   const handleLogout = () => {
-    // TODO: Implement logout logic
+    clearSession();
+    localStorage.removeItem("token");
     navigate("/");
   };
 
@@ -50,11 +52,13 @@ export function AppMenu({ title = "Dashboard" }: AppMenuProps) {
   }, {
     icon: Clock,
     label: "Histórico de Pagamento",
-    route: "/historico-pagamento"
+    route: "/historico-pagamento",
+    disabled: true
   }, {
     icon: CreditCard,
     label: "Gerenciar Cartões",
-    route: "/gerenciar-cartoes"
+    route: "/gerenciar-cartoes",
+    disabled: true
   }, {
     icon: Book,
     label: "Ver Cardápio",
@@ -97,13 +101,13 @@ export function AppMenu({ title = "Dashboard" }: AppMenuProps) {
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                   <img 
-                    src={mariaProfile} 
+                    src={mariaProfile}
                     alt="Foto de perfil da Maria" 
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-800 text-sm">{userData.fullName}</h4>
+                  <h4 className="font-semibold text-gray-800 text-sm">{fullName}</h4>
                   <p className="text-xs text-gray-600">Bem-vinda!</p>
                 </div>
               </div>
@@ -119,7 +123,9 @@ export function AppMenu({ title = "Dashboard" }: AppMenuProps) {
                       ? "bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white" 
                       : "hover:bg-gray-100"
                   }`}
+                  disabled={Boolean(item.disabled)}
                   onClick={() => {
+                    if (item.disabled) return;
                     if (item.action) {
                       item.action();
                     } else if (item.route) {

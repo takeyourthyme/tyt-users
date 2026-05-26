@@ -1,19 +1,22 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Users, Utensils } from "lucide-react";
 import { DadosContratacao } from "@/pages/Contratacao";
+import { loadSession } from "@/services/authService";
+import { listKitchenOrders } from "@/services/kitchenOrderService";
 
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
 }
 
-const cidades = [
+const fallbackCities = [
   "Curitiba - PR",
-  "São Paulo - SP", 
+  "São Paulo - SP",
   "Rio de Janeiro - RJ",
   "Florianópolis - SC",
   "Belo Horizonte - MG"
@@ -44,9 +47,51 @@ const servicos = [
 ];
 
 export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
+  const [cities, setCities] = useState<string[]>([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(true);
   const [cidadeSelecionada, setCidadeSelecionada] = useState(dados.cidade);
   const [servicoSelecionado, setServicoSelecionado] = useState(dados.tipoServico);
   const [tentouAvancar, setTentouAvancar] = useState(false);
+
+  useEffect(() => {
+    const session = loadSession();
+    if (!session?.token) {
+      setCities(fallbackCities);
+      setIsLoadingCities(false);
+      return;
+    }
+
+    const extractOrders = (data: unknown): Array<Record<string, unknown>> => {
+      if (Array.isArray(data)) return data as Array<Record<string, unknown>>;
+      if (data && typeof data === "object") {
+        const record = data as Record<string, unknown>;
+        const candidates = [record.orders, record.data, record.items, record.results];
+        const list = candidates.find((value) => Array.isArray(value));
+        if (Array.isArray(list)) return list as Array<Record<string, unknown>>;
+      }
+      return [];
+    };
+
+    setIsLoadingCities(true);
+    listKitchenOrders({ token: session.token })
+      .then((data) => {
+        const orders = extractOrders(data);
+        const mapped = orders
+          .map((order) => {
+            const city = (order.city as string | undefined) ?? (order.cidade as string | undefined) ?? "";
+            const state = (order.state as string | undefined) ?? (order.estado as string | undefined) ?? "";
+            const label = [city, state].filter(Boolean).join(" - ");
+            return label.trim();
+          })
+          .filter(Boolean);
+        const unique = Array.from(new Set([...mapped, ...fallbackCities])).filter(Boolean);
+        if (unique.length > 0) setCities(unique);
+      })
+      .catch(() => {
+        setCities(fallbackCities);
+      })
+      .finally(() => setIsLoadingCities(false));
+  }, []);
 
   const podeAvancar = cidadeSelecionada && servicoSelecionado;
 
@@ -55,7 +100,7 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
     if (podeAvancar) {
       onAvancar({
         cidade: cidadeSelecionada,
-        tipoServico: servicoSelecionado as any
+        tipoServico: servicoSelecionado as DadosContratacao["tipoServico"]
       });
     }
   };
@@ -77,18 +122,22 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
         <p className="text-sm text-gray-500 mb-3">
           Selecione a cidade onde você precisa que o serviço seja executado
         </p>
-        <Select value={cidadeSelecionada} onValueChange={setCidadeSelecionada}>
-          <SelectTrigger className={`w-full ${tentouAvancar && !cidadeSelecionada ? 'border-red-500' : ''}`}>
-            <SelectValue placeholder="Selecione sua cidade" />
-          </SelectTrigger>
-          <SelectContent>
-            {cidades.map((cidade) => (
-              <SelectItem key={cidade} value={cidade}>
-                {cidade}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {isLoadingCities ? (
+          <Skeleton className="h-10 w-full" />
+        ) : (
+          <Select value={cidadeSelecionada} onValueChange={setCidadeSelecionada}>
+            <SelectTrigger className={`w-full ${tentouAvancar && !cidadeSelecionada ? 'border-red-500' : ''}`}>
+              <SelectValue placeholder="Selecione sua cidade" />
+            </SelectTrigger>
+            <SelectContent>
+              {cities.map((cidade) => (
+                <SelectItem key={cidade} value={cidade}>
+                  {cidade}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Seleção de Serviço */}
@@ -101,22 +150,21 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
           {servicos.map((servico) => {
             const IconeServico = servico.icone;
             const selecionado = servicoSelecionado === servico.id;
-            
+
             return (
               <Card
                 key={servico.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-md border ${
-                  selecionado ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
-                onClick={() => setServicoSelecionado(servico.id as any)}
+                className={`cursor-pointer transition-all duration-200 hover:shadow-md border ${selecionado ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                onClick={() => setServicoSelecionado(servico.id as DadosContratacao["tipoServico"])}
               >
                 <CardContent className="p-4 md:p-6">
                   {/* Layout mobile: horizontal */}
                   <div className="flex items-center space-x-3 md:hidden">
                     <div className={`p-2 rounded-full flex-shrink-0 ${selecionado ? servico.cor : 'bg-gray-100'}`}>
-                      <IconeServico 
-                        size={20} 
-                        className={selecionado ? 'text-white' : 'text-gray-600'} 
+                      <IconeServico
+                        size={20}
+                        className={selecionado ? 'text-white' : 'text-gray-600'}
                       />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -124,14 +172,14 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
                       <p className="text-xs text-gray-600 mt-1 leading-tight">{servico.descricao}</p>
                     </div>
                   </div>
-                  
+
                   {/* Layout desktop: vertical */}
                   <div className="hidden md:block text-center space-y-3">
                     <div className="flex justify-center">
                       <div className={`p-3 rounded-full ${selecionado ? servico.cor : 'bg-gray-100'}`}>
-                        <IconeServico 
-                          size={24} 
-                          className={selecionado ? 'text-white' : 'text-gray-600'} 
+                        <IconeServico
+                          size={24}
+                          className={selecionado ? 'text-white' : 'text-gray-600'}
                         />
                       </div>
                     </div>
@@ -147,7 +195,7 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
 
       {/* Botão Avançar */}
       <div className="flex justify-end pt-6">
-        <Button 
+        <Button
           onClick={handleAvancar}
           size="lg"
         >

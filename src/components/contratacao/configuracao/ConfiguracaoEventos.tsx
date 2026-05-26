@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { cn } from "@/lib/utils";
+import { loadSession } from "@/services/authService";
+import { listCulinaryPreferences, listCuisineTypes, listThemes, type LookupOption } from "@/services/lookupService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Import das imagens dos temas
 import temaNoiteItaliana from "@/assets/tema-noite-italiana.jpg";
@@ -37,9 +40,16 @@ interface Props {
   onAvancar: (dados: Partial<DadosContratacao>) => void;
   onVoltar: () => void;
 }
-const preferencias = ['Vegetariano', 'Vegano', 'Sem Glúten', 'Sem Lactose', 'Low Carb', 'Proteína'];
-const tiposCozinha = ['Brasileira', 'Italiana', 'Asiática', 'Mediterrânea', 'Francesa', 'Japonesa'];
-const temasDisponiveis = [{
+type ThemeCard = {
+  id: string;
+  nome: string;
+  descricao: string;
+  foto: string;
+};
+
+const fallbackPreferences = ['Vegetariano', 'Vegano', 'Sem Glúten', 'Sem Lactose', 'Low Carb', 'Proteína'];
+const fallbackCuisineTypes = ['Brasileira', 'Italiana', 'Asiática', 'Mediterrânea', 'Francesa', 'Japonesa'];
+const fallbackThemes: ThemeCard[] = [{
   id: 'noite-italiana',
   nome: 'Noite Italiana',
   descricao: 'Sabores autênticos da Itália com massas artesanais e vinhos selecionados',
@@ -143,32 +153,84 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
   const [tiposCozinhaSelecionados, setTiposCozinhaSelecionados] = useState<string[]>(dados.tiposCozinha || []);
   const [pesquisaTema, setPesquisaTema] = useState('');
   const [temaSelecionado, setTemaSelecionado] = useState(dados.temaSelecionado || '');
+  const [availablePreferences, setAvailablePreferences] = useState<LookupOption[]>([]);
+  const [availableCuisineTypes, setAvailableCuisineTypes] = useState<LookupOption[]>([]);
+  const [availableThemes, setAvailableThemes] = useState<ThemeCard[]>([]);
+  const [isLoadingLookups, setIsLoadingLookups] = useState(true);
   const [errors, setErrors] = useState<{
     [key: string]: boolean;
   }>({});
   const avancarButtonsRef = useRef<HTMLDivElement>(null);
+
+  const themePhotoByName = useMemo(() => {
+    const normalize = (value: string) =>
+      value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+
+    const map = new Map<string, string>();
+    fallbackThemes.forEach((t) => {
+      map.set(normalize(t.nome), t.foto);
+      map.set(normalize(t.id), t.foto);
+    });
+    return { normalize, map };
+  }, []);
+
+  useEffect(() => {
+    const session = loadSession();
+    const token = session?.token;
+
+    const load = async () => {
+      setIsLoadingLookups(true);
+      try {
+        const [prefs, cuisines, themes] = await Promise.all([
+          listCulinaryPreferences({ token }),
+          listCuisineTypes({ token }),
+          listThemes({ token }),
+        ]);
+
+        setAvailablePreferences(prefs.length > 0 ? prefs : fallbackPreferences.map((label) => ({ id: label, label })));
+        setAvailableCuisineTypes(cuisines.length > 0 ? cuisines : fallbackCuisineTypes.map((label) => ({ id: label, label })));
+
+        if (themes.length > 0) {
+          const placeholder = "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200&h=800&fit=crop";
+          const mappedThemes: ThemeCard[] = themes.map((t) => {
+            const key = themePhotoByName.normalize(t.label);
+            const photo = themePhotoByName.map.get(key) ?? placeholder;
+            return {
+              id: t.id,
+              nome: t.label,
+              descricao: t.label,
+              foto: photo,
+            };
+          });
+          setAvailableThemes(mappedThemes);
+        } else {
+          setAvailableThemes(fallbackThemes);
+        }
+      } catch {
+        setAvailablePreferences(fallbackPreferences.map((label) => ({ id: label, label })));
+        setAvailableCuisineTypes(fallbackCuisineTypes.map((label) => ({ id: label, label })));
+        setAvailableThemes(fallbackThemes);
+      } finally {
+        setIsLoadingLookups(false);
+      }
+    };
+
+    void load();
+  }, [themePhotoByName]);
   const filtrarTemas = () => {
-    let temas = temasDisponiveis;
+    let temas = availableThemes;
 
     // Filtro por pesquisa
     if (pesquisaTema) {
       temas = temas.filter(tema => tema.nome.toLowerCase().includes(pesquisaTema.toLowerCase()) || tema.descricao.toLowerCase().includes(pesquisaTema.toLowerCase()));
     }
 
-    // Filtro por tipos de cozinha selecionados
-    if (tiposCozinhaSelecionados.length === 0) return temas;
-
-    // Mapear tipos de cozinha para temas relacionados
-    const mapeamento: {
-      [key: string]: string[];
-    } = {
-      'Italiana': ['noite-italiana', 'festa-italiana', 'noite-massas'],
-      'Brasileira': ['classicos-brasileiros'],
-      'Francesa': ['almoco-country', 'jantar-romantico'],
-      'Mediterrânea': ['mediterraneos'],
-      'Asiática': ['noite-marroquina']
-    };
-    return temas.filter(tema => tiposCozinhaSelecionados.some(tipo => mapeamento[tipo]?.includes(tema.id)) || tiposCozinhaSelecionados.length === 0);
+    return temas;
   };
   const toggleItem = (item: string, selectedItems: string[], setSelectedItems: (items: string[]) => void) => {
     if (selectedItems.includes(item)) {
@@ -202,162 +264,192 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
     }
   };
   return <div className="space-y-8">
-      <div className="text-center">
-        <p className="text-gray-600">
-          Vamos entender melhor suas preferências para te guiar na escolha dos pratos.
-        </p>
-      </div>
+    <div className="text-center">
+      <p className="text-gray-600">
+        Vamos entender melhor suas preferências para te guiar na escolha dos pratos.
+      </p>
+    </div>
 
-      <Card>
-        <CardContent className="p-6 space-y-6">
-          {/* Quantidade de Pessoas */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">Quantidade de pessoas</Label>
-            <p className="text-sm text-gray-500">Nos ajude a dimensionar as porções ideais para seu evento</p>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(Math.max(1, quantidadePessoas - 1))} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
-                <Minus size={14} />
-              </Button>
-              <Input type="number" value={quantidadePessoas} onChange={e => setQuantidadePessoas(parseInt(e.target.value) || 1)} className="w-16 text-center h-8 border-gray-300" min="1" />
-              <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(quantidadePessoas + 1)} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
-                <Plus size={14} />
-              </Button>
-            </div>
+    <Card>
+      <CardContent className="p-6 space-y-6">
+        {/* Quantidade de Pessoas */}
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Quantidade de pessoas</Label>
+          <p className="text-sm text-gray-500">Nos ajude a dimensionar as porções ideais para seu evento</p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(Math.max(1, quantidadePessoas - 1))} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
+              <Minus size={14} />
+            </Button>
+            <Input type="number" value={quantidadePessoas} onChange={e => setQuantidadePessoas(parseInt(e.target.value) || 1)} className="w-16 text-center h-8 border-gray-300" min="1" />
+            <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(quantidadePessoas + 1)} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
+              <Plus size={14} />
+            </Button>
           </div>
+        </div>
 
-          {/* Data do Evento e Horários */}
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Data do evento</Label>
-              <p className="text-sm text-gray-500">Quando será seu evento especial?</p>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" className={cn("w-full justify-start text-left font-normal border rounded-md px-3 py-2 text-sm ring-offset-background", "file:border-0 file:bg-transparent file:text-sm file:font-medium", "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", "disabled:cursor-not-allowed disabled:opacity-50", errors.dataEvento ? "border-red-500" : "border-input", !dataEvento && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dataEvento ? format(dataEvento, "PPP", {
+        {/* Data do Evento e Horários */}
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Data do evento</Label>
+            <p className="text-sm text-gray-500">Quando será seu evento especial?</p>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className={cn("w-full justify-start text-left font-normal border rounded-md px-3 py-2 text-sm ring-offset-background", "file:border-0 file:bg-transparent file:text-sm file:font-medium", "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", "disabled:cursor-not-allowed disabled:opacity-50", errors.dataEvento ? "border-red-500" : "border-input", !dataEvento && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dataEvento ? format(dataEvento, "PPP", {
                     locale: ptBR
                   }) : <span>Selecione a data</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={dataEvento} onSelect={date => date && setDataEvento(date)} disabled={date => date < new Date()} initialFocus className="pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Label className="text-base font-semibold">Horário de início</Label>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-5 w-5">
+                    <Info size={14} />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dataEvento} onSelect={date => date && setDataEvento(date)} disabled={date => date < new Date()} initialFocus className="pointer-events-auto" />
-                </PopoverContent>
-              </Popover>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Informações sobre Horário</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-gray-600">
+                    Insira aqui a hora que você deseja que a comida seja servida/consumida
+                    e a hora que você quer que o serviço seja interrompido/concluído.
+                  </p>
+                </DialogContent>
+              </Dialog>
             </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Label className="text-base font-semibold">Horário de início</Label>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-5 w-5">
-                      <Info size={14} />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Informações sobre Horário</DialogTitle>
-                    </DialogHeader>
-                    <p className="text-sm text-gray-600">
-                      Insira aqui a hora que você deseja que a comida seja servida/consumida 
-                      e a hora que você quer que o serviço seja interrompido/concluído.
-                    </p>
-                  </DialogContent>
-                </Dialog>
-              </div>
-              <p className="text-sm text-gray-500">Em que e a comida deve ser servida.</p>
-              <Input type="time" value={horarioInicio} onChange={e => setHorarioInicio(e.target.value)} className={cn("border-input bg-background", errors.horarioInicio && "border-red-500")} />
-            </div>
-
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Horário de fim</Label>
-              <p className="text-sm text-gray-500">Até que horas servir?</p>
-              <Input type="time" value={horarioFim} onChange={e => setHorarioFim(e.target.value)} className={cn("border-input bg-background", errors.horarioFim && "border-red-500")} />
-            </div>
+            <p className="text-sm text-gray-500">Em que e a comida deve ser servida.</p>
+            <Input type="time" value={horarioInicio} onChange={e => setHorarioInicio(e.target.value)} className={cn("border-input bg-background", errors.horarioInicio && "border-red-500")} />
           </div>
 
-          {/* Preferências Culinárias */}
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Preferências Culinárias</Label>
-            <p className="text-sm text-gray-500">Tem alguma preferência alimentar que devemos saber?</p>
-            <div className="flex flex-wrap gap-2">
-              {preferencias.map(item => {
-              const isSelected = preferenciaseSelecionadas.includes(item);
-              return <Badge key={item} variant={isSelected ? "default" : "secondary"} className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => toggleItem(item, preferenciaseSelecionadas, setPreferenciasSelecionadas)}>
-                    {item}
-                  </Badge>;
-            })}
-            </div>
+            <Label className="text-base font-semibold">Horário de fim</Label>
+            <p className="text-sm text-gray-500">Até que horas servir?</p>
+            <Input type="time" value={horarioFim} onChange={e => setHorarioFim(e.target.value)} className={cn("border-input bg-background", errors.horarioFim && "border-red-500")} />
+          </div>
+        </div>
+
+        {/* Preferências Culinárias */}
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Preferências Culinárias</Label>
+          <p className="text-sm text-gray-500">Tem alguma preferência alimentar que devemos saber?</p>
+          <div className="flex flex-wrap gap-2">
+            {isLoadingLookups
+              ? Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} className="h-6 w-24" />)
+              : availablePreferences.map((item) => {
+                const isSelected = preferenciaseSelecionadas.includes(item.label);
+                return (
+                  <Badge
+                    key={item.id}
+                    variant={isSelected ? "default" : "secondary"}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => toggleItem(item.label, preferenciaseSelecionadas, setPreferenciasSelecionadas)}
+                  >
+                    {item.label}
+                  </Badge>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* Tipos de Cozinha */}
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Tipos de Cozinha</Label>
+          <p className="text-sm text-gray-500">Quais sabores do mundo vocês mais apreciam?</p>
+          <div className="flex flex-wrap gap-2">
+            {isLoadingLookups
+              ? Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} className="h-6 w-24" />)
+              : availableCuisineTypes.map((item) => {
+                const isSelected = tiposCozinhaSelecionados.includes(item.label);
+                return (
+                  <Badge
+                    key={item.id}
+                    variant={isSelected ? "default" : "secondary"}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => toggleItem(item.label, tiposCozinhaSelecionados, setTiposCozinhaSelecionados)}
+                  >
+                    {item.label}
+                  </Badge>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* Escolha um Tema */}
+        <div className="space-y-4">
+          <div>
+            <Label className="text-base font-semibold">Escolha um tema</Label>
+            <p className="text-sm text-gray-500 mt-1">Qual atmosfera combina mais com seu evento?</p>
           </div>
 
-          {/* Tipos de Cozinha */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">Tipos de Cozinha</Label>
-            <p className="text-sm text-gray-500">Quais sabores do mundo vocês mais apreciam?</p>
-            <div className="flex flex-wrap gap-2">
-              {tiposCozinha.map(item => {
-              const isSelected = tiposCozinhaSelecionados.includes(item);
-              return <Badge key={item} variant={isSelected ? "default" : "secondary"} className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => toggleItem(item, tiposCozinhaSelecionados, setTiposCozinhaSelecionados)}>
-                    {item}
-                  </Badge>;
-            })}
-            </div>
+          {/* Campo de pesquisa de temas */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input placeholder="Pesquisar temas..." value={pesquisaTema} onChange={e => setPesquisaTema(e.target.value)} className="pl-10" />
           </div>
 
-          {/* Escolha um Tema */}
-          <div className="space-y-4">
-            <div>
-              <Label className="text-base font-semibold">Escolha um tema</Label>
-              <p className="text-sm text-gray-500 mt-1">Qual atmosfera combina mais com seu evento?</p>
-            </div>
-            
-            {/* Campo de pesquisa de temas */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input placeholder="Pesquisar temas..." value={pesquisaTema} onChange={e => setPesquisaTema(e.target.value)} className="pl-10" />
-            </div>
-            
-            <div className="grid gap-6 md:grid-cols-2">
-              {filtrarTemas().map(tema => <Card key={tema.id} className={cn("transition-all duration-200 hover:shadow-lg flex flex-col h-full", temaSelecionado === tema.id ? 'border-primary shadow-md' : 'border-gray-200 hover:border-gray-300', errors.temaSelecionado && !temaSelecionado ? 'border-red-500' : '')}>
-                  <CardContent className="p-6 flex flex-col h-full">
-                    <div className="space-y-4 flex-1 flex flex-col">
-                      <img src={tema.foto} alt={tema.nome} className="w-full h-48 object-cover rounded-lg bg-gray-100" />
-                      <div className="flex-1 flex flex-col justify-between space-y-3">
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-lg leading-tight min-h-[3.5rem] flex items-center">{tema.nome}</h4>
-                          <p className="text-sm text-gray-600 leading-relaxed min-h-[4rem] line-clamp-3">{tema.descricao}</p>
-                        </div>
-                        <Button 
-                          onClick={() => {
-                            setTemaSelecionado(tema.id);
-                            setTimeout(() => {
-                              avancarButtonsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                            }, 100);
-                          }} 
-                          variant={temaSelecionado === tema.id ? "default" : "outline"} 
-                          className="w-full mt-auto" 
-                          size="sm"
-                        >
-                          {temaSelecionado === tema.id ? "Selecionado" : "Selecionar"}
-                        </Button>
-                      </div>
-                    </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            {isLoadingLookups
+              ? Array.from({ length: 4 }).map((_, index) => (
+                <Card key={index} className="border-gray-200">
+                  <CardContent className="p-6 space-y-4">
+                    <Skeleton className="w-full h-48" />
+                    <Skeleton className="h-6 w-2/3" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-9 w-full" />
                   </CardContent>
-                </Card>)}
-            </div>
-            {errors.temaSelecionado && <p className="text-red-500 text-sm">Por favor, selecione um tema para continuar</p>}
+                </Card>
+              ))
+              : filtrarTemas().map(tema => <Card key={tema.id} className={cn("transition-all duration-200 hover:shadow-lg flex flex-col h-full", temaSelecionado === tema.id ? 'border-primary shadow-md' : 'border-gray-200 hover:border-gray-300', errors.temaSelecionado && !temaSelecionado ? 'border-red-500' : '')}>
+                <CardContent className="p-6 flex flex-col h-full">
+                  <div className="space-y-4 flex-1 flex flex-col">
+                    <img src={tema.foto} alt={tema.nome} className="w-full h-48 object-cover rounded-lg bg-gray-100" />
+                    <div className="flex-1 flex flex-col justify-between space-y-3">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-lg leading-tight min-h-[3.5rem] flex items-center">{tema.nome}</h4>
+                        <p className="text-sm text-gray-600 leading-relaxed min-h-[4rem] line-clamp-3">{tema.descricao}</p>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setTemaSelecionado(tema.id);
+                          setTimeout(() => {
+                            avancarButtonsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                          }, 100);
+                        }}
+                        variant={temaSelecionado === tema.id ? "default" : "outline"}
+                        className="w-full mt-auto"
+                        size="sm"
+                      >
+                        {temaSelecionado === tema.id ? "Selecionado" : "Selecionar"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>)}
           </div>
-        </CardContent>
-      </Card>
+          {errors.temaSelecionado && <p className="text-red-500 text-sm">Por favor, selecione um tema para continuar</p>}
+        </div>
+      </CardContent>
+    </Card>
 
-      {/* Botões */}
-      <div ref={avancarButtonsRef} className="flex justify-between">
-        <Button variant="outline" onClick={onVoltar}>
-          Voltar
-        </Button>
-        <Button onClick={handleAvancar}>
-          Avançar
-        </Button>
-      </div>
-    </div>;
+    {/* Botões */}
+    <div ref={avancarButtonsRef} className="flex justify-between">
+      <Button variant="outline" onClick={onVoltar}>
+        Voltar
+      </Button>
+      <Button onClick={handleAvancar}>
+        Avançar
+      </Button>
+    </div>
+  </div>;
 };
