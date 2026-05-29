@@ -16,8 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import LogoText from "@/components/LogoText";
+import { Lock } from "lucide-react";
 
-import { loadSession, saveSession } from "@/services/authService";
+import { loadSession, saveSession, changePassword } from "@/services/authService";
 import { updateChefUser } from "@/services/chefService";
 import { getUserById } from "@/services/userService";
 
@@ -241,6 +242,12 @@ const EditarCadastroChef = () => {
   const [photoPreview, setPhotoPreview] = useState<string>("");
   const [characterCount, setCharacterCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    senhaAtual: "",
+    novaSenha: "",
+    confirmarSenha: "",
+  });
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -554,6 +561,53 @@ const EditarCadastroChef = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!passwordData.senhaAtual || !passwordData.novaSenha || !passwordData.confirmarSenha) {
+      toast({ title: "Atenção", description: "Preencha todos os campos de senha", variant: "destructive" });
+      return;
+    }
+    if (passwordData.novaSenha !== passwordData.confirmarSenha) {
+      toast({ title: "Atenção", description: "As senhas não conferem", variant: "destructive" });
+      return;
+    }
+    if (!token || !form.getValues("email")) return;
+
+    try {
+      setIsPasswordSubmitting(true);
+      await changePassword({ 
+        token, 
+        email: form.getValues("email"), 
+        senhaAtual: passwordData.senhaAtual, 
+        novaSenha: passwordData.novaSenha 
+      });
+      toast({ title: "Senha alterada!", description: "Sua senha foi atualizada com sucesso." });
+      setPasswordData({ senhaAtual: "", novaSenha: "", confirmarSenha: "" });
+    } catch (error) {
+      const message = (() => {
+        if (isAxiosError(error)) {
+          const payload = error.response?.data;
+          if (typeof payload === "string") return payload;
+          if (payload && typeof payload === "object") {
+            const record = payload as Record<string, unknown>;
+            if (typeof record.message === "string") return record.message;
+            if (typeof record.error === "string") return record.error;
+          }
+          return error.message;
+        }
+        if (error instanceof Error) return error.message;
+        return "Tente novamente em alguns instantes";
+      })();
+
+      toast({
+        title: "Erro ao alterar senha",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPasswordSubmitting(false);
     }
   };
 
@@ -1089,6 +1143,58 @@ const EditarCadastroChef = () => {
                   </Button>
                 </form>
               </Form>
+            </CardContent>
+          </Card>
+
+          {/* Alterar Senha */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Alterar Senha
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="senhaAtual">Senha Atual</Label>
+                  <Input 
+                    id="senhaAtual" 
+                    type="password" 
+                    value={passwordData.senhaAtual} 
+                    onChange={e => setPasswordData(prev => ({ ...prev, senhaAtual: e.target.value }))} 
+                  />
+                </div>
+                <div className="hidden md:block" />
+                <div className="space-y-2">
+                  <Label htmlFor="novaSenha">Nova Senha</Label>
+                  <Input 
+                    id="novaSenha" 
+                    type="password" 
+                    value={passwordData.novaSenha} 
+                    onChange={e => setPasswordData(prev => ({ ...prev, novaSenha: e.target.value }))} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmarSenha">Confirmar Nova Senha</Label>
+                  <Input 
+                    id="confirmarSenha" 
+                    type="password" 
+                    value={passwordData.confirmarSenha} 
+                    onChange={e => setPasswordData(prev => ({ ...prev, confirmarSenha: e.target.value }))} 
+                  />
+                </div>
+              </div>
+              <div className="pt-2">
+                <Button 
+                  type="button"
+                  onClick={handlePasswordChange} 
+                  variant="outline" 
+                  disabled={isPasswordSubmitting}
+                >
+                  {isPasswordSubmitting ? "Alterando..." : "Atualizar Senha"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -27,10 +27,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import chefProfile from "@/assets/chef-roberto.jpg";
 import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
-import mariaProfile from "@/assets/maria-profile.jpg";
+
+import { useEffect, useMemo } from "react";
+import { loadSession, clearSession } from "@/services/authService";
+import { getUserPhotoUrl } from "@/services/userService";
+import {
+  getKitchenOrderClient,
+  getKitchenOrderDate,
+  getKitchenOrderLocation,
+  getKitchenOrderTime,
+  getKitchenOrderByCode,
+  normalizeKitchenOrderStatusLabel,
+  normalizeKitchenOrderTypeLabel,
+  type KitchenOrder,
+} from "@/services/kitchenOrderService";
 
 // Chef Menu Component
 const ChefMenu = () => {
@@ -60,10 +72,16 @@ const ChefMenu = () => {
         window.open('https://wa.me/5511999999999', '_blank');
         break;
       case 'logout':
+        clearSession();
+        localStorage.removeItem("token");
         navigate('/');
         break;
     }
   };
+
+  const session = useMemo(() => loadSession(), []);
+  const chefName = (session?.user?.nome as string | undefined) ?? (session?.user?.name as string | undefined) ?? "Chef";
+  const chefPhotoUrl = getUserPhotoUrl(session?.user);
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-tyt-yellow-500 border-b border-tyt-yellow-600 px-4 py-4 z-50">
@@ -83,15 +101,20 @@ const ChefMenu = () => {
               {/* Chef Profile Card */}
               <div className="mt-3 p-3 bg-gray-50 rounded-lg border flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img 
-                      src={chefProfile} 
-                      alt="Foto de perfil do Chef Roberto" 
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                    {chefPhotoUrl ? (
+                      <img 
+                        src={chefPhotoUrl} 
+                        alt={`Foto de perfil do Chef ${chefName}`} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-400" />
+                    )}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800 text-sm">Chef Roberto Silva</h4>
+                    <h4 className="font-semibold text-gray-800 text-sm">{chefName}</h4>
                     <p className="text-xs text-gray-600">Bem-vindo!</p>
                   </div>
                 </div>
@@ -125,6 +148,7 @@ const ChefMenu = () => {
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-base hover:bg-gray-100"
+                  disabled
                   onClick={() => handleMenuAction('pagamentos')}
                 >
                   <DollarSign className="w-5 h-5 mr-3" />
@@ -191,83 +215,81 @@ const ServicoDetalhes = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // Mock data for the service
-  const clientPhotos = {
-    male: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    female: mariaProfile
-  };
+  const [isLoading, setIsLoading] = useState(true);
+  const [kitchenOrder, setKitchenOrder] = useState<KitchenOrder | null>(null);
 
-  const servico = {
-    id: id || "1",
-    type: "Cozinha Semanal",
-    client: {
-      name: "Maria Silva",
-      photo: clientPhotos.female,
-      phone: "(11) 99999-9999",
-      email: "maria.silva@email.com",
-      address: "Rua Harmonia, 123 - Vila Madalena - São Paulo - SP - CEP 05435-000"
-    },
-    startDate: "2025-01-15",
-    endDate: "2025-03-15",
-    frequency: "Segundas e Quartas",
-    time: "14:00",
-    duration: "3h",
-    status: "em-andamento",
-    nextSession: "2025-01-29",
-    totalSessions: 24,
-    completedSessions: 8,
-    remainingSessions: 16,
-    monthlyValue: "R$ 1.800,00",
-    sessionValue: "R$ 450,00"
-  };
-
-  // Mock kitchen orders data inspired by DetalheContrato
-  const ordensServico = [
-    {
-      id: 6,
-      data: "2025-01-29",
-      valor: "R$ 450,00",
-      status: "em_andamento",
-      pratos: [
-        { nome: "Risotto de Camarão" },
-        { nome: "Salmão Grelhado" },
-        { nome: "Salada Caesar" }
-      ]
-    },
-    {
-      id: 5,
-      data: "2025-01-27",
-      valor: "R$ 450,00",
-      status: "finalizado",
-      pratos: [
-        { nome: "Paella Valenciana" },
-        { nome: "Gazpacho Andaluz" },
-        { nome: "Crema Catalana" }
-      ]
-    },
-    {
-      id: 4,
-      data: "2025-01-24",
-      valor: "R$ 450,00",
-      status: "finalizado",
-      pratos: [
-        { nome: "Lasanha Bolonhesa" },
-        { nome: "Bruschetta" },
-        { nome: "Tiramisu" }
-      ]
-    },
-    {
-      id: 3,
-      data: "2025-01-22",
-      valor: "R$ 450,00",
-      status: "finalizado",
-      pratos: [
-        { nome: "Ramen Tonkotsu" },
-        { nome: "Gyoza de Porco" },
-        { nome: "Mochi de Chocolate" }
-      ]
+  useEffect(() => {
+    const session = loadSession();
+    if (!session?.token || !id) {
+      setIsLoading(false);
+      return;
     }
-  ];
+    getKitchenOrderByCode({ token: session.token, code: id })
+      .then((data) => {
+        if (data && typeof data === "object") {
+          setKitchenOrder(data as KitchenOrder);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [id]);
+
+  const servico = useMemo(() => {
+    if (!kitchenOrder) return null;
+    const type = normalizeKitchenOrderTypeLabel(kitchenOrder);
+    const dateObj = getKitchenOrderDate(kitchenOrder);
+    const date = dateObj ? dateObj.toISOString() : new Date().toISOString();
+    const time = getKitchenOrderTime(kitchenOrder);
+    const client = getKitchenOrderClient(kitchenOrder);
+    const status = normalizeKitchenOrderStatusLabel(kitchenOrder);
+    const address = getKitchenOrderLocation(kitchenOrder);
+
+    return {
+      id: (kitchenOrder.id as string | number) || id,
+      type,
+      client: {
+        ...client,
+        phone: (kitchenOrder.client_phone as string) || "(11) 99999-9999",
+        email: (kitchenOrder.client_email as string) || "cliente@email.com",
+        address: address,
+      },
+      startDate: date,
+      endDate: date,
+      frequency: "Sessão Unica",
+      time: time,
+      duration: "3h",
+      status: status,
+      nextSession: date,
+      totalSessions: 1,
+      completedSessions: status === 'concluido' ? 1 : 0,
+      remainingSessions: status === 'concluido' ? 0 : 1,
+      monthlyValue: "R$ 450,00",
+      sessionValue: "R$ 450,00"
+    };
+  }, [kitchenOrder, id]);
+
+  const ordensServico = useMemo(() => {
+    if (!kitchenOrder) return [];
+    return [{
+      id: (kitchenOrder.id as string | number) || id,
+      data: getKitchenOrderDate(kitchenOrder)?.toISOString() || new Date().toISOString(),
+      valor: "R$ 450,00",
+      status: normalizeKitchenOrderStatusLabel(kitchenOrder) === 'concluido' ? "finalizado" : "em_andamento",
+      pratos: Array.isArray(kitchenOrder.dishes) 
+        ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? { nome: (d.dish as Record<string, unknown>)?.name as string } : { nome: "Prato" })
+        : [{ nome: "Menu Personalizado" }]
+    }];
+  }, [kitchenOrder, id]);
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Carregando...</div>;
+  }
+
+  if (!servico) {
+    return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Serviço não encontrado</div>;
+  }
 
   const getServiceIcon = (type: string) => {
     switch (type) {

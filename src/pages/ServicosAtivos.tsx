@@ -1,15 +1,26 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, ChefHat, Clock, MapPin, UtensilsCrossed, DollarSign, MessageCircle, LogOut, Menu, ChevronLeft, Eye, CheckCircle, Edit, BookOpen } from "lucide-react";
+import { Calendar, ChefHat, Clock, MapPin, UtensilsCrossed, DollarSign, MessageCircle, LogOut, Menu, ChevronLeft, Eye, CheckCircle, Edit, BookOpen, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import chefProfile from "@/assets/chef-roberto.jpg";
 import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
-import mariaProfile from "@/assets/maria-profile.jpg";
+import { useEffect, useMemo, useState } from "react";
+import { loadSession, clearSession } from "@/services/authService";
+import {
+  getKitchenOrderClient,
+  getKitchenOrderDate,
+  getKitchenOrderLocation,
+  getKitchenOrderTime,
+  listKitchenOrders,
+  normalizeKitchenOrderStatusLabel,
+  normalizeKitchenOrderTypeLabel,
+  getKitchenOrderCode,
+  type KitchenOrder,
+} from "@/services/kitchenOrderService";
+import { getUserPhotoUrl } from "@/services/userService";
 
 // Chef Menu Component
 const ChefMenu = () => {
@@ -42,6 +53,10 @@ const ChefMenu = () => {
         break;
     }
   };
+  const session = useMemo(() => loadSession(), []);
+  const chefName = (session?.user?.nome as string | undefined) ?? (session?.user?.name as string | undefined) ?? "Chef";
+  const chefPhotoUrl = getUserPhotoUrl(session?.user);
+
   return <div className="fixed top-0 left-0 right-0 bg-tyt-yellow-500 border-b border-tyt-yellow-600 px-4 py-4 z-50">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -55,11 +70,15 @@ const ChefMenu = () => {
               {/* Chef Profile Card */}
               <div className="mt-3 p-3 bg-gray-50 rounded-lg border flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img src={chefProfile} alt="Foto de perfil do Chef Roberto" className="w-full h-full object-cover" />
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                    {chefPhotoUrl ? (
+                      <img src={chefPhotoUrl} alt={`Foto de perfil do Chef ${chefName}`} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-400" />
+                    )}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800 text-sm">Chef Roberto Silva</h4>
+                    <h4 className="font-semibold text-gray-800 text-sm">{chefName}</h4>
                     <p className="text-xs text-gray-600">Bem-vindo!</p>
                   </div>
                 </div>
@@ -78,7 +97,7 @@ const ChefMenu = () => {
                   <UtensilsCrossed className="w-5 h-5 mr-3" />
                   Serviços Ativos
                 </Button>
-                <Button variant="ghost" className="w-full justify-start h-12 text-base hover:bg-gray-100" onClick={() => handleMenuAction('pagamentos')}>
+                <Button variant="ghost" className="w-full justify-start h-12 text-base hover:bg-gray-100" disabled onClick={() => handleMenuAction('pagamentos')}>
                   <DollarSign className="w-5 h-5 mr-3" />
                   Pagamentos
                 </Button>
@@ -115,54 +134,47 @@ const ChefMenu = () => {
 const ServicosAtivos = () => {
   const navigate = useNavigate();
 
-  // Mock data for active services
-  const clientPhotos = {
-    male: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    female: mariaProfile
-  };
-  const servicosAtivos = [{
-    id: 1,
-    type: "Cozinha Semanal",
-    client: {
-      name: "Maria Silva",
-      photo: clientPhotos.female
-    },
-    startDate: "2025-01-15",
-    endDate: "2025-03-15",
-    frequency: "Segundas e Quartas",
-    time: "14:00",
-    location: "Vila Madalena - São Paulo - SP",
-    status: "em-andamento",
-    nextSession: "2025-01-29"
-  }, {
-    id: 2,
-    type: "Evento",
-    client: {
-      name: "João Santos",
-      photo: clientPhotos.male
-    },
-    startDate: "2025-02-05",
-    endDate: "2025-02-05",
-    frequency: "Evento único",
-    time: "19:00",
-    location: "Moema - São Paulo - SP",
-    status: "confirmado",
-    nextSession: "2025-02-05"
-  }, {
-    id: 3,
-    type: "Cozinha Semanal",
-    client: {
-      name: "Ana Costa",
-      photo: clientPhotos.female
-    },
-    startDate: "2025-01-20",
-    endDate: "2025-04-20",
-    frequency: "Terças e Sextas",
-    time: "10:00",
-    location: "Jardins - São Paulo - SP",
-    status: "em-andamento",
-    nextSession: "2025-01-31"
-  }];
+  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
+
+  useEffect(() => {
+    const session = loadSession();
+    if (!session?.token) return;
+    listKitchenOrders({ token: session.token })
+      .then((data) => {
+        const orders = Array.isArray(data) ? data : (data as { orders?: unknown })?.orders;
+        if (Array.isArray(orders)) setKitchenOrders(orders as KitchenOrder[]);
+      })
+      .catch(() => {});
+  }, []);
+
+  const servicosAtivos = useMemo(() => {
+    return kitchenOrders
+      .map((order) => {
+        const id = getKitchenOrderCode(order);
+        const dateObj = getKitchenOrderDate(order);
+        const nextSession = dateObj ? dateObj.toISOString() : new Date().toISOString();
+        const time = getKitchenOrderTime(order);
+        const client = getKitchenOrderClient(order);
+        const type = normalizeKitchenOrderTypeLabel(order);
+        const status = normalizeKitchenOrderStatusLabel(order);
+        const location = getKitchenOrderLocation(order) || "—";
+        const frequency = "Sessão";
+
+        return {
+          id,
+          type,
+          client,
+          startDate: nextSession,
+          endDate: nextSession,
+          frequency,
+          time,
+          location,
+          status,
+          nextSession,
+        };
+      })
+      .filter((item) => Boolean(item.id) && (item.status === "confirmado" || item.status === "pendente"));
+  }, [kitchenOrders]);
   const getServiceIcon = (type: string) => {
     switch (type) {
       case "Cozinha Semanal":

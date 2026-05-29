@@ -30,6 +30,7 @@ import DetalheContrato from "./pages/DetalheContrato";
 import HistoricoPagamento from "./pages/HistoricoPagamento";
 import GerenciarCartoes from "./pages/GerenciarCartoes";
 import Contratacao from "./pages/Contratacao";
+import EsqueciSenha from "./pages/EsqueciSenha";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,9 +62,10 @@ const AppContent = () => {
       <Route path="/meus-contratos" element={<MeusContratos />} />
       <Route path="/detalhes-contrato/:id" element={<DetalheContrato />} />
       <Route path="/historico-pagamento" element={<HistoricoPagamento />} />
-      <Route path="/gerenciar-cartoes" element={<GerenciarCartoes />} />
+      {/* <Route path="/gerenciar-cartoes" element={<GerenciarCartoes />} /> */}
       <Route path="/contratacao" element={<Contratacao />} />
       <Route path="/contratacao-logado" element={<Contratacao />} />
+      <Route path="/esqueci-senha" element={<EsqueciSenha />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>

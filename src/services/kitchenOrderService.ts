@@ -58,7 +58,7 @@ export function getKitchenOrderTime(order: KitchenOrder): string {
   return String(raw);
 }
 
-export function getKitchenOrderClient(order: KitchenOrder, fallbackPhoto: string): { name: string; photo: string } {
+export function getKitchenOrderClient(order: KitchenOrder, fallbackPhoto: string = ""): { name: string; photo: string } {
   const client =
     (order.client as Record<string, unknown> | undefined) ??
     (order.cliente as Record<string, unknown> | undefined) ??
@@ -162,3 +162,19 @@ export async function cancelKitchenOrder(params: { token: string; code: string }
   );
   return data as unknown;
 }
+
+export function getKitchenOrderCode(order?: KitchenOrder | null): string {
+  if (!order) return "";
+  const candidates = [
+    order.code,
+    order.codigo,
+    order.order_code,
+    order.orderCode,
+    order.id,
+    order.kitchen_order_id,
+    order.kitchenOrderId,
+  ];
+  const value = candidates.find((item) => typeof item === "string" || typeof item === "number");
+  return value ? String(value) : "";
+}
+

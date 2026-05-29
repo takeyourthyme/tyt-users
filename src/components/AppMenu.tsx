@@ -1,26 +1,31 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User, ChefHat, Menu, CreditCard, FileText, MessageCircle, UtensilsCrossed, Clock, Book, Home } from "lucide-react";
+import { LogOut, User, Menu, CreditCard, FileText, MessageCircle, UtensilsCrossed, Clock, Book, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import LogoText from "@/components/LogoText";
-import mariaProfile from "@/assets/maria-profile.jpg";
 import logoCompleta from "@/assets/logo-completa.webp";
 import { clearSession, loadSession } from "@/services/authService";
+import { getUserPhotoUrl } from "@/services/userService";
 
 interface AppMenuProps {
   title?: string;
+  user?: Record<string, unknown> | null;
 }
 
-export function AppMenu({ title = "Dashboard" }: AppMenuProps) {
+export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const session = useMemo(() => loadSession(), []);
 
+  const activeUser = user ?? session?.user ?? null;
+
   const fullName =
-    (session?.user?.nome as string | undefined) ??
-    (session?.user?.name as string | undefined) ??
+    (activeUser?.nome as string | undefined) ??
+    (activeUser?.name as string | undefined) ??
     "Cliente";
+
+  const photoUrl = getUserPhotoUrl(activeUser ?? undefined);
 
   const handleLogout = () => {
     clearSession();
@@ -96,15 +101,24 @@ export function AppMenu({ title = "Dashboard" }: AppMenuProps) {
               </SheetDescription>
             </SheetHeader>
             
-            {/* Maria's Welcome Card */}
+            {/* User Welcome Card */}
             <div className="mt-3 p-3 bg-gray-50 rounded-lg border flex-shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                  <img 
-                    src={mariaProfile}
-                    alt="Foto de perfil da Maria" 
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                  {photoUrl ? (
+                    <img
+                      src={photoUrl}
+                      alt={`Foto de perfil de ${fullName}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) parent.dataset.noPhoto = "true";
+                      }}
+                    />
+                  ) : (
+                    <User className="w-6 h-6 text-gray-400" />
+                  )}
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-800 text-sm">{fullName}</h4>

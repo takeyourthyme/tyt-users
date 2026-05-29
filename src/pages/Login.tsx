@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { login, parseLoginResponse, saveSession } from "@/services/authService";
+import { login, parseLoginResponse, saveSession, clearSession } from "@/services/authService";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -39,6 +39,20 @@ const Login = () => {
       setIsSubmitting(true);
       const response = await login({ email: data.email.trim(), password: data.password });
       const session = parseLoginResponse(response);
+
+      const userType = session.user?.tipo_usuario || session.user?.tipoUsuario;
+      if (userType && userType !== "cliente") {
+        clearSession();
+        toast({
+          variant: "destructive",
+          title: "Erro de acesso",
+          description: userType === "chef" 
+            ? "Esta conta pertence a um Chef. Por favor, acesse a área de login para Chefs." 
+            : "Esta área de login é exclusiva para clientes.",
+        });
+        return;
+      }
+
       saveSession(session);
 
       toast({
@@ -125,11 +139,11 @@ const Login = () => {
 
             <div className="mt-6 space-y-4 text-center">
               <Link
-                to="/ajuda"
+                to="/esqueci-senha"
                 className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 <HelpCircle className="w-4 h-4" />
-                Esqueci meu número?
+                Esqueci minha senha
               </Link>
 
               <div className="flex items-center justify-center gap-2">

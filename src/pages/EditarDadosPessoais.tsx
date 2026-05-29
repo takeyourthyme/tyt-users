@@ -5,12 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Camera, User, MapPin, FileImage, Edit2 } from "lucide-react";
+import { ArrowLeft, Camera, User, MapPin, FileImage, Edit2, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/AppHeader";
-import mariaProfile from "@/assets/maria-profile.jpg";
-import { loadSession, saveSession } from "@/services/authService";
+import { loadSession, saveSession, changePassword } from "@/services/authService";
 import { updateClientUser } from "@/services/clientService";
 import { getUserById } from "@/services/userService";
 
@@ -212,6 +211,54 @@ const EditarDadosPessoais = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handlePasswordChange = async () => {
+    if (!passwordData.senhaAtual || !passwordData.novaSenha || !passwordData.confirmarSenha) {
+      toast({ title: "Atenção", description: "Preencha todos os campos de senha", variant: "destructive" });
+      return;
+    }
+    if (passwordData.novaSenha !== passwordData.confirmarSenha) {
+      toast({ title: "Atenção", description: "As senhas não conferem", variant: "destructive" });
+      return;
+    }
+    if (!token || !formData.email) return;
+
+    try {
+      setIsPasswordSubmitting(true);
+      await changePassword({ 
+        token, 
+        email: formData.email, 
+        senhaAtual: passwordData.senhaAtual, 
+        novaSenha: passwordData.novaSenha 
+      });
+      toast({ title: "Senha alterada!", description: "Sua senha foi atualizada com sucesso." });
+      setPasswordData({ senhaAtual: "", novaSenha: "", confirmarSenha: "" });
+    } catch (error) {
+      const message = (() => {
+        if (isAxiosError(error)) {
+          const payload = error.response?.data;
+          if (typeof payload === "string") return payload;
+          if (payload && typeof payload === "object") {
+            const record = payload as Record<string, unknown>;
+            if (typeof record.message === "string") return record.message;
+            if (typeof record.error === "string") return record.error;
+          }
+          return error.message;
+        }
+        if (error instanceof Error) return error.message;
+        return "Tente novamente em alguns instantes";
+      })();
+
+      toast({
+        title: "Erro ao alterar senha",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPasswordSubmitting(false);
+    }
+  };
+
   const handleCancel = () => {
     navigate("/dashboard-cliente");
   };
@@ -241,7 +288,7 @@ const EditarDadosPessoais = () => {
             <CardContent>
               <div className="flex flex-col items-center gap-4">
                 <Avatar className="h-32 w-32">
-                  <AvatarImage src={photoUrl || mariaProfile} />
+                  <AvatarImage src={photoUrl || undefined} />
                   <AvatarFallback>{(formData.nome || "Cliente").slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <Button variant="outline" size="sm" disabled>
@@ -364,6 +411,57 @@ const EditarDadosPessoais = () => {
                     Trocar
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Alterar Senha */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Alterar Senha
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="senhaAtual">Senha Atual</Label>
+                  <Input 
+                    id="senhaAtual" 
+                    type="password" 
+                    value={passwordData.senhaAtual} 
+                    onChange={e => setPasswordData(prev => ({ ...prev, senhaAtual: e.target.value }))} 
+                  />
+                </div>
+                <div className="hidden md:block" />
+                <div className="space-y-2">
+                  <Label htmlFor="novaSenha">Nova Senha</Label>
+                  <Input 
+                    id="novaSenha" 
+                    type="password" 
+                    value={passwordData.novaSenha} 
+                    onChange={e => setPasswordData(prev => ({ ...prev, novaSenha: e.target.value }))} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmarSenha">Confirmar Nova Senha</Label>
+                  <Input 
+                    id="confirmarSenha" 
+                    type="password" 
+                    value={passwordData.confirmarSenha} 
+                    onChange={e => setPasswordData(prev => ({ ...prev, confirmarSenha: e.target.value }))} 
+                  />
+                </div>
+              </div>
+              <div className="pt-2">
+                <Button 
+                  onClick={handlePasswordChange} 
+                  variant="outline" 
+                  disabled={isPasswordSubmitting}
+                >
+                  {isPasswordSubmitting ? "Alterando..." : "Atualizar Senha"}
+                </Button>
               </div>
             </CardContent>
           </Card>

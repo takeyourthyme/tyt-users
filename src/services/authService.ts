@@ -19,6 +19,34 @@ export async function login(params: { email: string; password: string }) {
   return data;
 }
 
+export async function forgotPassword(params: { email: string }) {
+  const { data } = await apiClient.post("/api/auth/forgot-password", {
+    email: params.email,
+  });
+  return data;
+}
+
+export async function resetPassword(params: { token: string; novaSenha: string }) {
+  const { data } = await apiClient.post("/api/auth/reset-password", {
+    token: params.token,
+    novaSenha: params.novaSenha,
+  });
+  return data;
+}
+
+export async function changePassword(params: { token: string; email: string; senhaAtual: string; novaSenha: string }) {
+  const { data } = await apiClient.post("/api/auth/change-password", {
+    email: params.email,
+    senha: params.senhaAtual,
+    novaSenha: params.novaSenha,
+  }, {
+    headers: {
+      Authorization: `Bearer ${params.token}`,
+    },
+  });
+  return data;
+}
+
 export function parseLoginResponse(response: LoginResponse): AuthSession {
   const tokenCandidates = [
     response.token,

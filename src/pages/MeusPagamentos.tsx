@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Calendar, 
-  ChefHat, 
+import {
+  Calendar,
+  ChefHat,
   Clock,
   UtensilsCrossed,
   DollarSign,
@@ -15,7 +15,8 @@ import {
   CalendarIcon,
   Search,
   Edit,
-  BookOpen
+  BookOpen,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,10 +27,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import chefProfile from "@/assets/chef-roberto.jpg";
 import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
-import mariaProfile from "@/assets/maria-profile.jpg";
+
+import { useMemo } from "react";
+import { loadSession, clearSession } from "@/services/authService";
+import { getUserPhotoUrl } from "@/services/userService";
 
 // Chef Menu Component
 const ChefMenu = () => {
@@ -59,10 +62,16 @@ const ChefMenu = () => {
         window.open('https://wa.me/5511999999999', '_blank');
         break;
       case 'logout':
+        clearSession();
+        localStorage.removeItem("token");
         navigate('/');
         break;
     }
   };
+
+  const session = useMemo(() => loadSession(), []);
+  const chefName = (session?.user?.nome as string | undefined) ?? (session?.user?.name as string | undefined) ?? "Chef";
+  const chefPhotoUrl = getUserPhotoUrl(session?.user);
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-tyt-yellow-500 border-b border-tyt-yellow-600 px-4 py-4 z-50">
@@ -82,15 +91,20 @@ const ChefMenu = () => {
               {/* Chef Profile Card */}
               <div className="mt-3 p-3 bg-gray-50 rounded-lg border flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img 
-                      src={chefProfile} 
-                      alt="Foto de perfil do Chef Roberto" 
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                    {chefPhotoUrl ? (
+                      <img
+                        src={chefPhotoUrl}
+                        alt={`Foto de perfil do Chef ${chefName}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-400" />
+                    )}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800 text-sm">Chef Roberto Silva</h4>
+                    <h4 className="font-semibold text-gray-800 text-sm">{chefName}</h4>
                     <p className="text-xs text-gray-600">Bem-vindo!</p>
                   </div>
                 </div>
@@ -124,6 +138,7 @@ const ChefMenu = () => {
                 <Button
                   variant="default"
                   className="w-full justify-start h-12 text-base bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
+                  disabled
                   onClick={() => handleMenuAction('pagamentos')}
                 >
                   <DollarSign className="w-5 h-5 mr-3" />
@@ -165,18 +180,18 @@ const ChefMenu = () => {
 
               {/* Logo no final do menu */}
               <div className="mt-3 pt-3 border-t border-gray-200 flex justify-center flex-shrink-0">
-                <img 
-                  src={logoCompleta} 
-                  alt="Logo Take Your Thyme" 
+                <img
+                  src={logoCompleta}
+                  alt="Logo Take Your Thyme"
                   className="h-6 w-auto opacity-80"
                 />
               </div>
             </SheetContent>
           </Sheet>
-          
-          <img 
-            src={logoWhite} 
-            alt="Take Your Thyme" 
+
+          <img
+            src={logoWhite}
+            alt="Take Your Thyme"
             className="h-6 w-auto cursor-pointer"
             onClick={() => navigate('/dashboard-chef')}
           />
@@ -191,11 +206,9 @@ const MeusPagamentos = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
-  
+
   const clientPhotos = {
-    "Maria Silva": mariaProfile,
     "João Santos": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    "Ana Costa": mariaProfile,
     "Carlos Lima": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
   };
 
@@ -212,7 +225,7 @@ const MeusPagamentos = () => {
     },
     {
       id: 2,
-      cliente: "João Santos", 
+      cliente: "João Santos",
       codigo: "EV-047",
       servico: "Evento",
       valor: 850,
@@ -246,10 +259,10 @@ const MeusPagamentos = () => {
   const filteredPagamentos = pagamentos.filter(pagamento => {
     const matchesSearch = pagamento.cliente.toLowerCase().includes(searchTerm.toLowerCase());
     const paymentDate = new Date(pagamento.data);
-    
+
     const matchesStartDate = !startDate || paymentDate >= startDate;
     const matchesEndDate = !endDate || paymentDate <= endDate;
-    
+
     return matchesSearch && matchesStartDate && matchesEndDate;
   });
 
@@ -396,7 +409,7 @@ const MeusPagamentos = () => {
                   <TableHead className="hidden md:table-cell">Cliente</TableHead>
                   <TableHead className="hidden md:table-cell">Valor</TableHead>
                   <TableHead className="hidden md:table-cell w-20"></TableHead>
-                  
+
                   {/* Mobile Headers */}
                   <TableHead className="md:hidden">Data/Serviço</TableHead>
                   <TableHead className="md:hidden w-12"></TableHead>
@@ -419,8 +432,8 @@ const MeusPagamentos = () => {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={clientPhotos[pagamento.cliente as keyof typeof clientPhotos]} 
+                        <img
+                          src={clientPhotos[pagamento.cliente as keyof typeof clientPhotos]}
                           alt={pagamento.cliente}
                           className="w-8 h-8 rounded-full object-cover"
                         />
@@ -447,8 +460,8 @@ const MeusPagamentos = () => {
                       </div>
                     </TableCell>
                     <TableCell className="md:hidden p-2">
-                      <img 
-                        src={clientPhotos[pagamento.cliente as keyof typeof clientPhotos]} 
+                      <img
+                        src={clientPhotos[pagamento.cliente as keyof typeof clientPhotos]}
                         alt={pagamento.cliente}
                         className="w-8 h-8 rounded-full object-cover"
                       />

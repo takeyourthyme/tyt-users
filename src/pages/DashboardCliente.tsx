@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, CheckCircle, AlertCircle, ChefHat, Calendar, UtensilsCrossed } from "lucide-react";
+import { Eye, CheckCircle, AlertCircle, ChefHat, Calendar, UtensilsCrossed, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AppMenu } from "@/components/AppMenu";
-import mariaProfile from "@/assets/maria-profile.jpg";
 import { loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
 import {
@@ -67,7 +66,7 @@ const typeConfig: Record<
 
 const DashboardCliente = () => {
   const navigate = useNavigate();
-  const [clientUser, setClientUser] = useState<Record<string, unknown> | null>(null);
+  const [clientUser, setClientUser] = useState<Record<string, unknown> | null>(() => loadSession()?.user ?? null);
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
 
   // Function to get greeting based on time
@@ -143,7 +142,7 @@ const DashboardCliente = () => {
   }, [activeOrders]);
   return <div className="min-h-screen bg-gray-50 pt-20">
     {/* AppBar */}
-    <AppMenu title="Dashboard" />
+    <AppMenu title="Dashboard" user={clientUser} />
 
     {/* Main Content */}
     <main className="p-4 space-y-6 max-w-4xl mx-auto">
@@ -152,14 +151,18 @@ const DashboardCliente = () => {
         <div className="flex items-center gap-4">
           {/* Profile Photo */}
           <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center shadow-md flex-shrink-0">
-            <img
-              src={clientPhotoUrl ?? mariaProfile}
-              alt={`Foto de perfil do(a) ${clientFirstName}`}
-              className="w-16 h-16 rounded-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src = mariaProfile;
-              }}
-            />
+            {clientPhotoUrl ? (
+              <img
+                src={clientPhotoUrl}
+                alt={`Foto de perfil do(a) ${clientFirstName}`}
+                className="w-16 h-16 rounded-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <User className="w-8 h-8 text-gray-400" />
+            )}
           </div>
 
           {/* Welcome Text */}

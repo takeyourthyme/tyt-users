@@ -38,10 +38,22 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import chefProfile from "@/assets/chef-roberto.jpg";
 import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
-import mariaProfile from "@/assets/maria-profile.jpg";
+
+import { useEffect, useMemo } from "react";
+import { loadSession, clearSession } from "@/services/authService";
+import { getUserPhotoUrl } from "@/services/userService";
+import {
+  getKitchenOrderClient,
+  getKitchenOrderDate,
+  getKitchenOrderLocation,
+  getKitchenOrderTime,
+  getKitchenOrderByCode,
+  normalizeKitchenOrderStatusLabel,
+  normalizeKitchenOrderTypeLabel,
+  type KitchenOrder,
+} from "@/services/kitchenOrderService";
 
 // Chef Menu Component
 const ChefMenu = () => {
@@ -71,10 +83,16 @@ const ChefMenu = () => {
         window.open('https://wa.me/5511999999999', '_blank');
         break;
       case 'logout':
+        clearSession();
+        localStorage.removeItem("token");
         navigate('/');
         break;
     }
   };
+
+  const session = useMemo(() => loadSession(), []);
+  const chefName = (session?.user?.nome as string | undefined) ?? (session?.user?.name as string | undefined) ?? "Chef";
+  const chefPhotoUrl = getUserPhotoUrl(session?.user);
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-tyt-yellow-500 border-b border-tyt-yellow-600 px-4 py-4 z-50">
@@ -94,15 +112,20 @@ const ChefMenu = () => {
               {/* Chef Profile Card */}
               <div className="mt-3 p-3 bg-gray-50 rounded-lg border flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img 
-                      src={chefProfile} 
-                      alt="Foto de perfil do Chef Roberto" 
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                    {chefPhotoUrl ? (
+                      <img 
+                        src={chefPhotoUrl} 
+                        alt={`Foto de perfil do Chef ${chefName}`} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-400" />
+                    )}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800 text-sm">Chef Roberto Silva</h4>
+                    <h4 className="font-semibold text-gray-800 text-sm">{chefName}</h4>
                     <p className="text-xs text-gray-600">Bem-vindo!</p>
                   </div>
                 </div>
@@ -136,6 +159,7 @@ const ChefMenu = () => {
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-base hover:bg-gray-100"
+                  disabled
                   onClick={() => handleMenuAction('pagamentos')}
                 >
                   <DollarSign className="w-5 h-5 mr-3" />
@@ -212,6 +236,29 @@ const OrdemDeCozinha = () => {
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [isReceiptSent, setIsReceiptSent] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [kitchenOrder, setKitchenOrder] = useState<KitchenOrder | null>(null);
+
+  useEffect(() => {
+    const session = loadSession();
+    if (!session?.token || !id) {
+      setIsLoading(false);
+      return;
+    }
+    getKitchenOrderByCode({ token: session.token, code: id })
+      .then((data) => {
+        if (data && typeof data === "object") {
+          setKitchenOrder(data as KitchenOrder);
+        }
+      })
+      .catch(() => {
+        toast({ title: "Erro", description: "Não foi possível carregar a ordem", variant: "destructive" });
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [id, toast]);
+
   // Função para formatar valor como moeda brasileira
   const formatCurrency = (value: string) => {
     // Remove tudo que não é número
@@ -283,7 +330,7 @@ const OrdemDeCozinha = () => {
   // Mock data for the order
   const clientPhotos = {
     male: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    female: mariaProfile
+    female: ""
   };
 
   // Mock dish images
@@ -324,149 +371,7 @@ const OrdemDeCozinha = () => {
     "Panna Cotta": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=300&h=200&fit=crop"
   };
 
-  // Mock orders database - matching agenda items
-  const ordersDatabase: Record<string, any> = {
-    "1": {
-      type: "Cozinha Semanal",
-      date: "2025-01-05",
-      time: "10:00",
-      duration: "2h",
-      location: "Pinheiros - São Paulo - SP",
-      address: "Rua dos Pinheiros, 456 - Pinheiros, São Paulo - SP",
-      people: 3,
-      client: { name: "Carlos Lima", photo: clientPhotos.male, phone: "(11) 66666-6666", email: "carlos.lima@email.com" },
-      status: "confirmado",
-      menu: ["Salmão Grelhado com Aspargos", "Risotto de Camarão", "Salada Mediterranean"],
-      observations: "Preferência por temperos suaves.",
-      budget: "R$ 380,00"
-    },
-    "2": {
-      type: "Evento",
-      date: "2025-01-09",
-      time: "19:00",
-      duration: "5h",
-      location: "Moema - São Paulo - SP",
-      address: "Av. Ibirapuera, 2300 - Moema, São Paulo - SP",
-      people: 25,
-      client: { name: "João Santos", photo: clientPhotos.male, phone: "(11) 88888-8888", email: "joao.santos@email.com" },
-      status: "pendente",
-      menu: ["Paella Valenciana", "Gazpacho Andaluz", "Crema Catalana", "Tapas Variadas"],
-      observations: "Evento de aniversário. Cliente prefere culinária espanhola.",
-      budget: "R$ 2.800,00"
-    },
-    "3": {
-      type: "Serviço Especial",
-      date: "2025-01-12",
-      time: "12:00",
-      duration: "4h",
-      location: "Jardins - São Paulo - SP",
-      address: "Rua Augusta, 1200 - Jardins, São Paulo - SP",
-      people: 8,
-      client: { name: "Ana Costa", photo: clientPhotos.female, phone: "(11) 77777-7777", email: "ana.costa@email.com" },
-      status: "confirmado",
-      menu: ["Picanha na Brasa", "Vinagrete", "Farofa Especial", "Pavê de Chocolate"],
-      observations: "Jantar de confraternização. Cliente gosta de churrasco.",
-      budget: "R$ 850,00"
-    },
-    "4": {
-      type: "Cozinha Semanal",
-      date: "2025-01-12",
-      time: "16:00",
-      duration: "2h",
-      location: "Vila Madalena - São Paulo - SP",
-      address: "Rua Harmonia, 123 - Vila Madalena, São Paulo - SP",
-      people: 4,
-      client: { name: "Maria Silva", photo: clientPhotos.female, phone: "(11) 99999-9999", email: "maria.silva@email.com" },
-      status: "confirmado",
-      menu: ["Salmão Grelhado com Aspargos", "Risotto de Camarão", "Salada Mediterranean", "Torta de Limão"],
-      observations: "Cliente é alérgica a amendoim. Preferência por temperos suaves.",
-      budget: "R$ 450,00"
-    },
-    "5": {
-      type: "Evento",
-      date: "2025-01-18",
-      time: "18:00",
-      duration: "4h",
-      location: "Ibirapuera - São Paulo - SP",
-      address: "Av. Pedro Álvares Cabral, 1500 - Ibirapuera, São Paulo - SP",
-      people: 40,
-      client: { name: "Patricia Oliveira", photo: clientPhotos.female, phone: "(11) 55555-5555", email: "patricia.oliveira@email.com" },
-      status: "confirmado",
-      menu: ["Lasanha Bolonhesa", "Bruschetta", "Tiramisu", "Carpaccio"],
-      observations: "Jantar corporativo. Cliente gosta de culinária italiana.",
-      budget: "R$ 3.500,00"
-    },
-    "6": {
-      type: "Cozinha Semanal",
-      date: "2025-01-22",
-      time: "09:00",
-      duration: "3h",
-      location: "Brooklin - São Paulo - SP",
-      address: "Av. Santo Amaro, 5000 - Brooklin, São Paulo - SP",
-      people: 5,
-      client: { name: "Roberto Ferreira", photo: clientPhotos.male, phone: "(11) 44444-4444", email: "roberto.ferreira@email.com" },
-      status: "pendente",
-      menu: ["Frango Grelhado", "Legumes no Vapor", "Arroz Integral", "Salada Verde"],
-      observations: "Cliente segue dieta low-carb.",
-      budget: "R$ 420,00"
-    },
-    "7": {
-      type: "Serviço Especial",
-      date: "2025-01-25",
-      time: "15:00",
-      duration: "3h",
-      location: "Vila Olímpia - São Paulo - SP",
-      address: "Rua Funchal, 500 - Vila Olímpia, São Paulo - SP",
-      people: 12,
-      client: { name: "Sandra Mendes", photo: clientPhotos.female, phone: "(11) 33333-3333", email: "sandra.mendes@email.com" },
-      status: "confirmado",
-      menu: ["Sushi Variado", "Sashimi", "Temaki", "Yakisoba"],
-      observations: "Jantar especial de comemoração.",
-      budget: "R$ 1.200,00"
-    },
-    "8": {
-      type: "Evento",
-      date: "2025-01-28",
-      time: "20:00",
-      duration: "6h",
-      location: "Moema - São Paulo - SP",
-      address: "Rua Vieira de Morais, 800 - Moema, São Paulo - SP",
-      people: 50,
-      client: { name: "Fernando Alves", photo: clientPhotos.male, phone: "(11) 22222-2222", email: "fernando.alves@email.com" },
-      status: "confirmado",
-      menu: ["Buffet Completo", "Carnes Variadas", "Massas", "Sobremesas"],
-      observations: "Casamento. Preferência por buffet variado.",
-      budget: "R$ 5.000,00"
-    },
-    "9": {
-      type: "Cozinha Semanal",
-      date: "2025-01-30",
-      time: "11:00",
-      duration: "2h",
-      location: "Perdizes - São Paulo - SP",
-      address: "Rua Turiassu, 300 - Perdizes, São Paulo - SP",
-      people: 2,
-      client: { name: "Lucia Santos", photo: clientPhotos.female, phone: "(11) 11111-1111", email: "lucia.santos@email.com" },
-      status: "pendente",
-      menu: ["Peixe Grelhado", "Quinoa com Legumes", "Salada de Folhas"],
-      observations: "Cliente vegetariana.",
-      budget: "R$ 320,00"
-    },
-    "10": {
-      type: "Serviço Especial",
-      date: "2025-01-15",
-      time: "14:00",
-      duration: "3h",
-      location: "Itaim Bibi - São Paulo - SP",
-      address: "Av. Brigadeiro Faria Lima, 3000 - Itaim Bibi, São Paulo - SP",
-      people: 10,
-      client: { name: "Ricardo Martins", photo: clientPhotos.male, phone: "(11) 98888-7777", email: "ricardo.martins@email.com" },
-      status: "pendente",
-      menu: ["Massa Fresca ao Molho Pesto", "Carpaccio", "Burrata", "Panna Cotta"],
-      observations: "Almoço de negócios. Cliente aprecia culinária italiana.",
-      budget: "R$ 980,00"
-    }
-  };
+
 
   const toggleCheckItem = (index: number) => {
     setCheckedItems(prev => ({
@@ -484,7 +389,6 @@ const OrdemDeCozinha = () => {
     return `${start}****${end}`;
   };
 
-  // Function to mask email
   const maskEmail = (email: string) => {
     const [username, domain] = email.split('@');
     if (!username || !domain) return email;
@@ -497,35 +401,46 @@ const OrdemDeCozinha = () => {
     return `${maskedUsername}@${domain}`;
   };
 
-  // Get order by ID or use default
-  const ordem = ordersDatabase[id || "1"] ? {
-    id: id || "1",
-    ...ordersDatabase[id || "1"]
-  } : {
-    id: id || "1",
-    type: "Cozinha Semanal",
-    date: "2025-01-27",
-    time: "14:00",
-    duration: "3h",
-    location: "Vila Madalena - São Paulo - SP",
-    address: "Rua Harmonia, 123 - Vila Madalena, São Paulo - SP",
-    people: 4,
-    client: {
-      name: "Maria Silva",
-      photo: clientPhotos.female,
-      phone: "(11) 99999-9999",
-      email: "maria.silva@email.com"
-    },
-    status: "confirmado",
-    menu: [
-      "Salmão Grelhado com Aspargos",
-      "Risotto de Camarão",
-      "Salada Mediterranean",
-      "Torta de Limão"
-    ],
-    observations: "Cliente é alérgica a amendoim. Preferência por temperos suaves.",
-    budget: "R$ 450,00"
-  };
+  const ordem = useMemo(() => {
+    if (!kitchenOrder) return null;
+    const type = normalizeKitchenOrderTypeLabel(kitchenOrder);
+    const dateObj = getKitchenOrderDate(kitchenOrder);
+    const date = dateObj ? dateObj.toISOString() : new Date().toISOString();
+    const time = getKitchenOrderTime(kitchenOrder);
+    const client = getKitchenOrderClient(kitchenOrder);
+    const status = normalizeKitchenOrderStatusLabel(kitchenOrder);
+    const address = getKitchenOrderLocation(kitchenOrder);
+
+    return {
+      id: kitchenOrder.id || id,
+      type,
+      date,
+      time,
+      duration: "3h",
+      location: address,
+      address: address,
+      people: (kitchenOrder.people_quantity as number) || 4,
+      client: {
+        ...client,
+        phone: (kitchenOrder.client_phone as string) || "(11) 99999-9999",
+        email: (kitchenOrder.client_email as string) || "cliente@email.com",
+      },
+      status,
+      menu: Array.isArray(kitchenOrder.dishes) 
+        ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? (d.dish as Record<string, unknown>)?.name as string : "Prato")
+        : ["Menu Personalizado"],
+      observations: (kitchenOrder.observations as string) || (kitchenOrder.client_request as string) || "Sem observações adicionais.",
+      budget: "R$ 0,00"
+    };
+  }, [kitchenOrder, id]);
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Carregando...</div>;
+  }
+
+  if (!ordem) {
+    return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Ordem não encontrada</div>;
+  }
 
   // Dynamic shopping list based on menu
   const shoppingList = ordem.menu.length > 3 ? [
@@ -621,7 +536,7 @@ const OrdemDeCozinha = () => {
                       {ordem.status}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600 font-normal">#{ordem.id}</p>
+                  <p className="text-sm text-gray-600 font-normal">#{String(ordem.id)}</p>
                 </div>
               </CardTitle>
             </CardHeader>

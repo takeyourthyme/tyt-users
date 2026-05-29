@@ -16,13 +16,13 @@ import {
   ClipboardList,
   AlertCircle,
   Settings,
-  Wallet
+  Wallet,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
-import chefProfile from "@/assets/chef-roberto.jpg";
 import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
 import { clearSession, loadSession } from "@/services/authService";
@@ -74,6 +74,7 @@ const ChefMenu = () => {
         navigate('/servicos-ativos');
         break;
       case 'pagamentos':
+        navigate('/meus-pagamentos');
         break;
       case 'editar-cadastro':
         navigate('/editar-cadastro-chef');
@@ -109,16 +110,20 @@ const ChefMenu = () => {
               {/* Chef Profile Card */}
               <div className="mt-3 p-3 bg-gray-50 rounded-lg border flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img
-                      src={chefPhotoUrl ?? chefProfile}
-                      alt={`Foto de perfil do Chef ${chefName}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = chefProfile;
-                      }}
-                    />
-                  </div>
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                      {chefPhotoUrl ? (
+                        <img
+                          src={chefPhotoUrl}
+                          alt={`Foto de perfil do Chef ${chefName}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <User className="w-6 h-6 text-gray-400" />
+                      )}
+                    </div>
                   <div>
                     <h4 className="font-semibold text-gray-800 text-sm">{chefName}</h4>
                     <p className="text-xs text-gray-600">Bem-vindo!</p>
@@ -212,7 +217,7 @@ const ChefMenu = () => {
 const DashboardChef = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [chefUser, setChefUser] = useState<Record<string, unknown> | null>(null);
+  const [chefUser, setChefUser] = useState<Record<string, unknown> | null>(() => loadSession()?.user ?? null);
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
 
   // Function to get greeting based on time
@@ -262,7 +267,7 @@ const DashboardChef = () => {
           description: "Tente novamente em instantes.",
         });
       });
-  }, []);
+  }, [toast]);
 
   const chefName = (chefUser?.nome as string | undefined) ?? (chefUser?.name as string | undefined) ?? "Chef";
   const chefFirstName = chefName.split(" ")[0] ?? "Chef";
@@ -381,14 +386,18 @@ const DashboardChef = () => {
           <div className="flex items-start gap-4">
             {/* Profile Photo */}
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center shadow-md flex-shrink-0">
-              <img
-                src={chefPhotoUrl ?? chefProfile}
-                alt={`Foto de perfil do Chef ${chefFirstName}`}
-                className="w-16 h-16 rounded-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = chefProfile;
-                }}
-              />
+              {chefPhotoUrl ? (
+                <img
+                  src={chefPhotoUrl}
+                  alt={`Foto de perfil do Chef ${chefFirstName}`}
+                  className="w-16 h-16 rounded-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <User className="w-8 h-8 text-gray-400" />
+              )}
             </div>
 
             {/* Welcome and Stats */}

@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Calendar, 
-  ChefHat, 
+import {
+  Calendar,
+  ChefHat,
   Clock,
   MapPin,
   User,
@@ -29,11 +29,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import chefProfile from "@/assets/chef-roberto.jpg";
 import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
-import mariaProfile from "@/assets/maria-profile.jpg";
-import { loadSession } from "@/services/authService";
+import { clearSession, loadSession } from "@/services/authService";
 import {
   getKitchenOrderClient,
   getKitchenOrderDate,
@@ -42,8 +40,10 @@ import {
   listKitchenOrders,
   normalizeKitchenOrderStatusLabel,
   normalizeKitchenOrderTypeLabel,
+  getKitchenOrderCode,
   type KitchenOrder,
 } from "@/services/kitchenOrderService";
+import { getUserPhotoUrl } from "@/services/userService";
 
 // Chef Menu Component
 const ChefMenu = ({ hasActiveFilter = false, onGoAgenda }: { hasActiveFilter?: boolean; onGoAgenda?: () => void }) => {
@@ -79,10 +79,17 @@ const ChefMenu = ({ hasActiveFilter = false, onGoAgenda }: { hasActiveFilter?: b
         window.open('https://wa.me/5511999999999', '_blank');
         break;
       case 'logout':
+        clearSession();
+        localStorage.removeItem("token");
         navigate('/');
         break;
     }
   };
+
+  const session = useMemo(() => loadSession(), []);
+  const chefName = (session?.user?.nome as string | undefined) ?? (session?.user?.name as string | undefined) ?? "Chef";
+  const chefPhotoUrl = getUserPhotoUrl(session?.user);
+
   return (
     <div className="fixed top-0 left-0 right-0 bg-tyt-yellow-500 border-b border-tyt-yellow-600 px-4 py-4 z-50">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -101,15 +108,22 @@ const ChefMenu = ({ hasActiveFilter = false, onGoAgenda }: { hasActiveFilter?: b
               {/* Chef Profile Card */}
               <div className="mt-3 p-3 bg-gray-50 rounded-lg border flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img 
-                      src={chefProfile} 
-                      alt="Foto de perfil do Chef Roberto" 
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                    {chefPhotoUrl ? (
+                      <img
+                        src={chefPhotoUrl}
+                        alt={`Foto de perfil do Chef ${chefName}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-400" />
+                    )}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800 text-sm">Chef Roberto Silva</h4>
+                    <h4 className="font-semibold text-gray-800 text-sm">{chefName}</h4>
                     <p className="text-xs text-gray-600">Bem-vindo!</p>
                   </div>
                 </div>
@@ -126,7 +140,7 @@ const ChefMenu = ({ hasActiveFilter = false, onGoAgenda }: { hasActiveFilter?: b
                 </Button>
                 <Button
                   variant={hasActiveFilter ? "ghost" : "default"}
-                  className={hasActiveFilter 
+                  className={hasActiveFilter
                     ? "w-full justify-start h-12 text-base hover:bg-gray-100"
                     : "w-full justify-start h-12 text-base bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
                   }
@@ -146,6 +160,7 @@ const ChefMenu = ({ hasActiveFilter = false, onGoAgenda }: { hasActiveFilter?: b
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-base hover:bg-gray-100"
+                  disabled
                   onClick={() => handleMenuAction('pagamentos')}
                 >
                   <DollarSign className="w-5 h-5 mr-3" />
@@ -187,18 +202,18 @@ const ChefMenu = ({ hasActiveFilter = false, onGoAgenda }: { hasActiveFilter?: b
 
               {/* Logo no final do menu */}
               <div className="mt-3 pt-3 border-t border-gray-200 flex justify-center flex-shrink-0">
-                <img 
-                  src={logoCompleta} 
-                  alt="Logo Take Your Thyme" 
+                <img
+                  src={logoCompleta}
+                  alt="Logo Take Your Thyme"
                   className="h-6 w-auto opacity-80"
                 />
               </div>
             </SheetContent>
           </Sheet>
-          
-          <img 
-            src={logoWhite} 
-            alt="Take Your Thyme" 
+
+          <img
+            src={logoWhite}
+            alt="Take Your Thyme"
             className="h-6 w-auto cursor-pointer"
             onClick={() => navigate('/dashboard-chef')}
           />
@@ -256,21 +271,21 @@ const AgendaChef = () => {
       handleGoAgenda();
       return;
     }
-    
+
     if (state?.filter) {
       // Apply filter from navigation state
       setAppliedFilters(prev => ({
         ...prev,
         serviceType: state.filter === "servicos-semanais" ? "Cozinha Semanal" :
-                     state.filter === "eventos" ? "Evento" :
-                     state.filter === "servicos-especiais" ? "Serviço Especial" : "",
+          state.filter === "eventos" ? "Evento" :
+            state.filter === "servicos-especiais" ? "Serviço Especial" : "",
         status: state.filter === "pendentes" ? "confirmado" : "",
         isPendentesFilter: state.filter === "pendentes"
       }));
-      
+
       // Mark that there's an active filter from dashboard
       setHasActiveFilter(true);
-      
+
       // Update section title based on filter
       if (state.filter === "servicos-semanais") {
         setSectionTitle("Serviços Semanais");
@@ -285,7 +300,7 @@ const AgendaChef = () => {
       setSectionTitle("Próximos Compromissos");
       setHasActiveFilter(false);
     }
-    
+
     if (window.location.hash === '#proximos-compromissos' || state?.scrollTo === 'proximos-compromissos') {
       setTimeout(() => {
         const element = document.getElementById('proximos-compromissos');
@@ -296,7 +311,7 @@ const AgendaChef = () => {
     }
   }, [location]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const session = loadSession();
     if (!session?.token) return;
     listKitchenOrders({ token: session.token })
@@ -312,26 +327,24 @@ const AgendaChef = () => {
           description: "Tente novamente em instantes.",
         });
       });
-  }, []);
+  }, [toast]);
 
-  const fallbackClientPhoto = mariaProfile;
   const toYMD = (d: Date) => format(d, "yyyy-MM-dd");
 
   const agendaItems = useMemo(() => {
     return kitchenOrders
       .map((order) => {
-        const idRaw = order.id as number | string | undefined;
-        const id = typeof idRaw === "number" ? idRaw : Number(idRaw);
+        const id = getKitchenOrderCode(order);
         const dateObj = getKitchenOrderDate(order);
         const date = dateObj ? toYMD(dateObj) : toYMD(new Date());
         const time = getKitchenOrderTime(order);
-        const client = getKitchenOrderClient(order, fallbackClientPhoto);
+        const client = getKitchenOrderClient(order);
         const type = normalizeKitchenOrderTypeLabel(order);
         const status = normalizeKitchenOrderStatusLabel(order);
         const location = getKitchenOrderLocation(order) || "—";
 
         return {
-          id: Number.isFinite(id) ? id : Math.floor(Math.random() * 1000000),
+          id,
           type,
           date,
           time,
@@ -363,25 +376,25 @@ const AgendaChef = () => {
   // Filter events based on applied filters and quick search
   const filteredAgendaItems = agendaItems.filter(item => {
     // Quick search term filter (dynamic)
-    const matchesQuickSearch = !searchTerm || 
+    const matchesQuickSearch = !searchTerm ||
       item.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     // Advanced filters (only applied when user clicks search)
-    const matchesClientName = !appliedFilters.clientName || 
+    const matchesClientName = !appliedFilters.clientName ||
       item.client.name.toLowerCase().includes(appliedFilters.clientName.toLowerCase());
-    
+
     const matchesDateRange = (!appliedFilters.dateRange.start || item.date >= appliedFilters.dateRange.start) &&
       (!appliedFilters.dateRange.end || item.date <= appliedFilters.dateRange.end);
-    
+
     const matchesServiceType = !appliedFilters.serviceType || item.type === appliedFilters.serviceType;
-    
+
     const matchesStatus = !appliedFilters.status || item.status === appliedFilters.status;
-    
+
     // Special filter for "Pendentes de Comprovante": exclude "Serviço Especial"
     const isPendentesFilterValid = !appliedFilters.isPendentesFilter || item.type !== "Serviço Especial";
-    
+
     return matchesQuickSearch && matchesClientName && matchesDateRange && matchesServiceType && matchesStatus && isPendentesFilterValid;
   }).sort((a, b) => {
     // Sort by status: pendentes first, then confirmados
@@ -442,7 +455,7 @@ const AgendaChef = () => {
   };
 
   // Função para determinar a rota de destino baseado no filtro ativo
-  const getOrderRoute = (itemId: number) => {
+  const getOrderRoute = (itemId: string) => {
     if (appliedFilters.isPendentesFilter) {
       return `/ordem-pendente/${itemId}`;
     }
@@ -534,13 +547,13 @@ const AgendaChef = () => {
                           <div className="hidden md:flex items-center justify-between">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                                <img 
-                                  src={item.client.photo} 
+                                <img
+                                  src={item.client.photo}
                                   alt={item.client.name}
                                   className="w-full h-full object-cover"
                                 />
                               </div>
-                              
+
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="font-medium text-gray-800 text-sm truncate">{item.type}</span>
@@ -548,7 +561,7 @@ const AgendaChef = () => {
                                     {item.status}
                                   </Badge>
                                 </div>
-                                
+
                                 <div className="text-xs text-gray-600 space-y-0.5">
                                   <div className="flex items-center gap-1">
                                     <Clock className="w-3 h-3 flex-shrink-0" />
@@ -561,9 +574,9 @@ const AgendaChef = () => {
                                 </div>
                               </div>
                             </div>
-                            
-                            <Button 
-                              size="sm" 
+
+                            <Button
+                              size="sm"
                               variant="outline"
                               className="p-2 h-8 w-8 flex-shrink-0"
                               onClick={(e) => {
@@ -581,7 +594,7 @@ const AgendaChef = () => {
                               <div className={`w-8 h-8 ${getServiceColor(item.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
                                 <IconComponent className="w-4 h-4 text-white" />
                               </div>
-                              
+
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="font-medium text-gray-800 text-sm">{item.type}</span>
@@ -589,7 +602,7 @@ const AgendaChef = () => {
                                     {item.status}
                                   </Badge>
                                 </div>
-                                
+
                                 <div className="text-xs text-gray-600 space-y-0.5">
                                   <div className="flex items-center gap-1">
                                     <Clock className="w-3 h-3 flex-shrink-0" />
@@ -598,20 +611,20 @@ const AgendaChef = () => {
                                 </div>
                               </div>
                             </div>
-                            
+
                             {/* Client info and button below on mobile */}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <img 
-                                  src={item.client.photo} 
+                                <img
+                                  src={item.client.photo}
                                   alt={item.client.name}
                                   className="w-6 h-6 rounded-full object-cover"
                                 />
                                 <span className="text-sm text-gray-700 font-medium">{item.client.name}</span>
                               </div>
-                              
-                              <Button 
-                                size="sm" 
+
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 className="px-2 py-1 h-auto text-xs"
                                 onClick={(e) => {
@@ -641,7 +654,7 @@ const AgendaChef = () => {
               {sectionTitle}
             </h3>
           </div>
-          
+
           {/* Search Bar */}
           <div className="space-y-2">
             <div className="flex gap-2">
@@ -662,7 +675,7 @@ const AgendaChef = () => {
                 </CollapsibleTrigger>
               </Collapsible>
             </div>
-            
+
             <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
               <CollapsibleContent className="bg-white border rounded-lg shadow-sm p-4 space-y-3 mt-2">
                 <div>
@@ -670,18 +683,18 @@ const AgendaChef = () => {
                   <Input
                     placeholder="Digite o nome do cliente..."
                     value={filters.clientName}
-                    onChange={(e) => setFilters({...filters, clientName: e.target.value})}
+                    onChange={(e) => setFilters({ ...filters, clientName: e.target.value })}
                     className="mt-1"
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-sm font-medium text-gray-700">Data Início</label>
                     <Input
                       type="date"
                       value={filters.dateRange.start}
-                      onChange={(e) => setFilters({...filters, dateRange: {...filters.dateRange, start: e.target.value}})}
+                      onChange={(e) => setFilters({ ...filters, dateRange: { ...filters.dateRange, start: e.target.value } })}
                       className="mt-1"
                     />
                   </div>
@@ -690,15 +703,15 @@ const AgendaChef = () => {
                     <Input
                       type="date"
                       value={filters.dateRange.end}
-                      onChange={(e) => setFilters({...filters, dateRange: {...filters.dateRange, end: e.target.value}})}
+                      onChange={(e) => setFilters({ ...filters, dateRange: { ...filters.dateRange, end: e.target.value } })}
                       className="mt-1"
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-gray-700">Tipo de Serviço</label>
-                  <Select value={filters.serviceType} onValueChange={(value) => setFilters({...filters, serviceType: value})}>
+                  <Select value={filters.serviceType} onValueChange={(value) => setFilters({ ...filters, serviceType: value })}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Selecione o tipo..." />
                     </SelectTrigger>
@@ -709,10 +722,10 @@ const AgendaChef = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-gray-700">Status</label>
-                  <Select value={filters.status} onValueChange={(value) => setFilters({...filters, status: value})}>
+                  <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Selecione o status..." />
                     </SelectTrigger>
@@ -722,8 +735,8 @@ const AgendaChef = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
-                <Button 
+
+                <Button
                   onClick={handleAdvancedSearch}
                   className="w-full"
                 >
@@ -745,7 +758,7 @@ const AgendaChef = () => {
                         <div className={`w-10 h-10 ${getServiceColor(item.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
                           <IconComponent className="w-5 h-5 text-white" />
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-800">{item.type}</span>
@@ -753,7 +766,7 @@ const AgendaChef = () => {
                               {item.status}
                             </Badge>
                           </div>
-                          
+
                           <div className="space-y-1 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -765,20 +778,20 @@ const AgendaChef = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Client info on the right side */}
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <img 
-                            src={item.client.photo} 
+                          <img
+                            src={item.client.photo}
                             alt={item.client.name}
                             className="w-8 h-8 rounded-full object-cover"
                           />
                           <span className="text-sm text-gray-700 font-medium">{item.client.name}</span>
                         </div>
                       </div>
-                      
-                      <Button 
-                        size="sm" 
+
+                      <Button
+                        size="sm"
                         variant="outline"
                         className="p-2 h-8 w-8 flex-shrink-0"
                         onClick={(e) => {
@@ -796,7 +809,7 @@ const AgendaChef = () => {
                         <div className={`w-10 h-10 ${getServiceColor(item.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
                           <IconComponent className="w-5 h-5 text-white" />
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-800">{item.type}</span>
@@ -804,7 +817,7 @@ const AgendaChef = () => {
                               {item.status}
                             </Badge>
                           </div>
-                          
+
                           <div className="space-y-1 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -817,20 +830,20 @@ const AgendaChef = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Client info and button below on mobile */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={item.client.photo} 
+                          <img
+                            src={item.client.photo}
                             alt={item.client.name}
                             className="w-7 h-7 rounded-full object-cover"
                           />
                           <span className="text-sm text-gray-700 font-medium">{item.client.name}</span>
                         </div>
-                        
-                        <Button 
-                          size="sm" 
+
+                        <Button
+                          size="sm"
                           variant="outline"
                           className="px-3 py-1 h-auto text-xs"
                           onClick={(e) => {

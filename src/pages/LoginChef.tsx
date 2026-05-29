@@ -4,14 +4,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { isAxiosError } from "axios";
-import { ArrowLeft, MessageCircle, ChefHat } from "lucide-react";
+import { ArrowLeft, MessageCircle, ChefHat, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import LogoText from "@/components/LogoText";
-import { login, parseLoginResponse, saveSession } from "@/services/authService";
+import { login, parseLoginResponse, saveSession, clearSession } from "@/services/authService";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -38,6 +38,20 @@ const LoginChef = () => {
       setIsSubmitting(true);
       const response = await login({ email: data.email.trim(), password: data.password });
       const session = parseLoginResponse(response);
+
+      const userType = session.user?.tipo_usuario || session.user?.tipoUsuario;
+      if (userType && userType !== "chef") {
+        clearSession();
+        toast({
+          variant: "destructive",
+          title: "Erro de acesso",
+          description: userType === "cliente"
+            ? "Esta conta pertence a um Cliente. Por favor, acesse a área de login para Clientes."
+            : "Esta área de login é exclusiva para Chefs.",
+        });
+        return;
+      }
+
       saveSession(session);
 
       toast({
@@ -150,6 +164,14 @@ const LoginChef = () => {
               </Form>
 
               <div className="mt-8 pt-6 border-t text-center space-y-4">
+                <Link
+                  to="/esqueci-senha"
+                  className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                  Esqueci minha senha
+                </Link>
+
                 <p className="text-sm text-gray-600">
                   Precisa de ajuda?
                 </p>

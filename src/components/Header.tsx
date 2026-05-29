@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useState } from "react";
 import { User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,9 +14,7 @@ const Header = () => {
     <header className="w-full bg-background border-b border-border fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
-          <LogoText variant="dark" />
-        </Link>
+        <LogoText variant="dark" />
       </div>
     </header>
   );

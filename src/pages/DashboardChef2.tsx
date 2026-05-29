@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Calendar, 
@@ -33,10 +33,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import chefProfile from "@/assets/chef-roberto.jpg";
+import { useToast } from "@/hooks/use-toast";
 import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
-import mariaProfile from "@/assets/maria-profile.jpg";
+import { loadSession, clearSession } from "@/services/authService";
+import { getUserPhotoUrl } from "@/services/userService";
 
 // Chef Menu Component - Different from client menu
 const ChefMenu = () => {
@@ -63,10 +64,16 @@ const ChefMenu = () => {
         window.open('https://wa.me/5511999999999', '_blank');
         break;
       case 'logout':
+        clearSession();
+        localStorage.removeItem("token");
         navigate('/');
         break;
     }
   };
+
+  const session = useMemo(() => loadSession(), []);
+  const chefName = (session?.user?.nome as string | undefined) ?? (session?.user?.name as string | undefined) ?? "Chef";
+  const chefPhotoUrl = getUserPhotoUrl(session?.user);
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-tyt-yellow-500 border-b border-tyt-yellow-600 px-4 py-4 z-50">
@@ -86,15 +93,20 @@ const ChefMenu = () => {
               {/* Chef Profile Card */}
               <div className="mt-3 p-3 bg-gray-50 rounded-lg border flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img 
-                      src={chefProfile} 
-                      alt="Foto de perfil do Chef Roberto" 
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                    {chefPhotoUrl ? (
+                      <img 
+                        src={chefPhotoUrl} 
+                        alt={`Foto de perfil do Chef ${chefName}`} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-400" />
+                    )}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800 text-sm">Chef Roberto Silva</h4>
+                    <h4 className="font-semibold text-gray-800 text-sm">{chefName}</h4>
                     <p className="text-xs text-gray-600">Bem-vindo!</p>
                   </div>
                 </div>
@@ -120,6 +132,7 @@ const ChefMenu = () => {
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-base hover:bg-gray-100"
+                  disabled
                   onClick={() => handleMenuAction('pagamentos')}
                 >
                   <DollarSign className="w-5 h-5 mr-3" />
@@ -183,6 +196,10 @@ const ChefMenu = () => {
 
 const DashboardChef = () => {
   const navigate = useNavigate();
+  const session = useMemo(() => loadSession(), []);
+  const chefName = (session?.user?.nome as string | undefined) ?? (session?.user?.name as string | undefined) ?? "Chef";
+  const chefPhotoUrl = getUserPhotoUrl(session?.user);
+
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [receiptValue, setReceiptValue] = useState("");
@@ -209,8 +226,8 @@ const DashboardChef = () => {
 
   // Mock chef data
   const chefData = {
-    firstName: "Roberto",
-    fullName: "Chef Roberto Silva",
+    firstName: chefName.split(' ')[0],
+    fullName: chefName,
     timeWithTYT: "2 meses"
   };
 
@@ -234,7 +251,7 @@ const DashboardChef = () => {
       location: "Vila Madalena - São Paulo - SP",
       client: {
         name: "Maria Silva",
-        photo: mariaProfile
+        photo: ""
       }
     },
     {
@@ -246,7 +263,7 @@ const DashboardChef = () => {
       location: "Moema - São Paulo - SP",
       client: {
         name: "João Santos",
-        photo: mariaProfile
+        photo: ""
       }
     }
   ];
@@ -262,7 +279,7 @@ const DashboardChef = () => {
       location: "Jardins - São Paulo - SP",
       client: {
         name: "Ana Costa",
-        photo: mariaProfile
+        photo: ""
       }
     },
     {
@@ -274,7 +291,7 @@ const DashboardChef = () => {
       location: "Pinheiros - São Paulo - SP",
       client: {
         name: "Carlos Lima",
-        photo: mariaProfile
+        photo: ""
       }
     }
   ];
@@ -290,7 +307,7 @@ const DashboardChef = () => {
       location: "Vila Madalena - São Paulo - SP",
       client: {
         name: "Maria Silva",
-        photo: mariaProfile
+        photo: ""
       }
     },
     {
@@ -302,7 +319,7 @@ const DashboardChef = () => {
       location: "Moema - São Paulo - SP",
       client: {
         name: "João Santos",
-        photo: mariaProfile
+        photo: ""
       }
     }
   ];
@@ -318,7 +335,7 @@ const DashboardChef = () => {
       location: "Vila Madalena - São Paulo - SP",
       client: {
         name: "Maria Silva",
-        photo: mariaProfile
+        photo: ""
       }
     },
     {
@@ -330,7 +347,7 @@ const DashboardChef = () => {
       location: "Jardins - São Paulo - SP",
       client: {
         name: "Ana Costa",
-        photo: mariaProfile
+        photo: ""
       }
     },
     {
@@ -342,7 +359,7 @@ const DashboardChef = () => {
       location: "Moema - São Paulo - SP",
       client: {
         name: "João Santos",
-        photo: mariaProfile
+        photo: ""
       }
     }
   ];
@@ -385,34 +402,34 @@ const DashboardChef = () => {
           className="bg-white rounded-lg p-6 border border-gray-200 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
           onClick={() => navigate('/editar-cadastro-chef')}
         >
-          <div className="flex items-start gap-4">
-            {/* Profile Photo */}
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center shadow-md flex-shrink-0">
-              <img src={chefProfile} alt="Foto de perfil do Chef Roberto" className="w-16 h-16 rounded-full object-cover" />
+          <div className="flex items-center gap-4">
+            {chefPhotoUrl ? (
+              <img src={chefPhotoUrl} alt={`Foto de perfil do Chef ${chefName}`} className="w-16 h-16 rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                <User className="w-8 h-8 text-gray-400" />
+              </div>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Olá, {chefName}</h1>
+              <p className="text-gray-600">Aqui está o resumo da sua semana</p>
+            </div>
+          </div>
+          
+          <div className="mt-6 flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-pink-600" />
+              <div>
+                <div className="text-xs text-gray-500">Tempo de TYT</div>
+                <div className="text-sm font-semibold text-gray-800">{chefData.timeWithTYT}</div>
+              </div>
             </div>
             
-            {/* Welcome and Stats */}
-            <div className="flex-1">
-              <h2 className="text-h3 font-semibold text-gray-800 mb-3">
-                {getTimeBasedGreeting()}, {chefData.firstName}! 👨‍🍳
-              </h2>
-              
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-pink-600" />
-                  <div>
-                    <div className="text-xs text-gray-500">Tempo de TYT</div>
-                    <div className="text-sm font-semibold text-gray-800">{chefData.timeWithTYT}</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-purple-600 fill-purple-600" />
-                  <div>
-                    <div className="text-xs text-gray-500">Sua avaliação</div>
-                    <div className="text-sm font-semibold text-gray-800">{stats.avaliacaoMedia}</div>
-                  </div>
-                </div>
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-purple-600 fill-purple-600" />
+              <div>
+                <div className="text-xs text-gray-500">Sua avaliação</div>
+                <div className="text-sm font-semibold text-gray-800">{stats.avaliacaoMedia}</div>
               </div>
             </div>
           </div>
@@ -883,6 +900,7 @@ const DashboardChef = () => {
         <div className="text-center">
           <Button 
             className="bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900 px-8 py-2 w-full"
+            disabled
             onClick={() => navigate('/meus-pagamentos')}
           >
             <DollarSign className="w-4 h-4 mr-2" />
