@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, FileText, Eye, Calendar, ChefHat, CheckCircle, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { loadSession } from "@/services/authService";
 import {
   getKitchenOrderDate,
@@ -32,23 +33,39 @@ const getKitchenOrderCode = (order: KitchenOrder): string => {
 };
 const MeusContratos = () => {
   const navigate = useNavigate();
-  const [filtroAtivo, setFiltroAtivo] = useState("ativos");
+  const [filtroAtivo, setFiltroAtivo] = useState("ativos"); // "ativos" | "pendentes" | "antigos"
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const session = loadSession();
-    if (!session?.token) return;
+    if (!session?.token) {
+      setIsLoading(false);
+      return;
+    }
 
+    setIsLoading(true);
     listKitchenOrders({ token: session.token })
       .then((data) => {
-        const orders = Array.isArray(data) ? data : (data as { orders?: unknown })?.orders;
+        const orders = (() => {
+          if (Array.isArray(data)) return data;
+          if (data && typeof data === "object") {
+            const record = data as Record<string, unknown>;
+            const candidates = [record.orders, record.data, record.items, record.results];
+            const list = candidates.find((value) => Array.isArray(value));
+            if (Array.isArray(list)) return list;
+          }
+          return undefined;
+        })();
         if (Array.isArray(orders)) setKitchenOrders(orders as KitchenOrder[]);
       })
-      .catch(() => { });
+      .catch(() => { })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const { activeContracts, pastContracts } = useMemo(() => {
+  const { activeContracts, pendingContracts, pastContracts } = useMemo(() => {
     const active: KitchenOrder[] = [];
+    const pending: KitchenOrder[] = [];
     const past: KitchenOrder[] = [];
 
     kitchenOrders.forEach((order) => {
@@ -57,13 +74,21 @@ const MeusContratos = () => {
         past.push(order);
         return;
       }
+      if (status === "pendente") {
+        pending.push(order);
+        return;
+      }
       active.push(order);
     });
 
-    return { activeContracts: active, pastContracts: past };
+    return { activeContracts: active, pendingContracts: pending, pastContracts: past };
   }, [kitchenOrders]);
 
-  const contratosFiltrados = filtroAtivo === "antigos" ? pastContracts : activeContracts;
+  const contratosFiltrados = useMemo(() => {
+    if (filtroAtivo === "antigos") return pastContracts;
+    if (filtroAtivo === "pendentes") return pendingContracts;
+    return activeContracts;
+  }, [filtroAtivo, activeContracts, pendingContracts, pastContracts]);
 
   const getStatusBadge = (order: KitchenOrder) => {
     const status = normalizeKitchenOrderStatusLabel(order);
@@ -98,90 +123,132 @@ const MeusContratos = () => {
       </div>
 
       {/* Filtros */}
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <Button variant={filtroAtivo === "ativos" ? "default" : "outline"} onClick={() => setFiltroAtivo("ativos")} className="flex-1">
-          Ativos ({activeContracts.length})
+          Ativos ({isLoading ? "..." : activeContracts.length})
+        </Button>
+        <Button variant={filtroAtivo === "pendentes" ? "default" : "outline"} onClick={() => setFiltroAtivo("pendentes")} className="flex-1">
+          Pendentes ({isLoading ? "..." : pendingContracts.length})
         </Button>
         <Button variant={filtroAtivo === "antigos" ? "default" : "outline"} onClick={() => setFiltroAtivo("antigos")} className="flex-1">
-          Antigos ({pastContracts.length})
+          Antigos ({isLoading ? "..." : pastContracts.length})
         </Button>
       </div>
 
       {/* Lista de Contratos */}
       <div className="space-y-4">
-        {contratosFiltrados.map((contrato, index) => {
-          const type = normalizeKitchenOrderTypeLabel(contrato);
-          const code = getKitchenOrderCode(contrato);
-          const date = getKitchenOrderDate(contrato);
-          const time = getKitchenOrderTime(contrato);
-          const location = getKitchenOrderLocation(contrato);
-          const borderClass =
-            type === "Cozinha Semanal" ? "border-green-200" : type === "Evento" ? "border-purple-200" : "border-orange-200";
-
-          return (
-            <Card key={code || `${type}-${index}`} className={`bg-white shadow-md ${borderClass}`}>
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index} className="bg-white shadow-md border-gray-100">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${type === "Cozinha Semanal" ? "bg-green-500" : type === "Evento" ? "bg-purple-500" : "bg-orange-500"}`}>
-                      {type === "Cozinha Semanal" ? <ChefHat className="w-4 h-4 text-white" /> : <Calendar className="w-4 h-4 text-white" />}
-                    </div>
-                    <span className="text-lg text-gray-800">{type}</span>
-                  </CardTitle>
                   <div className="flex items-center gap-2">
-                    {getStatusBadge(contrato)}
+                    <Skeleton className="w-8 h-8 rounded-full" />
+                    <Skeleton className="h-5 w-36" />
                   </div>
+                  <Skeleton className="h-6 w-20" />
                 </div>
-                <div className="text-sm text-gray-500 mt-2">
-                  Referência: #{code || "—"}
-                </div>
+                <Skeleton className="h-4 w-28 mt-2" />
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-500">Data</p>
-                    <p className="font-medium">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-5 w-24" />
                   </div>
-                  <div>
-                    <p className="text-gray-500">Horário</p>
-                    <p className="font-medium">{time || "—"}</p>
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-5 w-16" />
                   </div>
-                  <div>
-                    <p className="text-gray-500">Local</p>
-                    <p className="font-medium">{location || "—"}</p>
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-5 w-48" />
                   </div>
                 </div>
-
                 <Separator />
-
-                {/* Botões de ação */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    variant="outline"
-                    className={`flex-1 ${type === "Cozinha Semanal" ? "border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800" : type === "Evento" ? "border-purple-300 text-purple-700 hover:bg-purple-50 hover:text-purple-800" : "border-orange-300 text-orange-700 hover:bg-orange-50 hover:text-orange-800"}`}
-                    disabled={!code}
-                    onClick={() => navigate(`/detalhes-contrato/${code}`)}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Ver detalhes
-                  </Button>
-                </div>
+                <Skeleton className="h-10 w-full" />
               </CardContent>
             </Card>
-          );
-        })}
+          ))
+        ) : (
+          contratosFiltrados.map((contrato, index) => {
+            const type = normalizeKitchenOrderTypeLabel(contrato);
+            const code = getKitchenOrderCode(contrato);
+            const date = getKitchenOrderDate(contrato);
+            const time = getKitchenOrderTime(contrato);
+            const location = getKitchenOrderLocation(contrato);
+            const borderClass =
+              type === "Cozinha Semanal" ? "border-green-200" : type === "Evento" ? "border-purple-200" : "border-orange-200";
+
+            return (
+              <Card key={code || `${type}-${index}`} className={`bg-white shadow-md ${borderClass}`}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${type === "Cozinha Semanal" ? "bg-green-500" : type === "Evento" ? "bg-purple-500" : "bg-orange-500"}`}>
+                        {type === "Cozinha Semanal" ? <ChefHat className="w-4 h-4 text-white" /> : <Calendar className="w-4 h-4 text-white" />}
+                      </div>
+                      <span className="text-lg text-gray-800">{type}</span>
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(contrato)}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-500 mt-2">
+                    Referência: #{code || "—"}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-500">Data</p>
+                      <p className="font-medium">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Horário</p>
+                      <p className="font-medium">{time || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Local</p>
+                      <p className="font-medium">{location || "—"}</p>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Botões de ação */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      variant="outline"
+                      className={`flex-1 ${type === "Cozinha Semanal" ? "border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800" : type === "Evento" ? "border-purple-300 text-purple-700 hover:bg-purple-50 hover:text-purple-800" : "border-orange-300 text-orange-700 hover:bg-orange-50 hover:text-orange-800"}`}
+                      disabled={!code}
+                      onClick={() => navigate(`/detalhes-contrato/${code}`)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver detalhes
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
 
-      {contratosFiltrados.length === 0 && <Card className="bg-white shadow-md">
+      {!isLoading && contratosFiltrados.length === 0 && <Card className="bg-white shadow-md">
         <CardContent className="p-8 text-center">
           <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            Nenhum contrato {filtroAtivo === "ativos" ? "ativo" : "antigo"} encontrado
+            Nenhum contrato {filtroAtivo === "ativos" ? "ativo" : filtroAtivo === "pendentes" ? "pendente" : "antigo"} encontrado
           </h3>
           <p className="text-gray-600 mb-4">
-            {filtroAtivo === "ativos" ? "Você não possui contratos ativos no momento." : "Você não possui contratos anteriores."}
+            {filtroAtivo === "ativos"
+              ? "Você não possui contratos ativos no momento."
+              : filtroAtivo === "pendentes"
+              ? "Você não possui contratos pendentes no momento."
+              : "Você não possui contratos anteriores."}
           </p>
-          {filtroAtivo === "ativos" && <Button onClick={() => navigate("/dashboard-cliente")}>
+          {(filtroAtivo === "ativos" || filtroAtivo === "pendentes") && <Button onClick={() => navigate("/dashboard-cliente")}>
             Contratar novo serviço
           </Button>}
         </CardContent>

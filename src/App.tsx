@@ -32,6 +32,7 @@ import GerenciarCartoes from "./pages/GerenciarCartoes";
 import Contratacao from "./pages/Contratacao";
 import EsqueciSenha from "./pages/EsqueciSenha";
 import NotFound from "./pages/NotFound";
+import { ClientRoute, ChefRoute, PublicClientRoute, GuestRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -40,34 +41,41 @@ const AppContent = () => {
   
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/login/chef" element={<LoginChef />} />
-      <Route path="/cadastro" element={<Cadastro />} />
-      <Route path="/cadastro-chef" element={<CadastroChef />} />
-      <Route path="/cadastro-chef-sucesso" element={<CadastroChefSucesso />} />
-      <Route path="/editar-cadastro-chef" element={<EditarCadastroChef />} />
-      <Route path="/dashboard-cliente" element={<DashboardCliente />} />
-      <Route path="/dashboard-chef" element={<DashboardChef />} />
-      <Route path="/dashboard-chef2" element={<DashboardChef2 />} />
-      <Route path="/agenda-chef" element={<AgendaChef />} />
-      <Route path="/servicos-ativos" element={<ServicosAtivos />} />
-      <Route path="/ordem-de-cozinha/:id" element={<OrdemDeCozinha />} />
-      <Route path="/ordem-pendente/:id" element={<OrdemPendente />} />
-      <Route path="/servico-detalhes/:id" element={<ServicoDetalhes />} />
-      <Route path="/meus-pagamentos" element={<MeusPagamentos />} />
-      <Route path="/cardapio" element={<Cardapio />} />
-      <Route path="/prato/:id" element={<PratoDetalhes />} />
-      <Route path="/editar-dados" element={<EditarDadosPessoais />} />
-      <Route path="/meus-contratos" element={<MeusContratos />} />
-      <Route path="/detalhes-contrato/:id" element={<DetalheContrato />} />
-      <Route path="/historico-pagamento" element={<HistoricoPagamento />} />
-      {/* <Route path="/gerenciar-cartoes" element={<GerenciarCartoes />} /> */}
-      <Route path="/contratacao" element={<Contratacao />} />
-      <Route path="/contratacao-logado" element={<Contratacao />} />
-      <Route path="/esqueci-senha" element={<EsqueciSenha />} />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
+
+      {/* Guest/Auth Routes */}
+      <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+      <Route path="/login/chef" element={<GuestRoute><LoginChef /></GuestRoute>} />
+      <Route path="/cadastro" element={<GuestRoute><Cadastro /></GuestRoute>} />
+      <Route path="/cadastro-chef" element={<GuestRoute><CadastroChef /></GuestRoute>} />
+      <Route path="/cadastro-chef-sucesso" element={<GuestRoute><CadastroChefSucesso /></GuestRoute>} />
+      <Route path="/esqueci-senha" element={<GuestRoute><EsqueciSenha /></GuestRoute>} />
+
+      {/* Public Client Routes (Blocked for Chefs) */}
+      <Route path="/cardapio" element={<PublicClientRoute><Cardapio /></PublicClientRoute>} />
+      <Route path="/prato/:id" element={<PublicClientRoute><PratoDetalhes /></PublicClientRoute>} />
+      <Route path="/contratacao" element={<PublicClientRoute><Contratacao /></PublicClientRoute>} />
+
+      {/* Protected Client Routes */}
+      <Route path="/dashboard-cliente" element={<ClientRoute><DashboardCliente /></ClientRoute>} />
+      <Route path="/editar-dados" element={<ClientRoute><EditarDadosPessoais /></ClientRoute>} />
+      <Route path="/meus-contratos" element={<ClientRoute><MeusContratos /></ClientRoute>} />
+      <Route path="/detalhes-contrato/:id" element={<ClientRoute><DetalheContrato /></ClientRoute>} />
+      <Route path="/historico-pagamento" element={<ClientRoute><HistoricoPagamento /></ClientRoute>} />
+      <Route path="/contratacao-logado" element={<ClientRoute><Contratacao /></ClientRoute>} />
+
+      {/* Protected Chef Routes */}
+      <Route path="/editar-cadastro-chef" element={<ChefRoute><EditarCadastroChef /></ChefRoute>} />
+      <Route path="/dashboard-chef" element={<ChefRoute><DashboardChef /></ChefRoute>} />
+      <Route path="/dashboard-chef2" element={<ChefRoute><DashboardChef2 /></ChefRoute>} />
+      <Route path="/agenda-chef" element={<ChefRoute><AgendaChef /></ChefRoute>} />
+      <Route path="/servicos-ativos" element={<ChefRoute><ServicosAtivos /></ChefRoute>} />
+      <Route path="/ordem-de-cozinha/:id" element={<ChefRoute><OrdemDeCozinha /></ChefRoute>} />
+      <Route path="/ordem-pendente/:id" element={<ChefRoute><OrdemPendente /></ChefRoute>} />
+      <Route path="/servico-detalhes/:id" element={<ChefRoute><ServicoDetalhes /></ChefRoute>} />
+      <Route path="/meus-pagamentos" element={<ChefRoute><MeusPagamentos /></ChefRoute>} />
     </Routes>
   );
 };

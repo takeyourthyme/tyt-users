@@ -9,6 +9,23 @@ export const apiClient: AxiosInstance = axios.create({
     },
 });
 
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (axios.isAxiosError(error) && error.response) {
+            const { status } = error.response;
+            if (status === 401 || status === 403) {
+                localStorage.removeItem("tyt_access_token");
+                localStorage.removeItem("tyt_user");
+                localStorage.removeItem("auth");
+                localStorage.removeItem("token");
+                window.location.hash = "/login";
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export function createAuthConfig(token?: string): AxiosRequestConfig {
     if (!token) return {};
     return {

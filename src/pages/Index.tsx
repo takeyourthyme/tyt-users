@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChefHat, Users, Info, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
@@ -5,8 +6,22 @@ import Footer from "@/components/Footer";
 import ServiceCard from "@/components/ServiceCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { loadSession } from "@/services/authService";
+
 const Index = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const session = loadSession();
+    if (session?.token && session?.user) {
+      const userType = session.user?.tipo_usuario || session.user?.tipoUsuario;
+      if (userType === "chef") {
+        navigate("/dashboard-chef", { replace: true });
+      } else if (userType === "cliente") {
+        navigate("/dashboard-cliente", { replace: true });
+      }
+    }
+  }, [navigate]);
   const handleClienteClick = () => {
     navigate("/contratacao");
   };

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AppMenu } from "@/components/AppMenu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
 import {
@@ -68,6 +69,7 @@ const DashboardCliente = () => {
   const navigate = useNavigate();
   const [clientUser, setClientUser] = useState<Record<string, unknown> | null>(() => loadSession()?.user ?? null);
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Function to get greeting based on time
   const getTimeBasedGreeting = () => {
@@ -102,8 +104,12 @@ const DashboardCliente = () => {
 
   useEffect(() => {
     const session = loadSession();
-    if (!session?.token) return;
+    if (!session?.token) {
+      setIsLoading(false);
+      return;
+    }
 
+    setIsLoading(true);
     listKitchenOrders({ token: session.token })
       .then((data) => {
         const orders = (() => {
@@ -118,7 +124,8 @@ const DashboardCliente = () => {
         })();
         if (Array.isArray(orders)) setKitchenOrders(orders as KitchenOrder[]);
       })
-      .catch(() => { });
+      .catch(() => { })
+      .finally(() => setIsLoading(false));
   }, []);
 
   const clientName = (clientUser?.nome as string | undefined) ?? (clientUser?.name as string | undefined) ?? "Cliente";
@@ -180,77 +187,114 @@ const DashboardCliente = () => {
       {/* Active Services */}
       <div className="space-y-4">
         <h3 className="text-h4 font-semibold text-gray-800">
-          Serviços Ativos ({activeOrders.length})
+          Serviços Ativos {isLoading ? "" : `(${activeOrders.length})`}
         </h3>
 
-        {Object.entries(activeOrdersByType).map(([typeKey, order]) => {
-          if (!order) return null;
-          const type = typeKey as ReturnType<typeof normalizeKitchenOrderTypeLabel>;
-          const config = typeConfig[type];
-          const status = normalizeKitchenOrderStatusLabel(order);
-          const code = getKitchenOrderCode(order);
-          const date = getKitchenOrderDate(order);
-          const time = getKitchenOrderTime(order);
-          const location = getKitchenOrderLocation(order);
-          const isPending = status === "pendente";
-
-          return (
-            <Card key={code || type} className={`bg-white shadow-md ${config.borderClass}`}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <div className={`w-10 h-10 ${config.iconBgClass} rounded-full flex items-center justify-center flex-shrink-0`}>
-                      <config.icon className="w-5 h-5 text-white" />
+        {isLoading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <Card key={index} className="bg-white shadow-md border-gray-100">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="w-10 h-10 rounded-full" />
+                      <Skeleton className="h-5 w-36" />
                     </div>
-                    <span className="text-gray-800">{config.title}</span>
-                  </CardTitle>
-                  <Badge
-                    variant="outline"
-                    className={
-                      isPending ? "border-orange-300 text-orange-700" : "border-green-300 text-green-700"
-                    }
-                  >
-                    {isPending ? <AlertCircle className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
-                    {isPending ? "Pendente" : "Confirmado"}
-                  </Badge>
-                </div>
-                {code ? (
-                  <div className="text-sm text-gray-500 mt-2">Referência: #{code}</div>
-                ) : null}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-500">Data</p>
-                    <p className="font-medium">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
+                    <Skeleton className="h-6 w-24 rounded-full" />
                   </div>
-                  <div>
-                    <p className="text-gray-500">Horário</p>
-                    <p className="font-medium">{time || "—"}</p>
+                  <Skeleton className="h-4 w-28 mt-2" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-12" />
+                      <Skeleton className="h-5 w-24" />
+                    </div>
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-12" />
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-12" />
+                      <Skeleton className="h-5 w-48" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-500">Local</p>
-                    <p className="font-medium">{location || "—"}</p>
-                  </div>
-                </div>
+                  <Separator />
+                  <Skeleton className="h-10 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          Object.entries(activeOrdersByType).map(([typeKey, order]) => {
+            if (!order) return null;
+            const type = typeKey as ReturnType<typeof normalizeKitchenOrderTypeLabel>;
+            const config = typeConfig[type];
+            const status = normalizeKitchenOrderStatusLabel(order);
+            const code = getKitchenOrderCode(order);
+            const date = getKitchenOrderDate(order);
+            const time = getKitchenOrderTime(order);
+            const location = getKitchenOrderLocation(order);
+            const isPending = status === "pendente";
 
-                <Separator />
+            return (
+              <Card key={code || type} className={`bg-white shadow-md ${config.borderClass}`}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <div className={`w-10 h-10 ${config.iconBgClass} rounded-full flex items-center justify-center flex-shrink-0`}>
+                        <config.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-gray-800">{config.title}</span>
+                    </CardTitle>
+                    <Badge
+                      variant="outline"
+                      className={
+                        isPending ? "border-orange-300 text-orange-700" : "border-green-300 text-green-700"
+                      }
+                    >
+                      {isPending ? <AlertCircle className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
+                      {isPending ? "Pendente" : "Confirmado"}
+                    </Badge>
+                  </div>
+                  {code ? (
+                    <div className="text-sm text-gray-500 mt-2">Referência: #{code}</div>
+                  ) : null}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-500">Data</p>
+                      <p className="font-medium">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Horário</p>
+                      <p className="font-medium">{time || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Local</p>
+                      <p className="font-medium">{location || "—"}</p>
+                    </div>
+                  </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    disabled={!code}
-                    onClick={() => navigate(`/detalhes-contrato/${code}`)}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Ver detalhes
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                  <Separator />
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      disabled={!code}
+                      onClick={() => navigate(`/detalhes-contrato/${code}`)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver detalhes
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
 
       {/* CTAs */}
