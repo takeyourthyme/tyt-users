@@ -25,7 +25,13 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
   onVoltar
 }) => {
   const [quantidadePessoas, setQuantidadePessoas] = useState(dados.quantidadePessoas || 1);
-  const [dataEvento, setDataEvento] = useState<Date>(dados.dataEvento || new Date());
+  const [dataEvento, setDataEvento] = useState<Date>(() => {
+    if (dados.dataEvento) {
+      const parsed = new Date(dados.dataEvento);
+      return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+    return new Date();
+  });
   const [horarioInicio, setHorarioInicio] = useState(dados.horarioInicio || '');
   const [horarioFim, setHorarioFim] = useState(dados.horarioFim || '');
   const [errors, setErrors] = useState<{
@@ -107,15 +113,47 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
               <p className="text-sm text-gray-500">
                 Quando o evento acontecerá.
               </p>
-              <Input type="date" value={dataEvento ? format(dataEvento, "yyyy-MM-dd") : ''} onChange={e => {
-              if (e.target.value) {
-                setDataEvento(new Date(e.target.value));
-                setErrors(prev => ({
-                  ...prev,
-                  dataEvento: false
-                }));
-              }
-            }} min={format(new Date(), "yyyy-MM-dd")} className={cn("h-10 rounded-md border-gray-300 text-gray-900", errors.dataEvento && "border-red-500")} />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal border rounded-md px-3 py-2 text-sm ring-offset-background",
+                      errors.dataEvento ? "border-red-500 text-red-500" : "border-input text-gray-900",
+                      !dataEvento && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dataEvento ? (
+                      format(dataEvento, "PPP", { locale: ptBR })
+                    ) : (
+                      <span>Selecione a data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dataEvento}
+                    onSelect={(date) => {
+                      if (date) {
+                        setDataEvento(date);
+                        setErrors((prev) => ({
+                          ...prev,
+                          dataEvento: false,
+                        }));
+                      }
+                    }}
+                    disabled={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today;
+                    }}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Horário de Início */}

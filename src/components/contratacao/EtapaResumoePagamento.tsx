@@ -9,6 +9,8 @@ import { MapPin, Receipt, User, Info, Home, DollarSign } from "lucide-react";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Props {
   dados: DadosContratacao;
@@ -178,6 +180,29 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                   <span className="font-medium capitalize">{dados.tamanhoPortacao}</span>
                 </div>
               )}
+
+              {dados.dataEvento && (() => {
+                const parsed = new Date(dados.dataEvento);
+                if (Number.isNaN(parsed.getTime())) return null;
+                return (
+                  <div className="flex justify-between">
+                    <span>Data do Serviço:</span>
+                    <span className="font-medium">
+                      {format(parsed, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </span>
+                  </div>
+                );
+              })()}
+
+              {dados.horarioInicio && (
+                <div className="flex justify-between">
+                  <span>Horário:</span>
+                  <span className="font-medium">
+                    {dados.horarioInicio}
+                    {dados.horarioFim ? ` às ${dados.horarioFim}` : ""}
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -230,47 +255,48 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
             </Card>
           )}
 
-          {/* Resumo Financeiro */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <DollarSign className="w-5 h-5" />
-                Resumo Financeiro
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Serviço do Chef:</span>
-                <span className="font-medium">R$ {precoChef.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <div className="flex items-center gap-1">
-                  <span>Compras:</span>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Info className="w-4 h-4 cursor-pointer text-blue-500 hover:text-blue-700" />
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Informações sobre Compras</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-3">
-                        <p className="text-sm text-gray-600">
-                          As compras de Supermercado são um valor estimado conforme a pesquisa do TYT na sua região. Depois que o chef fizer a compra, ele vai anexar o comprovante do mercado e o valor será atualizado, reembolsado ou cobrado adicional no cartão de crédito em caso de diferença.
-                        </p>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+          {dados.tipoServico !== 'servicos-especiais' && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <DollarSign className="w-5 h-5" />
+                  Resumo Financeiro
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>Serviço do Chef:</span>
+                  <span className="font-medium">R$ {precoChef.toFixed(2)}</span>
                 </div>
-                <span className="font-medium">R$ {precoCompras.toFixed(2)}</span>
-              </div>
-              <hr />
-              <div className="flex justify-between font-bold text-lg">
-                <span>Total:</span>
-                <span>R$ {total.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-1">
+                    <span>Compras:</span>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Info className="w-4 h-4 cursor-pointer text-blue-500 hover:text-blue-700" />
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Informações sobre Compras</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3">
+                          <p className="text-sm text-gray-600">
+                            As compras de Supermercado são um valor estimado conforme a pesquisa do TYT na sua região. Depois que o chef fizer a compra, ele vai anexar o comprovante do mercado e o valor será atualizado, reembolsado ou cobrado adicional no cartão de crédito em caso de diferença.
+                          </p>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <span className="font-medium">R$ {precoCompras.toFixed(2)}</span>
+                </div>
+                <hr />
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total:</span>
+                  <span>R$ {total.toFixed(2)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Coluna da Direita - Dados */}

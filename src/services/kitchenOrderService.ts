@@ -20,9 +20,25 @@ export function normalizeKitchenOrderTypeLabel(order: KitchenOrder): KitchenOrde
     (order.solicitacao_cliente as string | undefined) ??
     (order.solicitacaoCliente as string | undefined);
 
-  if (normalized.includes("MEAL") || normalized.includes("PREP") || normalized.includes("WEEK")) return "Cozinha Semanal";
-  if (normalized.includes("EVENT")) return "Evento";
-  if (normalized.includes("SPECIAL") || normalized.includes("CUSTOM") || Boolean(clientRequest)) return "Serviço Especial";
+  if (normalized.includes("MEAL") || normalized.includes("PREP") || normalized.includes("WEEK") || normalized === "MEAL_PREAP") {
+    return "Cozinha Semanal";
+  }
+
+  const dishes = (order.dishes as unknown[] | undefined) ?? (order.pratos as unknown[] | undefined) ?? [];
+  const hasDishes = Array.isArray(dishes) && dishes.length > 0;
+
+  if (
+    normalized.includes("EVENT") ||
+    normalized.includes("TOGHETER") ||
+    normalized === "GET_TOGHETER" ||
+    (normalized.includes("SPECIAL") && hasDishes)
+  ) {
+    return "Evento";
+  }
+
+  if (normalized.includes("SPECIAL") || normalized.includes("CUSTOM") || Boolean(clientRequest)) {
+    return "Serviço Especial";
+  }
 
   return "Cozinha Semanal";
 }
@@ -123,6 +139,7 @@ export type CreateKitchenOrderInput = {
   district: string;
   observations?: string;
   client_request?: string;
+  temas?: number[];
   dishes: Array<{ dish_id: number; quantity: number }>;
 };
 

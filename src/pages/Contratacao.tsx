@@ -95,66 +95,31 @@ const Contratacao = () => {
   }, [etapaAtual]);
 
   const getTotalEtapas = () => {
-    if (dadosContratacao.tipoServico === 'servicos-especiais') {
-      return isLoggedIn ? 2 : 3; // Pula etapa 2 (configuração) e etapa de pagamento
-    }
-    return isLoggedIn ? 4 : 5; // Se logado, pula etapa de identificação
+    return isLoggedIn ? 4 : 5;
   };
 
   const getEtapaAtualAjustada = () => {
-    if (dadosContratacao.tipoServico === 'servicos-especiais') {
-      // Para serviços especiais: etapa 1 -> mostra 1, etapa 3 -> mostra 2, etapa 4 -> mostra 3
-      if (etapaAtual === 1) return 1;
-      if (etapaAtual === 3) return 2;
-      if (etapaAtual === 4) return 3;
-    }
     if (isLoggedIn && etapaAtual > 3) {
-      return etapaAtual - 1; // Ajusta para etapas sem identificação
+      return etapaAtual - 1;
     }
     return etapaAtual;
   };
 
   const avancarEtapa = (novosdados?: Partial<DadosContratacao>) => {
-    let dadosAtualizados = dadosContratacao;
     if (novosdados) {
-      dadosAtualizados = { ...dadosContratacao, ...novosdados };
-      setDadosContratacao(dadosAtualizados);
+      setDadosContratacao(prev => ({ ...prev, ...novosdados }));
     }
 
-    // Lógica especial para serviços especiais
-    if (dadosAtualizados.tipoServico === 'servicos-especiais') {
-      // Da etapa 1, pula direto para etapa 3
-      if (etapaAtual === 1) {
-        setEtapaAtual(3);
-        return;
-      }
-      // Da etapa 3, vai para identificação se não logado, ou sucesso se logado
-      if (etapaAtual === 3 && !isLoggedIn) {
-        setEtapaAtual(4); // Vai para identificação
-        return;
-      } else if ((etapaAtual === 3 && isLoggedIn) || etapaAtual === 4) {
-        void concluirContratacao(dadosAtualizados);
-        return;
-      }
-    }
-
-    // Para outros serviços
     if (isLoggedIn && etapaAtual === 3) {
-      setEtapaAtual(5); // Pula identificação
+      setEtapaAtual(5);
     } else {
       setEtapaAtual(prev => prev + 1);
     }
   };
 
   const voltarEtapa = () => {
-    // Lógica especial para serviços especiais
-    if (dadosContratacao.tipoServico === 'servicos-especiais' && etapaAtual === 3) {
-      setEtapaAtual(1); // Volta direto para etapa 1
-      return;
-    }
-
     if (isLoggedIn && etapaAtual === 5) {
-      setEtapaAtual(3); // Volta direto da etapa 5 para 3
+      setEtapaAtual(3);
     } else {
       setEtapaAtual(prev => Math.max(1, prev - 1));
     }
@@ -195,7 +160,7 @@ const Contratacao = () => {
   };
 
   const mapServiceType = (tipoServico: DadosContratacao["tipoServico"]) => {
-    if (tipoServico === "eventos") return "EVENT";
+    if (tipoServico === "eventos") return "GET_TOGETHER";
     if (tipoServico === "servicos-especiais") return "SPECIAL_SERVICE";
     return "MEAL_PREP";
   };
@@ -305,6 +270,7 @@ const Contratacao = () => {
         district: endereco.bairro,
         observations: dados.descricaoDetalhada || "",
         client_request: dados.tipoServico === "servicos-especiais" ? dados.descricaoDetalhada || "" : undefined,
+        temas: dados.temaSelecionado ? [parseInt(dados.temaSelecionado, 10)] : undefined,
         dishes,
       });
 
@@ -312,9 +278,15 @@ const Contratacao = () => {
         if (!response) return undefined;
         if (typeof response === "object") {
           const record = response as Record<string, unknown>;
-          const data = record.data;
-          if (Array.isArray(data) && data.length > 0 && data[0] && typeof data[0] === "object") return data[0] as Record<string, unknown>;
-          if (record.success && record.data && typeof record.data === "object" && !Array.isArray(record.data)) return record.data as Record<string, unknown>;
+          if (record.data && typeof record.data === "object") {
+            if (Array.isArray(record.data)) {
+              if (record.data.length > 0 && record.data[0] && typeof record.data[0] === "object") {
+                return record.data[0] as Record<string, unknown>;
+              }
+            } else {
+              return record.data as Record<string, unknown>;
+            }
+          }
           return record;
         }
         return undefined;
@@ -340,6 +312,22 @@ const Contratacao = () => {
     }
   };
 
+  const getStepHeaderLabel = () => {
+    const step = getEtapaAtualAjustada();
+    const isSpecial = dadosContratacao.tipoServico === 'servicos-especiais';
+
+    if (step === 1) return "Escolha do Serviço";
+    if (step === 2) return "Configuração";
+    if (step === 3) return isSpecial ? "Detalhamento" : "Escolha de Pratos";
+    if (step === 4) {
+      if (isLoggedIn) {
+        return isSpecial ? "Endereço e Resumo" : "Resumo e Pagamento";
+      }
+      return "Identificação";
+    }
+    return isSpecial ? "Endereço e Resumo" : "Resumo e Pagamento";
+  };
+
   if (mostrarSucesso) {
     return (
       <TelaSuccesso
@@ -362,11 +350,7 @@ const Contratacao = () => {
               Etapa {getEtapaAtualAjustada()} de {getTotalEtapas()}
             </span>
             <span className="text-sm text-gray-500">
-              {getEtapaAtualAjustada() === 1 && "Escolha do Serviço"}
-              {getEtapaAtualAjustada() === 2 && "Configuração"}
-              {getEtapaAtualAjustada() === 3 && (dadosContratacao.tipoServico === 'servicos-especiais' ? "Detalhamento" : "Escolha de Pratos")}
-              {getEtapaAtualAjustada() === 4 && (isLoggedIn ? "Resumo e Pagamento" : "Identificação")}
-              {getEtapaAtualAjustada() === 5 && "Resumo e Pagamento"}
+              {getStepHeaderLabel()}
             </span>
           </div>
           <Progress

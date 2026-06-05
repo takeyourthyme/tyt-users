@@ -137,6 +137,7 @@ const DetalheContrato = () => {
   const [apiOrder, setApiOrder] = useState<KitchenOrder | null>(null);
   const [apiLoading, setApiLoading] = useState(true);
   const [isAcceptingProposal, setIsAcceptingProposal] = useState(false);
+  const [isDecliningProposal, setIsDecliningProposal] = useState(false);
   const [pauseDuration, setPauseDuration] = useState<string>("");
   const [pauseModalOpen, setPauseModalOpen] = useState(false);
 
@@ -144,17 +145,24 @@ const DetalheContrato = () => {
     if (!token || !contratoId) return;
     setApiLoading(true);
     getKitchenOrderByCode({ token, code: contratoId })
-      .then((data) => {
-        if (data && typeof data === "object" && !Array.isArray(data)) {
-          setApiOrder(data as KitchenOrder);
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Erro ao carregar detalhes",
-            description: "Serviço não encontrado.",
-          });
-          navigate("/meus-contratos");
+      .then((res) => {
+        if (res && typeof res === "object") {
+          const order = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
+            ? (res as any).data
+            : res;
+          
+          if (order && typeof order === "object" && !Array.isArray(order)) {
+            setApiOrder(order as KitchenOrder);
+            return;
+          }
         }
+        
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar detalhes",
+          description: "Serviço não encontrado.",
+        });
+        navigate("/meus-contratos");
       })
       .catch((err) => {
         console.error("Erro ao carregar serviço:", err);
@@ -199,6 +207,33 @@ const DetalheContrato = () => {
     }
   };
 
+  const handleDeclineProposal = async () => {
+    if (!token || !apiOrder) return;
+    const orderId = (apiOrder.id as string | number) ?? getKitchenOrderCode(apiOrder);
+    try {
+      setIsDecliningProposal(true);
+      await updateKitchenOrderStatus({
+        token,
+        id: orderId,
+        status: "DECLINED",
+      });
+      toast({
+        title: "Proposta recusada",
+        description: "Você recusou a proposta. O status do serviço foi atualizado.",
+      });
+      loadOrderDetails();
+    } catch (err) {
+      console.error("Erro ao recusar proposta:", err);
+      toast({
+        variant: "destructive",
+        title: "Erro ao recusar proposta",
+        description: "Tente novamente em alguns instantes.",
+      });
+    } finally {
+      setIsDecliningProposal(false);
+    }
+  };
+
   const handlePausarServico = () => {
     setPauseModalOpen(false);
     setPauseDuration("");
@@ -214,6 +249,43 @@ const DetalheContrato = () => {
       description: "Seu horário foi descartado e disponibilizado para esta semana.",
     });
   };
+
+  const rawProposals = useMemo(() => {
+    if (!apiOrder) return [];
+    if (Array.isArray(apiOrder.proposals)) {
+      return apiOrder.proposals as Array<{ id: number; item: string; value: number }>;
+    }
+    const spec = apiOrder.special_service_proposal as Record<string, unknown> | null;
+    if (spec && Array.isArray(spec.items)) {
+      return spec.items.map((item: any, idx: number) => ({
+        id: idx,
+        item: item.description ?? "",
+        value: item.price ?? 0,
+      }));
+    }
+    return [];
+  }, [apiOrder]);
+
+  const proposalItems = useMemo(() => {
+    return rawProposals.map((p) => ({
+      description: p.item,
+      price: Number(p.value),
+    }));
+  }, [rawProposals]);
+
+  const proposalTotalPrice = useMemo(() => {
+    return proposalItems.reduce((acc, item) => acc + (item.price || 0), 0);
+  }, [proposalItems]);
+
+  const proposalStatus = useMemo(() => {
+    if (!apiOrder) return null;
+    if (rawProposals.length === 0) return null;
+    
+    const orderStatus = String(apiOrder.status).toUpperCase();
+    if (orderStatus === "CONFIRMED") return "ACCEPTED";
+    if (orderStatus === "DECLINED" || orderStatus === "CANCELLED") return "DECLINED";
+    return "AWAITING_CLIENT";
+  }, [apiOrder, rawProposals]);
 
   // Skeleton view
   if (apiLoading) {
@@ -287,14 +359,6 @@ const DetalheContrato = () => {
   const dishes = Array.isArray(apiOrder.dishes) ? (apiOrder.dishes as any[]) : [];
   const observations = (apiOrder.observations as string | null) ?? "";
   const clientRequest = (apiOrder.client_request as string | null) ?? "";
-
-  const proposal = apiOrder.special_service_proposal as {
-    id: number;
-    status: "AWAITING_CLIENT" | "ACCEPTED" | "DECLINED";
-    items: Array<{ description: string; price: number }>;
-  } | null;
-
-  const proposalTotalPrice = proposal?.items?.reduce((acc, item) => acc + (item.price || 0), 0) || 0;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -469,10 +533,10 @@ const DetalheContrato = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {proposal ? (
+              {proposalStatus ? (
                 <div className="space-y-4">
                   <div className="border border-gray-100 rounded-lg overflow-hidden divide-y divide-gray-100">
-                    {proposal.items?.map((item, index) => (
+                    {proposalItems.map((item, index) => (
                       <div
                         key={index}
                         className={`p-3 flex justify-between items-center text-sm ${
@@ -493,23 +557,34 @@ const DetalheContrato = () => {
                     </div>
                   </div>
 
-                  {proposal.status === "AWAITING_CLIENT" && (
-                    <Button
-                      onClick={handleAcceptProposal}
-                      disabled={isAcceptingProposal}
-                      className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold h-11"
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      {isAcceptingProposal ? "Processando Pagamento..." : `Pagar Agora - ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}`}
-                    </Button>
+                  {proposalStatus === "AWAITING_CLIENT" && (
+                    <div className="flex flex-col gap-3">
+                      <Button
+                        onClick={handleAcceptProposal}
+                        disabled={isAcceptingProposal || isDecliningProposal}
+                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold h-11"
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        {isAcceptingProposal ? "Processando Pagamento..." : `Aceitar e Pagar - ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}`}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleDeclineProposal}
+                        disabled={isAcceptingProposal || isDecliningProposal}
+                        className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold h-11"
+                      >
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        {isDecliningProposal ? "Recusando Proposta..." : "Recusar Proposta"}
+                      </Button>
+                    </div>
                   )}
-                  {proposal.status === "ACCEPTED" && (
+                  {proposalStatus === "ACCEPTED" && (
                     <div className="p-3 bg-green-50 text-green-800 rounded-lg border border-green-200 text-sm font-semibold flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
                       Você aceitou esta proposta. O pagamento foi efetuado.
                     </div>
                   )}
-                  {proposal.status === "DECLINED" && (
+                  {proposalStatus === "DECLINED" && (
                     <div className="p-3 bg-red-50 text-red-800 rounded-lg border border-red-200 text-sm font-semibold flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4" />
                       Esta proposta foi recusada. Aguarde o envio de uma nova proposta.

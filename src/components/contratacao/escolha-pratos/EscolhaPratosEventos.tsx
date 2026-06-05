@@ -9,18 +9,18 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Edit, Heart, Flame, Info, Search, Utensils, Fish, Beef, ChefHat, Leaf, Soup, Salad, Wheat, Zap, Users, Crown, Plus } from "lucide-react";
+import { Eye, Edit, Heart, Flame, Info, Search, Utensils, ChefHat, Salad, Plus, Users, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
 import { listDishes, listHighlightedDishes, normalizeDish, type Dish } from "@/services/dishService";
+import { listDishCategories, type LookupOption } from "@/services/lookupService";
+
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
   onVoltar: () => void;
 }
-
-type Course = "entradas" | "saladas" | "principais" | "sobremesas";
 
 type DishOption = {
   id: string;
@@ -31,151 +31,49 @@ type DishOption = {
   preco: number;
   favorito?: boolean;
   frequente?: boolean;
-  categoria: Course;
+  categorias: string[];
 };
-const CATEGORIAS_ICONES = {
-  "entradas": {
-    icon: Utensils,
-    color: "bg-orange-100 text-orange-700 border-orange-200"
-  },
-  "saladas": {
-    icon: Salad,
-    color: "bg-lime-100 text-lime-700 border-lime-200"
-  },
-  "principais": {
-    icon: ChefHat,
-    color: "bg-yellow-100 text-yellow-700 border-yellow-200"
-  },
-  "sobremesas": {
-    icon: Heart,
-    color: "bg-pink-100 text-pink-700 border-pink-200"
-  }
-};
-const pratosEventos: Record<Course, DishOption[]> = {
-  entradas: [{
+
+// Unified mock data for fallback
+const mockDishes: DishOption[] = [
+  // Entradas
+  {
     id: 'e1',
     nome: 'Bruschetta Italiana',
     descricao: 'Torrada com tomate, manjericão e queijo',
     foto: 'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=400&h=300&fit=crop',
     preco: 18,
     favorito: true,
-    categoria: 'entradas',
+    categorias: ['entradas'],
     dishId: 1
-  }, {
+  },
+  {
     id: 'e2',
     nome: 'Carpaccio de Salmão',
     descricao: 'Fatias finas de salmão com alcaparras',
     foto: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop',
     preco: 25,
     favorito: false,
-    categoria: 'entradas',
+    categorias: ['entradas'],
     dishId: 2
-  }, {
+  },
+  {
     id: 'e3',
     nome: 'Camarão na Moranga',
     descricao: 'Camarões refogados servidos na moranga',
     foto: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=400&h=300&fit=crop',
     preco: 32,
     frequente: true,
-    categoria: 'entradas',
+    categorias: ['entradas'],
     dishId: 3
-  }],
-  saladas: [{
-    id: 's1',
-    nome: 'Salada Caesar',
-    descricao: 'Alface romana, croutons e molho caesar',
-    foto: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
-    preco: 22,
-    favorito: false,
-    categoria: 'saladas',
-    dishId: 4
-  }, {
-    id: 's2',
-    nome: 'Salada Caprese',
-    descricao: 'Tomate, muçarela de búfala e manjericão',
-    foto: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop',
-    preco: 28,
-    favorito: true,
-    categoria: 'saladas',
-    dishId: 5
-  }, {
-    id: 's3',
-    nome: 'Salada de Quinoa',
-    descricao: 'Quinoa com vegetais e molho tahine',
-    foto: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
-    preco: 24,
-    frequente: false,
-    categoria: 'saladas',
-    dishId: 6
-  }],
-  principais: [{
-    id: 'p1',
-    nome: 'Salmão Grelhado',
-    descricao: 'Salmão com crosta de ervas e legumes',
-    foto: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop',
-    preco: 58,
-    favorito: false,
-    categoria: 'principais',
-    dishId: 7
-  }, {
-    id: 'p2',
-    nome: 'Risotto de Camarão',
-    descricao: 'Risotto cremoso com camarões frescos',
-    foto: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop',
-    preco: 52,
-    frequente: true,
-    categoria: 'principais',
-    dishId: 8
-  }, {
-    id: 'p3',
-    nome: 'Filé Wellington',
-    descricao: 'Filé mignon envolvido em massa folhada',
-    foto: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop',
-    preco: 75,
-    favorito: true,
-    categoria: 'principais',
-    dishId: 9
-  }],
-  sobremesas: [{
-    id: 'so1',
-    nome: 'Tiramisù',
-    descricao: 'Sobremesa italiana com café e mascarpone',
-    foto: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop',
-    preco: 18,
-    favorito: true,
-    categoria: 'sobremesas',
-    dishId: 10
-  }, {
-    id: 'so2',
-    nome: 'Petit Gateau',
-    descricao: 'Bolinho de chocolate com sorvete de baunilha',
-    foto: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop',
-    preco: 22,
-    frequente: false,
-    categoria: 'sobremesas',
-    dishId: 11
-  }, {
-    id: 'so3',
-    nome: 'Cheesecake de Frutas Vermelhas',
-    descricao: 'Torta cremosa com calda de frutas',
-    foto: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af?w=400&h=300&fit=crop',
-    preco: 20,
-    favorito: false,
-    categoria: 'sobremesas',
-    dishId: 12
-  }]
-};
-
-// Catálogo completo de pratos da plataforma
-const catalogoPratos: DishOption[] = [
-  // Entradas adicionais
+  },
   {
     id: 'cat-e1',
     nome: 'Hummus com Vegetais',
     descricao: 'Grão-de-bico, tahine, azeite, vegetais crudité',
     foto: 'https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?w=400&h=300&fit=crop',
     preco: 20,
-    categoria: 'entradas'
+    categorias: ['entradas']
   },
   {
     id: 'cat-e2',
@@ -183,16 +81,46 @@ const catalogoPratos: DishOption[] = [
     descricao: 'Crocantes bolinhos de falafel servidos com molho tahine cremoso',
     foto: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400&h=300&fit=crop',
     preco: 22,
-    categoria: 'entradas'
+    categorias: ['entradas']
   },
-  // Saladas adicionais
+  // Saladas
+  {
+    id: 's1',
+    nome: 'Salada Caesar',
+    descricao: 'Alface romana, croutons e molho caesar',
+    foto: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
+    preco: 22,
+    favorito: false,
+    categorias: ['saladas'],
+    dishId: 4
+  },
+  {
+    id: 's2',
+    nome: 'Salada Caprese',
+    descricao: 'Tomate, muçarela de búfala e manjericão',
+    foto: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop',
+    preco: 28,
+    favorito: true,
+    categorias: ['saladas'],
+    dishId: 5
+  },
+  {
+    id: 's3',
+    nome: 'Salada de Quinoa',
+    descricao: 'Quinoa com vegetais e molho tahine',
+    foto: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
+    preco: 24,
+    frequente: false,
+    categorias: ['saladas'],
+    dishId: 6
+  },
   {
     id: 'cat-s1',
     nome: 'Salada Caesar com Camarão',
     descricao: 'Alface americana, camarão grelhado, croutons, parmesão',
     foto: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
     preco: 26,
-    categoria: 'saladas'
+    categorias: ['saladas']
   },
   {
     id: 'cat-s2',
@@ -200,16 +128,46 @@ const catalogoPratos: DishOption[] = [
     descricao: 'Mix de folhas, tomate cereja, azeitonas e queijo feta',
     foto: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop',
     preco: 24,
-    categoria: 'saladas'
+    categorias: ['saladas']
   },
-  // Pratos principais adicionais
+  // Principais
+  {
+    id: 'p1',
+    nome: 'Salmão Grelhado',
+    descricao: 'Salmão com crosta de ervas e legumes',
+    foto: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop',
+    preco: 58,
+    favorito: false,
+    categorias: ['principais'],
+    dishId: 7
+  },
+  {
+    id: 'p2',
+    nome: 'Risotto de Camarão',
+    descricao: 'Risotto cremoso com camarões frescos',
+    foto: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop',
+    preco: 52,
+    frequente: true,
+    categorias: ['principais'],
+    dishId: 8
+  },
+  {
+    id: 'p3',
+    nome: 'Filé Wellington',
+    descricao: 'Filé mignon envolvido em massa folhada',
+    foto: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop',
+    preco: 75,
+    favorito: true,
+    categorias: ['principais'],
+    dishId: 9
+  },
   {
     id: 'cat-p1',
     nome: 'Yakisoba de Frango',
     descricao: 'Macarrão yakisoba, frango, legumes, molho shoyu',
     foto: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop',
     preco: 45,
-    categoria: 'principais'
+    categorias: ['principais']
   },
   {
     id: 'cat-p2',
@@ -217,7 +175,7 @@ const catalogoPratos: DishOption[] = [
     descricao: 'Arroz arbóreo, cogumelos porcini, parmesão',
     foto: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop',
     preco: 50,
-    categoria: 'principais'
+    categorias: ['principais']
   },
   {
     id: 'cat-p3',
@@ -225,7 +183,7 @@ const catalogoPratos: DishOption[] = [
     descricao: 'Suculenta picanha grelhada na brasa, temperada apenas com sal grosso',
     foto: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop',
     preco: 68,
-    categoria: 'principais'
+    categorias: ['principais']
   },
   {
     id: 'cat-p4',
@@ -233,7 +191,7 @@ const catalogoPratos: DishOption[] = [
     descricao: 'Linguine, vongole, alho, vinho branco, salsa',
     foto: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=400&h=300&fit=crop',
     preco: 55,
-    categoria: 'principais'
+    categorias: ['principais']
   },
   {
     id: 'cat-p5',
@@ -241,16 +199,46 @@ const catalogoPratos: DishOption[] = [
     descricao: 'Sofisticada lagosta thermidor com molho bechamel cremoso',
     foto: 'https://images.unsplash.com/photo-1625944230945-1b7dd3b949ab?w=400&h=300&fit=crop',
     preco: 120,
-    categoria: 'principais'
+    categorias: ['principais']
   },
-  // Sobremesas adicionais
+  // Sobremesas
+  {
+    id: 'so1',
+    nome: 'Tiramisù',
+    descricao: 'Sobremesa italiana com café e mascarpone',
+    foto: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop',
+    preco: 18,
+    favorito: true,
+    categorias: ['sobremesas'],
+    dishId: 10
+  },
+  {
+    id: 'so2',
+    nome: 'Petit Gateau',
+    descricao: 'Bolinho de chocolate com sorvete de baunilha',
+    foto: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop',
+    preco: 22,
+    frequente: false,
+    categorias: ['sobremesas'],
+    dishId: 11
+  },
+  {
+    id: 'so3',
+    nome: 'Cheesecake de Frutas Vermelhas',
+    descricao: 'Torta cremosa com calda de frutas',
+    foto: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af?w=400&h=300&fit=crop',
+    preco: 20,
+    favorito: false,
+    categorias: ['sobremesas'],
+    dishId: 12
+  },
   {
     id: 'cat-so1',
     nome: 'Panna Cotta de Frutas Vermelhas',
     descricao: 'Sobremesa italiana cremosa com calda de frutas vermelhas',
     foto: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af?w=400&h=300&fit=crop',
     preco: 18,
-    categoria: 'sobremesas'
+    categorias: ['sobremesas']
   },
   {
     id: 'cat-so2',
@@ -258,7 +246,7 @@ const catalogoPratos: DishOption[] = [
     descricao: 'Brownie de chocolate com sorvete de creme',
     foto: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop',
     preco: 16,
-    categoria: 'sobremesas'
+    categorias: ['sobremesas']
   },
   {
     id: 'cat-so3',
@@ -266,9 +254,10 @@ const catalogoPratos: DishOption[] = [
     descricao: 'Mousse aerado feito com chocolate belga',
     foto: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop',
     preco: 19,
-    categoria: 'sobremesas'
+    categorias: ['sobremesas']
   }
 ];
+
 export const EscolhaPratosEventos: React.FC<Props> = ({
   dados,
   onAvancar,
@@ -277,25 +266,13 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
   const {
     toast
   } = useToast();
-  type SelectedByCourse = Record<Course, DishOption[]>;
-  const emptySelected: SelectedByCourse = {
-    entradas: [],
-    saladas: [],
-    principais: [],
-    sobremesas: [],
-  };
 
   const [nivelServico, setNivelServico] = useState<'classico' | 'banquete'>(dados.nivelServico || 'classico');
-  const [pratosSelecionados, setPratosSelecionados] = useState<SelectedByCourse>(() => {
+  const [categorias, setCategorias] = useState<LookupOption[]>([]);
+  const [pratosSelecionados, setPratosSelecionados] = useState<DishOption[]>(() => {
     const raw = dados.pratosSelecionados;
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return emptySelected;
-    const record = raw as Record<string, unknown>;
-    const next: SelectedByCourse = { ...emptySelected };
-    (Object.keys(next) as Course[]).forEach((key) => {
-      const value = record[key];
-      if (Array.isArray(value)) next[key] = value as DishOption[];
-    });
-    return next;
+    if (Array.isArray(raw)) return raw as DishOption[];
+    return [];
   });
   const [personalizacoes, setPersonalizacoes] = useState<{
     [key: string]: string;
@@ -303,17 +280,34 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
   const [dialogPersonalizacao, setDialogPersonalizacao] = useState<string | null>(null);
   const [textoPersonalizacao, setTextoPersonalizacao] = useState('');
   const [pesquisaPratos, setPesquisaPratos] = useState('');
-  const [dialogAdicionar, setDialogAdicionar] = useState<Course | null>(null);
+  const [dialogAdicionar, setDialogAdicionar] = useState<string | null>(null);
   const [pesquisaCatalogo, setPesquisaCatalogo] = useState('');
   const [pratoDetalhesDialog, setPratoDetalhesDialog] = useState<DishOption | null>(null);
-  const [availableByCourse, setAvailableByCourse] = useState<Record<Course, DishOption[]>>({
-    entradas: [],
-    saladas: [],
-    principais: [],
-    sobremesas: [],
-  });
   const [catalogDishes, setCatalogDishes] = useState<DishOption[]>([]);
   const [isLoadingDishes, setIsLoadingDishes] = useState(true);
+
+  const matchesCategory = (pratoCategorias: string[], targetCategoryId: string) => {
+    if (!pratoCategorias || !Array.isArray(pratoCategorias)) return false;
+    
+    if (pratoCategorias.includes(targetCategoryId)) return true;
+
+    const targetCategory = categorias.find(c => c.id === targetCategoryId);
+    if (!targetCategory) return false;
+
+    const targetLabelNorm = targetCategory.label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    return pratoCategorias.some(cat => {
+      const catNorm = cat.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      if (catNorm === targetLabelNorm) return true;
+
+      const catLookup = categorias.find(c => c.id === cat);
+      if (catLookup) {
+        const catLookupNorm = catLookup.label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (catLookupNorm === targetLabelNorm) return true;
+      }
+      return false;
+    });
+  };
 
   useEffect(() => {
     const session = loadSession();
@@ -330,24 +324,20 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
       return [];
     };
 
-    const classifyCourse = (raw: string): Course => {
-      const value = raw
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-      if (value.includes("entrada") || value.includes("aperitivo") || value.includes("petisco")) return "entradas";
-      if (value.includes("salad")) return "saladas";
-      if (value.includes("sobremesa") || value.includes("doce") || value.includes("dessert")) return "sobremesas";
-      return "principais";
-    };
+    const loadData = async () => {
+      setIsLoadingDishes(true);
+      try {
+        const cats = await listDishCategories({ token });
+        const hasCategories = cats && cats.length > 0;
+        if (hasCategories) {
+          setCategorias(cats);
+        } else {
+          setCategorias([{ id: "prato", label: "Prato" }]);
+        }
 
-    setIsLoadingDishes(true);
-    const request = token ? listDishes({ token }) : listHighlightedDishes();
-
-    request
-      .then((data) => {
+        const request = token ? listDishes({ token }) : listHighlightedDishes();
+        const data = await request;
         const list = extractList(data);
-        if (!Array.isArray(list) || list.length === 0) throw new Error("empty");
 
         const placeholder = "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200&h=800&fit=crop";
         const mapped = list
@@ -355,92 +345,58 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
             const normalized = normalizeDish(dish);
             const dishId = Number(normalized.id);
             if (!Number.isFinite(dishId)) return undefined;
-            const categoryRaw = normalized.categories[0] || "";
-            const categoria = classifyCourse(categoryRaw);
-            const foto = normalized.photoUrl || placeholder;
             return {
               id: normalized.id,
               dishId,
               nome: normalized.name,
               descricao: normalized.description,
-              foto,
+              foto: normalized.photoUrl || placeholder,
               preco: 0,
-              categoria,
+              categorias: hasCategories ? normalized.categories : ["prato"],
             };
           })
           .filter((v): v is DishOption & { dishId: number } => Boolean(v));
 
-        if (mapped.length === 0) throw new Error("empty");
+        setCatalogDishes(mapped.length > 0 ? mapped : mockDishes);
+      } catch {
+        setCatalogDishes(mockDishes);
+        setCategorias([
+          { id: "entradas", label: "Entradas" },
+          { id: "saladas", label: "Saladas" },
+          { id: "principais", label: "Pratos Principais" },
+          { id: "sobremesas", label: "Sobremesas" },
+        ]);
+      } finally {
+        setIsLoadingDishes(false);
+      }
+    };
 
-        const byCourse: Record<Course, DishOption[]> = {
-          entradas: [],
-          saladas: [],
-          principais: [],
-          sobremesas: [],
-        };
-        mapped.forEach((dish) => {
-          byCourse[dish.categoria].push(dish);
-        });
-
-        setCatalogDishes(mapped);
-        setAvailableByCourse(byCourse);
-      })
-      .catch(() => {
-        setCatalogDishes(catalogoPratos);
-        setAvailableByCourse(pratosEventos);
-      })
-      .finally(() => setIsLoadingDishes(false));
+    void loadData();
   }, []);
-  const getLimites = () => {
-    if (nivelServico === 'classico') {
-      return {
-        entradas: 1,
-        saladas: 2,
-        principais: 2,
-        sobremesas: 1
-      };
+
+  const togglePrato = (prato: DishOption) => {
+    const isSelected = pratosSelecionados.some((p) => p.id === prato.id);
+    if (isSelected) {
+      setPratosSelecionados((prev) => prev.filter((p) => p.id !== prato.id));
     } else {
-      return {
-        entradas: 2,
-        saladas: 3,
-        principais: 3,
-        sobremesas: 3
-      };
+      const limit = nivelServico === 'classico' ? 5 : 10;
+      if (pratosSelecionados.length < limit) {
+        setPratosSelecionados((prev) => [...prev, prato]);
+      } else {
+        toast({
+          title: "Limite atingido",
+          description: `Você já selecionou o limite de ${limit} pratos para o nível ${nivelServico === 'classico' ? 'Clássico' : 'Banquete'}. Desmarque uma opção para marcar esta.`,
+          duration: 3000
+        });
+      }
     }
   };
-  const limites = getLimites();
-  const togglePrato = (categoria: Course, prato: DishOption) => {
-    setPratosSelecionados((prev) => {
-      const categoriaPratos = prev[categoria] || [];
-      const jaEscolhido = categoriaPratos.find((p) => p.id === prato.id);
-      if (jaEscolhido) {
-        return {
-          ...prev,
-          [categoria]: categoriaPratos.filter((p) => p.id !== prato.id)
-        };
-      } else {
-        const limite = limites[categoria as keyof typeof limites];
-        if (categoriaPratos.length < limite) {
-          return {
-            ...prev,
-            [categoria]: [...categoriaPratos, prato]
-          };
-        } else {
-          // Mostrar notificação de limite atingido
-          toast({
-            title: "Limite atingido",
-            description: `Você já selecionou o limite de ${categoria} (${limite}). Desmarque uma opção para marcar essa.`,
-            duration: 3000
-          });
-        }
-      }
-      return prev;
-    });
-  };
+
   const abrirPersonalizacao = (pratoId: string) => {
     setDialogPersonalizacao(pratoId);
     setTextoPersonalizacao(personalizacoes[pratoId] || '');
   };
+
   const salvarPersonalizacao = () => {
     if (dialogPersonalizacao) {
       setPersonalizacoes(prev => ({
@@ -451,67 +407,59 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
       setTextoPersonalizacao('');
     }
   };
-  const verificarCompleto = () => {
-    return Object.keys(limites).every(categoria => {
-      const categoria_key = categoria as keyof typeof limites;
-      return pratosSelecionados[categoria]?.length === limites[categoria_key];
-    });
-  };
+
   const calcularTotal = () => {
     const precoChef = 550;
-    let precoCompras = 0;
-    Object.values(pratosSelecionados).forEach((pratos) => {
-      pratos.forEach((prato) => {
-        precoCompras += prato.preco;
-      });
-    });
+    const precoCompras = pratosSelecionados.reduce((acc, p) => acc + p.preco, 0);
     return {
       precoChef,
       precoCompras,
       total: precoChef + precoCompras
     };
   };
+
   const {
     precoChef,
     precoCompras,
     total
   } = calcularTotal();
+
   const handleAvancar = () => {
-    const categoriasFaltando: string[] = [];
-    (Object.keys(limites) as Course[]).forEach((categoria) => {
-      const categoria_key = categoria as keyof typeof limites;
-      const selecionados = pratosSelecionados[categoria]?.length || 0;
-      const limite = limites[categoria_key];
-      if (selecionados < limite) {
-        categoriasFaltando.push(`${categoria} (${selecionados}/${limite})`);
-      }
-    });
-    if (categoriasFaltando.length > 0) {
+    if (pratosSelecionados.length === 0) {
       toast({
         title: "Seleção incompleta",
-        description: `Ainda faltam selecionar itens em: ${categoriasFaltando.join(', ')}`,
+        description: "Selecione ao menos 1 prato para continuar.",
         duration: 4000
       });
       return;
     }
+
+    const limit = nivelServico === 'classico' ? 5 : 10;
+    if (pratosSelecionados.length > limit) {
+      toast({
+        title: "Limite excedido",
+        description: `Você selecionou ${pratosSelecionados.length} pratos, mas o limite para o nível ${nivelServico === 'classico' ? 'Clássico' : 'Banquete'} é de ${limit} pratos.`,
+        duration: 4000
+      });
+      return;
+    }
+
     onAvancar({
       nivelServico,
-      pratosSelecionados: (Object.entries(pratosSelecionados) as Array<[Course, DishOption[]]>).flatMap(([categoria, pratos]) =>
-        pratos.map((prato) => ({
-          ...prato,
-          categoria,
-          personalizacao: personalizacoes[prato.id] || '',
-        })),
-      ),
+      pratosSelecionados: pratosSelecionados.map((prato) => ({
+        ...prato,
+        personalizacao: personalizacoes[prato.id] || '',
+      })),
     });
   };
+
   const filtrarPratos = (pratos: DishOption[]) => {
     if (!pesquisaPratos) return pratos;
     return pratos.filter(prato => prato.nome.toLowerCase().includes(pesquisaPratos.toLowerCase()) || prato.descricao.toLowerCase().includes(pesquisaPratos.toLowerCase()));
   };
-  const renderCategoria = (categoria: Course, pratos: DishOption[], titulo: string) => {
-    const categoriaSelecionados = pratosSelecionados[categoria] || [];
-    const limite = limites[categoria as keyof typeof limites];
+
+  const renderCategoria = (categoriaId: string, pratos: DishOption[], titulo: string) => {
+    const categoriaSelecionados = pratosSelecionados.filter((p) => matchesCategory(p.categorias, categoriaId));
     const pratosFiltrados = filtrarPratos(pratos);
 
     // Adicionar pratos do catálogo que foram escolhidos mas não estão na lista padrão
@@ -520,19 +468,19 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
     );
     const todosPratos = [...pratosFiltrados, ...pratosAdicionais];
 
-    return <div className="space-y-4">
+    return <div className="space-y-4" key={categoriaId}>
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">{titulo}</h3>
         <Badge variant="outline">
-          {categoriaSelecionados.length}/{limite}
+          {categoriaSelecionados.length}
         </Badge>
       </div>
 
       <div className="space-y-3">
         {todosPratos.map(prato => {
-          const selecionado = categoriaSelecionados.find((p) => p.id === prato.id);
+          const selecionado = pratosSelecionados.some((p) => p.id === prato.id);
           const temPersonalizacao = personalizacoes[prato.id];
-          return <Card key={prato.id} className={`cursor-pointer transition-colors ${selecionado ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`} onClick={() => togglePrato(categoria, prato)}>
+          return <Card key={prato.id} className={`cursor-pointer transition-colors ${selecionado ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`} onClick={() => togglePrato(prato)}>
             <CardContent className="p-4">
               <div className="flex gap-4">
                 {/* Checkbox fora da foto, alinhado à esquerda */}
@@ -577,9 +525,8 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                               <h4 className="font-semibold">Categoria</h4>
-                              <p className="capitalize">{prato.categoria}</p>
+                              <p className="capitalize">{titulo}</p>
                             </div>
-
                           </div>
 
                           {(prato.favorito || prato.frequente) && <div>
@@ -624,14 +571,15 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
         <Button
           variant="outline"
           className="w-full border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary hover:text-white"
-          onClick={() => setDialogAdicionar(categoria)}
+          onClick={() => setDialogAdicionar(categoriaId)}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Adicionar {categoria === 'principais' ? 'Prato Principal' : titulo.slice(0, -1)}
+          Adicionar {titulo === 'Pratos Principais' ? 'Prato Principal' : (titulo === 'Prato' ? 'Prato' : titulo.replace(/s$/, ''))}
         </Button>
       </div>
     </div>;
   };
+
   return <div className="space-y-8">
     <div className="text-center">
       <p className="text-muted-foreground">
@@ -662,14 +610,14 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                       <h4 className="font-semibold">Clássico</h4>
                       <p className="text-sm text-muted-foreground">
                         Os convidados serão bem servidos em quantidades de comida e opções comuns em eventos.
-                        Ninguém vai ficar com fome. (1 Entrada, 2 Saladas, 2 Principais, 1 Sobremesa)
+                        Ninguém vai ficar com fome. (Até 5 pratos no total)
                       </p>
                     </div>
                     <div>
                       <h4 className="font-semibold">Banquete</h4>
                       <p className="text-sm text-muted-foreground">
                         Um número maior de opções no buffet com mais variedade de pratos.
-                        (2 Entradas, 3 Saladas, 3 Principais, 3 Sobremesas)
+                        (Até 10 pratos no total)
                       </p>
                     </div>
                   </div>
@@ -686,7 +634,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                       <Users className="h-6 w-6 text-muted-foreground" />
                       <div>
                         <h4 className="font-medium">Clássico</h4>
-                        <p className="text-sm text-muted-foreground">Porções adequadas</p>
+                        <p className="text-sm text-muted-foreground">Até 5 pratos</p>
                       </div>
                     </div>
                   </Card>
@@ -701,7 +649,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                       <Crown className="h-6 w-6 text-muted-foreground" />
                       <div>
                         <h4 className="font-medium">Banquete</h4>
-                        <p className="text-sm text-muted-foreground">Maior variedade</p>
+                        <p className="text-sm text-muted-foreground">Até 10 pratos</p>
                       </div>
                     </div>
                   </Card>
@@ -742,10 +690,10 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
           </div>
         ) : (
           <div className="space-y-8">
-            {renderCategoria('entradas', availableByCourse.entradas, 'Entradas')}
-            {renderCategoria('saladas', availableByCourse.saladas, 'Saladas')}
-            {renderCategoria('principais', availableByCourse.principais, 'Pratos Principais')}
-            {renderCategoria('sobremesas', availableByCourse.sobremesas, 'Sobremesas')}
+            {categorias.map((cat) => {
+              const pratosDaCategoria = catalogDishes.filter((p) => matchesCategory(p.categorias, cat.id));
+              return renderCategoria(cat.id, pratosDaCategoria, cat.label);
+            })}
           </div>
         )}
       </div>
@@ -758,20 +706,25 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Pratos por Categoria */}
-            {(Object.entries(pratosSelecionados) as Array<[Course, DishOption[]]>).map(([categoria, pratos]) => (
-              <div key={categoria}>
-                <h4 className="font-semibold capitalize mb-2">{categoria}</h4>
-                <div className="space-y-1 mb-4">
-                  {pratos.map((prato) => (
-                    <div key={prato.id} className="flex justify-between text-sm">
-                      <span>{prato.nome}</span>
-                      <span>R$ {prato.preco.toFixed(2)}</span>
-                    </div>
-                  ))}
-                  {pratos.length === 0 && <div className="text-muted-foreground text-sm">Aguardando seleção</div>}
+            {categorias.map((cat) => {
+              const pratosDaCategoria = pratosSelecionados.filter((p) => matchesCategory(p.categorias, cat.id));
+              return (
+                <div key={cat.id}>
+                  <h4 className="font-semibold capitalize mb-2">{cat.label}</h4>
+                  <div className="space-y-1 mb-4">
+                    {pratosDaCategoria.map((prato) => (
+                      <div key={prato.id} className="flex justify-between text-sm">
+                        <span>{prato.nome}</span>
+                        <span>R$ {prato.preco.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {pratosDaCategoria.length === 0 && (
+                      <div className="text-muted-foreground text-sm">Aguardando seleção</div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <hr />
 
@@ -804,7 +757,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                 </div>
                 <span>R$ {precoCompras.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm font-bold border-t pt-2 mt-2">
                 <span>Total:</span>
                 <span>R$ {total.toFixed(2)}</span>
               </div>
@@ -851,10 +804,9 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
       <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            Adicionar {dialogAdicionar === 'entradas' ? 'Entrada' :
-              dialogAdicionar === 'saladas' ? 'Salada' :
-                dialogAdicionar === 'principais' ? 'Prato Principal' :
-                  'Sobremesa'}
+            Adicionar {dialogAdicionar ? (
+              categorias.find(c => c.id === dialogAdicionar)?.label?.replace(/s$/, '') || 'Prato'
+            ) : 'Prato'}
           </DialogTitle>
         </DialogHeader>
 
@@ -874,14 +826,15 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
           <div className="space-y-3">
             {catalogDishes
               .filter(prato =>
-                prato.categoria === dialogAdicionar &&
-                (pesquisaCatalogo === '' ||
-                  prato.nome.toLowerCase().includes(pesquisaCatalogo.toLowerCase()) ||
-                  prato.descricao.toLowerCase().includes(pesquisaCatalogo.toLowerCase()))
+                dialogAdicionar ? (
+                  matchesCategory(prato.categorias, dialogAdicionar) &&
+                  (pesquisaCatalogo === '' ||
+                    prato.nome.toLowerCase().includes(pesquisaCatalogo.toLowerCase()) ||
+                    prato.descricao.toLowerCase().includes(pesquisaCatalogo.toLowerCase()))
+                ) : false
               )
               .map(prato => {
-                const categoriaSelecionados = pratosSelecionados[dialogAdicionar!] || [];
-                const jaEscolhido = categoriaSelecionados.find((p) => p.id === prato.id);
+                const jaEscolhido = pratosSelecionados.some((p) => p.id === prato.id);
 
                 return (
                   <Card key={prato.id} className="hover:border-primary/50 transition-colors">
@@ -918,12 +871,10 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                             size="sm"
                             disabled={Boolean(jaEscolhido)}
                             onClick={() => {
-                              togglePrato(dialogAdicionar!, prato);
+                              togglePrato(prato);
                               if (!jaEscolhido) {
-                                const categoriaSelecionados = pratosSelecionados[dialogAdicionar!] || [];
-                                const limite = limites[dialogAdicionar! as keyof typeof limites];
-                                // Só fecha se conseguiu adicionar
-                                if (categoriaSelecionados.length < limite) {
+                                const limit = nivelServico === 'classico' ? 5 : 10;
+                                if (pratosSelecionados.length < limit) {
                                   setDialogAdicionar(null);
                                   setPesquisaCatalogo('');
                                 }
@@ -965,10 +916,6 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <h4 className="font-semibold">Categoria</h4>
-                    <p className="capitalize">{pratoDetalhesDialog.categoria}</p>
-                  </div>
-                  <div>
                     <h4 className="font-semibold">Preço</h4>
                     <p>R$ {pratoDetalhesDialog.preco.toFixed(2)}</p>
                   </div>
@@ -986,23 +933,21 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
               <Button
                 className="w-full"
                 onClick={() => {
-                  const categoriaSelecionados = pratosSelecionados[pratoDetalhesDialog.categoria] || [];
-                  const jaEscolhido = categoriaSelecionados.find((p) => p.id === pratoDetalhesDialog.id);
+                  const jaEscolhido = pratosSelecionados.some((p) => p.id === pratoDetalhesDialog.id);
 
                   if (!jaEscolhido) {
-                    togglePrato(pratoDetalhesDialog.categoria, pratoDetalhesDialog);
-                    const limite = limites[pratoDetalhesDialog.categoria as keyof typeof limites];
-                    // Só fecha se conseguiu adicionar
-                    if (categoriaSelecionados.length < limite) {
+                    togglePrato(pratoDetalhesDialog);
+                    const limit = nivelServico === 'classico' ? 5 : 10;
+                    if (pratosSelecionados.length < limit) {
                       setPratoDetalhesDialog(null);
                       setDialogAdicionar(null);
                       setPesquisaCatalogo('');
                     }
                   }
                 }}
-                disabled={Boolean(pratosSelecionados[pratoDetalhesDialog.categoria]?.find((p) => p.id === pratoDetalhesDialog.id))}
+                disabled={pratosSelecionados.some((p) => p.id === pratoDetalhesDialog.id)}
               >
-                {pratosSelecionados[pratoDetalhesDialog.categoria]?.find((p) => p.id === pratoDetalhesDialog.id)
+                {pratosSelecionados.some((p) => p.id === pratoDetalhesDialog.id)
                   ? 'Já Escolhido'
                   : 'Escolher este Prato'}
               </Button>

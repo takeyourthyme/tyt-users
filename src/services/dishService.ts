@@ -13,6 +13,8 @@ export type NormalizedDish = {
   mainIngredients: string[];
   culinaryPreferences: string[];
   themes: string[];
+  meal_preap: boolean;
+  get_togheter: boolean;
 };
 
 const sanitizeUrl = (value: string) => value.trim().replace(/^[`"' ]+|[`"' ]+$/g, "");
@@ -20,16 +22,24 @@ const sanitizeUrl = (value: string) => value.trim().replace(/^[`"' ]+|[`"' ]+$/g
 const getStringArray = (value: unknown): string[] => {
   if (Array.isArray(value)) {
     const mapped = value
-      .map((item) => {
-        if (typeof item === "string") return item;
-        if (typeof item === "number") return String(item);
+      .flatMap((item) => {
+        if (typeof item === "string") return [item];
+        if (typeof item === "number") return [String(item)];
         if (item && typeof item === "object") {
           const record = item as Record<string, unknown>;
+          const res: string[] = [];
+          if (record.id !== undefined && record.id !== null) {
+            res.push(String(record.id));
+          }
           const candidate = record.descricao ?? record.nome ?? record.name ?? record.label ?? record.title;
-          if (typeof candidate === "string") return candidate;
-          if (typeof candidate === "number") return String(candidate);
+          if (typeof candidate === "string") {
+            res.push(candidate);
+          } else if (typeof candidate === "number") {
+            res.push(String(candidate));
+          }
+          return res;
         }
-        return "";
+        return [];
       })
       .map((item) => item.trim())
       .filter(Boolean);
@@ -76,13 +86,16 @@ export function normalizeDish(dish: Dish): NormalizedDish {
     .map((value) => sanitizeUrl(String(value)))
     .filter(Boolean);
 
-  const categories = getStringArray(dish.categorias ?? dish.categoria ?? dish.categories ?? dish.category);
-  const cuisineTypes = getStringArray(dish.tipos_cozinha ?? dish.tiposCozinha ?? dish.cuisineTypes);
-  const mainIngredients = getStringArray(dish.ingredientes_principais ?? dish.ingredientesPrincipais ?? dish.mainIngredients);
-  const culinaryPreferences = getStringArray(dish.pref_culinarias ?? dish.prefCulinarias ?? dish.culinaryPreferences);
-  const themes = getStringArray(dish.temas ?? dish.themes);
+  const categories = getStringArray(dish.pratos_categorias ?? dish.categorias ?? dish.categoria ?? dish.categories ?? dish.category);
+  const cuisineTypes = getStringArray(dish.pratos_tipos_cozinha ?? dish.tipos_cozinha ?? dish.tiposCozinha ?? dish.cuisineTypes);
+  const mainIngredients = getStringArray(dish.pratos_ingredientes_principais ?? dish.ingredientes_principais ?? dish.ingredientesPrincipais ?? dish.mainIngredients);
+  const culinaryPreferences = getStringArray(dish.pratos_pref_culinarias ?? dish.pref_culinarias ?? dish.prefCulinarias ?? dish.culinaryPreferences);
+  const themes = getStringArray(dish.pratos_temas ?? dish.temas ?? dish.themes);
 
-  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes };
+  const meal_preap = dish.meal_preap === true || dish.meal_preap === "true";
+  const get_togheter = dish.get_togheter === true || dish.get_togheter === "true";
+
+  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, meal_preap, get_togheter };
 }
 
 export async function listDishes(params?: { token?: string }) {
