@@ -65,6 +65,12 @@ const EditarDadosPessoais = () => {
     comprovanteEndereco: null as File | null
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    senhaAtual: "",
+    novaSenha: "",
+    confirmarSenha: "",
+  });
 
   useEffect(() => {
     if (!token || !userId) return;
