@@ -15,11 +15,39 @@ apiClient.interceptors.response.use(
         if (axios.isAxiosError(error) && error.response) {
             const { status } = error.response;
             if (status === 401 || status === 403) {
+                const requestUrl = error.config?.url ?? "";
+                if (requestUrl.includes("/api/auth/login")) {
+                    return Promise.reject(error);
+                }
+
+                let isChef = false;
+                try {
+                    const authRaw = localStorage.getItem("auth");
+                    if (authRaw) {
+                        const parsed = JSON.parse(authRaw);
+                        if (parsed?.user?.tipo_usuario === "chef" || parsed?.user?.tipoUsuario === "chef") {
+                            isChef = true;
+                        }
+                    }
+                    const userRaw = localStorage.getItem("tyt_user");
+                    if (userRaw) {
+                        const parsed = JSON.parse(userRaw);
+                        if (parsed?.tipo_usuario === "chef" || parsed?.tipoUsuario === "chef") {
+                            isChef = true;
+                        }
+                    }
+                } catch (e) {}
+
+                const currentPath = window.location.hash || window.location.pathname;
+                if (currentPath.includes("chef")) {
+                    isChef = true;
+                }
+
                 localStorage.removeItem("tyt_access_token");
                 localStorage.removeItem("tyt_user");
                 localStorage.removeItem("auth");
                 localStorage.removeItem("token");
-                window.location.hash = "/login";
+                window.location.hash = isChef ? "/login/chef" : "/login";
             }
         }
         return Promise.reject(error);
