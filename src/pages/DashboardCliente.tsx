@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
 import {
+  getKitchenOrderByCode,
   getKitchenOrderDate,
   getKitchenOrderLocation,
   getKitchenOrderTime,
@@ -70,6 +71,7 @@ const DashboardCliente = () => {
   const [clientUser, setClientUser] = useState<Record<string, unknown> | null>(() => loadSession()?.user ?? null);
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeOrdersDetails, setActiveOrdersDetails] = useState<Record<string, KitchenOrder>>({});
 
   // Function to get greeting based on time
   const getTimeBasedGreeting = () => {
@@ -138,6 +140,32 @@ const DashboardCliente = () => {
       return status === "pendente" || status === "confirmado";
     });
   }, [kitchenOrders]);
+
+  useEffect(() => {
+    const session = loadSession();
+    if (!session?.token) return;
+
+    activeOrders.forEach((order) => {
+      const code = getKitchenOrderCode(order);
+      if (!code || activeOrdersDetails[code]) return;
+
+      getKitchenOrderByCode({ token: session.token, code })
+        .then((res) => {
+          if (res && typeof res === "object") {
+            const detail = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
+              ? (res as any).data
+              : res;
+            if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+              setActiveOrdersDetails((prev) => ({
+                ...prev,
+                [code]: detail as KitchenOrder,
+              }));
+            }
+          }
+        })
+        .catch(() => {});
+    });
+  }, [activeOrders, activeOrdersDetails]);
 
   const activeOrdersByType = useMemo(() => {
     const byType: Partial<Record<ReturnType<typeof normalizeKitchenOrderTypeLabel>, KitchenOrder>> = {};
@@ -232,9 +260,10 @@ const DashboardCliente = () => {
             const config = typeConfig[type];
             const status = normalizeKitchenOrderStatusLabel(order);
             const code = getKitchenOrderCode(order);
-            const date = getKitchenOrderDate(order);
-            const time = getKitchenOrderTime(order);
-            const location = getKitchenOrderLocation(order);
+            const detail = activeOrdersDetails[code] || order;
+            const date = getKitchenOrderDate(detail);
+            const time = getKitchenOrderTime(detail);
+            const location = getKitchenOrderLocation(detail);
             const isPending = status === "pendente";
 
             return (

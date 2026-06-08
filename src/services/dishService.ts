@@ -28,9 +28,6 @@ const getStringArray = (value: unknown): string[] => {
         if (item && typeof item === "object") {
           const record = item as Record<string, unknown>;
           const res: string[] = [];
-          if (record.id !== undefined && record.id !== null) {
-            res.push(String(record.id));
-          }
           const candidate = record.descricao ?? record.nome ?? record.name ?? record.label ?? record.title;
           if (typeof candidate === "string") {
             res.push(candidate);

@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadSession } from "@/services/authService";
 import {
+  getKitchenOrderByCode,
   getKitchenOrderDate,
   getKitchenOrderLocation,
   getKitchenOrderTime,
@@ -36,6 +37,7 @@ const MeusContratos = () => {
   const [filtroAtivo, setFiltroAtivo] = useState("ativos"); // "ativos" | "pendentes" | "antigos"
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [contractsDetails, setContractsDetails] = useState<Record<string, KitchenOrder>>({});
 
   useEffect(() => {
     const session = loadSession();
@@ -83,6 +85,34 @@ const MeusContratos = () => {
 
     return { activeContracts: active, pendingContracts: pending, pastContracts: past };
   }, [kitchenOrders]);
+
+  useEffect(() => {
+    const session = loadSession();
+    if (!session?.token) return;
+
+    const targetContracts = [...activeContracts, ...pendingContracts];
+
+    targetContracts.forEach((order) => {
+      const code = getKitchenOrderCode(order);
+      if (!code || contractsDetails[code]) return;
+
+      getKitchenOrderByCode({ token: session.token, code })
+        .then((res) => {
+          if (res && typeof res === "object") {
+            const detail = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
+              ? (res as any).data
+              : res;
+            if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+              setContractsDetails((prev) => ({
+                ...prev,
+                [code]: detail as KitchenOrder,
+              }));
+            }
+          }
+        })
+        .catch(() => {});
+    });
+  }, [activeContracts, pendingContracts, contractsDetails]);
 
   const contratosFiltrados = useMemo(() => {
     if (filtroAtivo === "antigos") return pastContracts;
@@ -174,9 +204,10 @@ const MeusContratos = () => {
           contratosFiltrados.map((contrato, index) => {
             const type = normalizeKitchenOrderTypeLabel(contrato);
             const code = getKitchenOrderCode(contrato);
-            const date = getKitchenOrderDate(contrato);
-            const time = getKitchenOrderTime(contrato);
-            const location = getKitchenOrderLocation(contrato);
+            const detail = contractsDetails[code] || contrato;
+            const date = getKitchenOrderDate(detail);
+            const time = getKitchenOrderTime(detail);
+            const location = getKitchenOrderLocation(detail);
             const borderClass =
               type === "Cozinha Semanal" ? "border-green-200" : type === "Evento" ? "border-purple-200" : "border-orange-200";
 
