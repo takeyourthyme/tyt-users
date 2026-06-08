@@ -22,6 +22,7 @@ import OrdemDeCozinha from "./pages/OrdemDeCozinha";
 import OrdemPendente from "./pages/OrdemPendente";
 import ServicoDetalhes from "./pages/ServicoDetalhes";
 import MeusPagamentos from "./pages/MeusPagamentos";
+import AprovacoesChef from "./pages/AprovacoesChef";
 import Cardapio from "./pages/Cardapio";
 import PratoDetalhes from "./pages/PratoDetalhes";
 import EditarDadosPessoais from "./pages/EditarDadosPessoais";
@@ -76,6 +77,7 @@ const AppContent = () => {
       <Route path="/ordem-pendente/:id" element={<ChefRoute><OrdemPendente /></ChefRoute>} />
       <Route path="/servico-detalhes/:id" element={<ChefRoute><ServicoDetalhes /></ChefRoute>} />
       <Route path="/meus-pagamentos" element={<ChefRoute><MeusPagamentos /></ChefRoute>} />
+      <Route path="/servicos-pendentes" element={<ChefRoute><AprovacoesChef /></ChefRoute>} />
     </Routes>
   );
 };
