@@ -316,8 +316,18 @@ const AgendaChef = () => {
     if (!session?.token) return;
     listKitchenOrders({ token: session.token })
       .then((data) => {
-        const orders = Array.isArray(data) ? data : (data as { orders?: unknown })?.orders;
-        if (Array.isArray(orders)) setKitchenOrders(orders as KitchenOrder[]);
+        const orders = Array.isArray(data)
+          ? data
+          : (data as { data?: unknown })?.data ?? (data as { orders?: unknown })?.orders;
+        if (Array.isArray(orders)) {
+          const chefUserId = session.userId ?? session.user?.id;
+          const chefProfileId = session.user?.usuario_chef?.id ?? session.user?.chef?.id;
+          const filtered = (orders as KitchenOrder[]).filter((order) => {
+            const orderChefId = (order.chef as { id?: number } | null)?.id;
+            return Number(orderChefId) === Number(chefUserId) || Number(orderChefId) === Number(chefProfileId);
+          });
+          setKitchenOrders(filtered);
+        }
       })
       .catch((err) => {
         console.error("Falha ao carregar pedidos:", err);
@@ -356,53 +366,55 @@ const AgendaChef = () => {
       .filter((item) => Boolean(item.id));
   }, [kitchenOrders]);
 
+  // Filter events based on applied filters and quick search
+  const filteredAgendaItems = useMemo(() => {
+    return agendaItems.filter(item => {
+      // Quick search term filter (dynamic)
+      const matchesQuickSearch = !searchTerm ||
+        item.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.location.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Advanced filters (only applied when user clicks search)
+      const matchesClientName = !appliedFilters.clientName ||
+        item.client.name.toLowerCase().includes(appliedFilters.clientName.toLowerCase());
+
+      const matchesDateRange = (!appliedFilters.dateRange.start || item.date >= appliedFilters.dateRange.start) &&
+        (!appliedFilters.dateRange.end || item.date <= appliedFilters.dateRange.end);
+
+      const matchesServiceType = !appliedFilters.serviceType || item.type === appliedFilters.serviceType;
+
+      const matchesStatus = !appliedFilters.status || item.status === appliedFilters.status;
+
+      // Special filter for "Pendentes de Comprovante": exclude "Serviço Especial"
+      const isPendentesFilterValid = !appliedFilters.isPendentesFilter || item.type !== "Serviço Especial";
+
+      return matchesQuickSearch && matchesClientName && matchesDateRange && matchesServiceType && matchesStatus && isPendentesFilterValid;
+    }).sort((a, b) => {
+      // Sort by status: pendentes first, then confirmados
+      if (a.status === "pendente" && b.status !== "pendente") return -1;
+      if (a.status !== "pendente" && b.status === "pendente") return 1;
+      // If same status, maintain original order (by date)
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+  }, [agendaItems, searchTerm, appliedFilters]);
+
   // Get events for selected date
   const getEventsForDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return agendaItems.filter(item => item.date === dateStr);
+    return filteredAgendaItems.filter(item => item.date === dateStr);
   };
 
   // Get all dates that have events
   const getDatesWithEvents = () => {
-    return agendaItems.map(item => new Date(item.date + 'T00:00:00'));
+    return filteredAgendaItems.map(item => new Date(item.date + 'T00:00:00'));
   };
 
   // Check if a date has events
   const dateHasEvents = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return agendaItems.some(item => item.date === dateStr);
+    return filteredAgendaItems.some(item => item.date === dateStr);
   };
-
-  // Filter events based on applied filters and quick search
-  const filteredAgendaItems = agendaItems.filter(item => {
-    // Quick search term filter (dynamic)
-    const matchesQuickSearch = !searchTerm ||
-      item.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.location.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Advanced filters (only applied when user clicks search)
-    const matchesClientName = !appliedFilters.clientName ||
-      item.client.name.toLowerCase().includes(appliedFilters.clientName.toLowerCase());
-
-    const matchesDateRange = (!appliedFilters.dateRange.start || item.date >= appliedFilters.dateRange.start) &&
-      (!appliedFilters.dateRange.end || item.date <= appliedFilters.dateRange.end);
-
-    const matchesServiceType = !appliedFilters.serviceType || item.type === appliedFilters.serviceType;
-
-    const matchesStatus = !appliedFilters.status || item.status === appliedFilters.status;
-
-    // Special filter for "Pendentes de Comprovante": exclude "Serviço Especial"
-    const isPendentesFilterValid = !appliedFilters.isPendentesFilter || item.type !== "Serviço Especial";
-
-    return matchesQuickSearch && matchesClientName && matchesDateRange && matchesServiceType && matchesStatus && isPendentesFilterValid;
-  }).sort((a, b) => {
-    // Sort by status: pendentes first, then confirmados
-    if (a.status === "pendente" && b.status !== "pendente") return -1;
-    if (a.status !== "pendente" && b.status === "pendente") return 1;
-    // If same status, maintain original order (by date)
-    return new Date(a.date).getTime() - new Date(b.date).getTime();
-  });
 
   // Handle advanced search
   const handleAdvancedSearch = () => {

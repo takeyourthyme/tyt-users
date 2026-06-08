@@ -256,8 +256,18 @@ const DashboardChef = () => {
     if (!session?.token) return;
     listKitchenOrders({ token: session.token })
       .then((data) => {
-        const orders = Array.isArray(data) ? data : (data as { orders?: unknown })?.orders;
-        if (Array.isArray(orders)) setKitchenOrders(orders as KitchenOrder[]);
+        const orders = Array.isArray(data)
+          ? data
+          : (data as { data?: unknown })?.data ?? (data as { orders?: unknown })?.orders;
+        if (Array.isArray(orders)) {
+          const chefUserId = session.userId ?? session.user?.id;
+          const chefProfileId = session.user?.usuario_chef?.id ?? session.user?.chef?.id;
+          const filtered = (orders as KitchenOrder[]).filter((order) => {
+            const orderChefId = (order.chef as { id?: number } | null)?.id;
+            return Number(orderChefId) === Number(chefUserId) || Number(orderChefId) === Number(chefProfileId);
+          });
+          setKitchenOrders(filtered);
+        }
       })
       .catch((err) => {
         console.error("Falha ao carregar pedidos:", err);
@@ -337,7 +347,6 @@ const DashboardChef = () => {
       description: "Finalize seus serviços",
       onClick: () => handleNavigateToAgenda("pendentes"),
       color: "from-red-500 to-red-600",
-      disabled: true,
     },
     {
       icon: Settings,

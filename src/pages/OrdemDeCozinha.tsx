@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { 
-  Calendar, 
-  ChefHat, 
+import {
+  Calendar,
+  ChefHat,
   Clock,
   MapPin,
   UtensilsCrossed,
@@ -53,6 +53,7 @@ import {
   normalizeKitchenOrderStatusLabel,
   normalizeKitchenOrderTypeLabel,
   type KitchenOrder,
+  getKitchenOrderCode,
 } from "@/services/kitchenOrderService";
 
 // Chef Menu Component
@@ -114,9 +115,9 @@ const ChefMenu = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
                     {chefPhotoUrl ? (
-                      <img 
-                        src={chefPhotoUrl} 
-                        alt={`Foto de perfil do Chef ${chefName}`} 
+                      <img
+                        src={chefPhotoUrl}
+                        alt={`Foto de perfil do Chef ${chefName}`}
                         className="w-full h-full object-cover"
                         onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
@@ -201,18 +202,18 @@ const ChefMenu = () => {
 
               {/* Logo no final do menu */}
               <div className="mt-3 pt-3 border-t border-gray-200 flex justify-center flex-shrink-0">
-                <img 
-                  src={logoCompleta} 
-                  alt="Logo Take Your Thyme" 
+                <img
+                  src={logoCompleta}
+                  alt="Logo Take Your Thyme"
                   className="h-6 w-auto opacity-80"
                 />
               </div>
             </SheetContent>
           </Sheet>
-          
-          <img 
-            src={logoWhite} 
-            alt="Take Your Thyme" 
+
+          <img
+            src={logoWhite}
+            alt="Take Your Thyme"
             className="h-6 w-auto cursor-pointer"
             onClick={() => navigate('/dashboard-chef')}
           />
@@ -246,9 +247,15 @@ const OrdemDeCozinha = () => {
       return;
     }
     getKitchenOrderByCode({ token: session.token, code: id })
-      .then((data) => {
-        if (data && typeof data === "object") {
-          setKitchenOrder(data as KitchenOrder);
+      .then((res) => {
+        if (res && typeof res === "object") {
+          const order = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
+            ? (res as any).data
+            : res;
+
+          if (order && typeof order === "object" && !Array.isArray(order)) {
+            setKitchenOrder(order as KitchenOrder);
+          }
         }
       })
       .catch(() => {
@@ -263,13 +270,13 @@ const OrdemDeCozinha = () => {
   const formatCurrency = (value: string) => {
     // Remove tudo que não é número
     const numbers = value.replace(/\D/g, '');
-    
+
     // Se vazio, retorna vazio
     if (!numbers) return '';
-    
+
     // Converte para número e divide por 100 para ter os centavos
     const amount = parseFloat(numbers) / 100;
-    
+
     // Formata como moeda brasileira
     return amount.toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
@@ -336,7 +343,7 @@ const OrdemDeCozinha = () => {
   // Mock dish images
   const dishImages: Record<string, string> = {
     "Salmão Grelhado com Aspargos": "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop",
-    "Risotto de Camarão": "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=300&h=200&fit=crop", 
+    "Risotto de Camarão": "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=300&h=200&fit=crop",
     "Salada Mediterranean": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop",
     "Torta de Limão": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=300&h=200&fit=crop",
     "Paella Valenciana": "https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=300&h=200&fit=crop",
@@ -392,12 +399,12 @@ const OrdemDeCozinha = () => {
   const maskEmail = (email: string) => {
     const [username, domain] = email.split('@');
     if (!username || !domain) return email;
-    
+
     // Show first 2 chars of username and mask the rest
-    const maskedUsername = username.length > 2 
+    const maskedUsername = username.length > 2
       ? `${username.substring(0, 2)}${'*'.repeat(Math.min(username.length - 2, 5))}`
       : username;
-    
+
     return `${maskedUsername}@${domain}`;
   };
 
@@ -413,6 +420,7 @@ const OrdemDeCozinha = () => {
 
     return {
       id: kitchenOrder.id || id,
+      code: getKitchenOrderCode(kitchenOrder) || "",
       type,
       date,
       time,
@@ -422,11 +430,11 @@ const OrdemDeCozinha = () => {
       people: (kitchenOrder.people_quantity as number) || 4,
       client: {
         ...client,
-        phone: (kitchenOrder.client_phone as string) || "(11) 99999-9999",
-        email: (kitchenOrder.client_email as string) || "cliente@email.com",
+        phone: (kitchenOrder.client_phone as string) || (kitchenOrder.cliente as any)?.whatsapp || (kitchenOrder.cliente as any)?.phone || "(11) 99999-9999",
+        email: (kitchenOrder.client_email as string) || (kitchenOrder.cliente as any)?.email || "cliente@email.com",
       },
       status,
-      menu: Array.isArray(kitchenOrder.dishes) 
+      menu: Array.isArray(kitchenOrder.dishes)
         ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? (d.dish as Record<string, unknown>)?.name as string : "Prato")
         : ["Menu Personalizado"],
       observations: (kitchenOrder.observations as string) || (kitchenOrder.client_request as string) || "Sem observações adicionais.",
@@ -536,7 +544,7 @@ const OrdemDeCozinha = () => {
                       {ordem.status}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600 font-normal">#{String(ordem.id)}</p>
+                  <p className="text-sm text-gray-600 font-normal">#{String(ordem.code)}</p>
                 </div>
               </CardTitle>
             </CardHeader>
@@ -567,8 +575,8 @@ const OrdemDeCozinha = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col md:flex-row items-start gap-4">
-                <img 
-                  src={ordem.client.photo} 
+                <img
+                  src={ordem.client.photo}
                   alt={ordem.client.name}
                   className="w-16 h-16 rounded-full object-cover"
                 />
@@ -601,7 +609,7 @@ const OrdemDeCozinha = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Desktop buttons - side by side */}
                 <div className="hidden md:flex flex-col gap-2">
                   <Button
@@ -632,7 +640,7 @@ const OrdemDeCozinha = () => {
                   )}
                 </div>
               </div>
-              
+
               {/* Mobile buttons - stacked below */}
               <div className="md:hidden flex flex-col gap-2 mt-4">
                 <Button
@@ -716,7 +724,7 @@ const OrdemDeCozinha = () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction 
+                    <AlertDialogAction
                       className="bg-green-600 hover:bg-green-700"
                       onClick={() => navigate('/dashboard-chef')}
                     >
@@ -742,7 +750,7 @@ const OrdemDeCozinha = () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction 
+                    <AlertDialogAction
                       className="bg-red-600 hover:bg-red-700"
                       onClick={() => navigate('/dashboard-chef')}
                     >
@@ -764,8 +772,8 @@ const OrdemDeCozinha = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {ordem.menu.map((item, index) => (
                     <div key={index} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
-                      <img 
-                        src={dishImages[item] || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"} 
+                      <img
+                        src={dishImages[item] || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"}
                         alt={item}
                         className="w-16 h-16 rounded-lg object-cover"
                       />
@@ -786,7 +794,7 @@ const OrdemDeCozinha = () => {
                     <FileText className="w-4 h-4 mr-2" />
                     Ficha Técnica
                   </Button>
-                  
+
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full">
@@ -808,8 +816,8 @@ const OrdemDeCozinha = () => {
                                 onCheckedChange={() => toggleCheckItem(index)}
                               />
                               <div className="flex-1 flex items-center justify-between">
-                                <label 
-                                  htmlFor={`item-${index}`} 
+                                <label
+                                  htmlFor={`item-${index}`}
                                   className={`font-medium cursor-pointer ${checkedItems[index] ? 'line-through text-gray-500' : ''}`}
                                 >
                                   {item.item}

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { 
-  Calendar, 
-  ChefHat, 
+import {
+  Calendar,
+  ChefHat,
   Clock,
   MapPin,
   UtensilsCrossed,
@@ -41,6 +41,7 @@ import {
   getKitchenOrderByCode,
   normalizeKitchenOrderStatusLabel,
   normalizeKitchenOrderTypeLabel,
+  getKitchenOrderCode,
   type KitchenOrder,
 } from "@/services/kitchenOrderService";
 
@@ -103,9 +104,9 @@ const ChefMenu = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
                     {chefPhotoUrl ? (
-                      <img 
-                        src={chefPhotoUrl} 
-                        alt={`Foto de perfil do Chef ${chefName}`} 
+                      <img
+                        src={chefPhotoUrl}
+                        alt={`Foto de perfil do Chef ${chefName}`}
                         className="w-full h-full object-cover"
                         onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
@@ -190,18 +191,18 @@ const ChefMenu = () => {
 
               {/* Logo no final do menu */}
               <div className="mt-3 pt-3 border-t border-gray-200 flex justify-center flex-shrink-0">
-                <img 
-                  src={logoCompleta} 
-                  alt="Logo Take Your Thyme" 
+                <img
+                  src={logoCompleta}
+                  alt="Logo Take Your Thyme"
                   className="h-6 w-auto opacity-80"
                 />
               </div>
             </SheetContent>
           </Sheet>
-          
-          <img 
-            src={logoWhite} 
-            alt="Take Your Thyme" 
+
+          <img
+            src={logoWhite}
+            alt="Take Your Thyme"
             className="h-6 w-auto cursor-pointer"
             onClick={() => navigate('/dashboard-chef')}
           />
@@ -225,12 +226,18 @@ const ServicoDetalhes = () => {
       return;
     }
     getKitchenOrderByCode({ token: session.token, code: id })
-      .then((data) => {
-        if (data && typeof data === "object") {
-          setKitchenOrder(data as KitchenOrder);
+      .then((res) => {
+        if (res && typeof res === "object") {
+          const order = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
+            ? (res as any).data
+            : res;
+
+          if (order && typeof order === "object" && !Array.isArray(order)) {
+            setKitchenOrder(order as KitchenOrder);
+          }
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         setIsLoading(false);
       });
@@ -248,11 +255,12 @@ const ServicoDetalhes = () => {
 
     return {
       id: (kitchenOrder.id as string | number) || id,
+      code: getKitchenOrderCode(kitchenOrder),
       type,
       client: {
         ...client,
-        phone: (kitchenOrder.client_phone as string) || "(11) 99999-9999",
-        email: (kitchenOrder.client_email as string) || "cliente@email.com",
+        phone: (kitchenOrder.client_phone as string) || (kitchenOrder.cliente as any)?.whatsapp || (kitchenOrder.cliente as any)?.phone || "(11) 99999-9999",
+        email: (kitchenOrder.client_email as string) || (kitchenOrder.cliente as any)?.email || "cliente@email.com",
         address: address,
       },
       startDate: date,
@@ -273,11 +281,11 @@ const ServicoDetalhes = () => {
   const ordensServico = useMemo(() => {
     if (!kitchenOrder) return [];
     return [{
-      id: (kitchenOrder.id as string | number) || id,
+      id: getKitchenOrderCode(kitchenOrder) || id,
       data: getKitchenOrderDate(kitchenOrder)?.toISOString() || new Date().toISOString(),
       valor: "R$ 450,00",
       status: normalizeKitchenOrderStatusLabel(kitchenOrder) === 'concluido' ? "finalizado" : "em_andamento",
-      pratos: Array.isArray(kitchenOrder.dishes) 
+      pratos: Array.isArray(kitchenOrder.dishes)
         ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? { nome: (d.dish as Record<string, unknown>)?.name as string } : { nome: "Prato" })
         : [{ nome: "Menu Personalizado" }]
     }];
@@ -353,7 +361,7 @@ const ServicoDetalhes = () => {
                 </div>
                 <div>
                   <span>{servico.type}</span>
-                  <p className="text-sm text-gray-600 font-normal">Contrato #{servico.id}</p>
+                  <p className="text-sm text-gray-600 font-normal">Contrato #{servico.code}</p>
                 </div>
               </CardTitle>
             </CardHeader>
@@ -376,7 +384,7 @@ const ServicoDetalhes = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   <h4 className="font-medium text-gray-900">Valores</h4>
                   <div className="space-y-2 text-sm">
@@ -401,8 +409,8 @@ const ServicoDetalhes = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col md:flex-row items-start gap-4">
-                <img 
-                  src={servico.client.photo} 
+                <img
+                  src={servico.client.photo}
                   alt={servico.client.name}
                   className="w-16 h-16 rounded-full object-cover"
                 />
@@ -427,7 +435,7 @@ const ServicoDetalhes = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Desktop buttons - side by side */}
                 <div className="hidden md:flex flex-col gap-2">
                   <Button
@@ -454,7 +462,7 @@ const ServicoDetalhes = () => {
                   </Button>
                 </div>
               </div>
-              
+
               {/* Mobile buttons - stacked below */}
               <div className="md:hidden flex flex-col gap-2 mt-4">
                 <Button

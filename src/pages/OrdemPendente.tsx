@@ -235,9 +235,15 @@ const OrdemPendente = () => {
       return;
     }
     getKitchenOrderByCode({ token: session.token, code: id })
-      .then((data) => {
-        if (data && typeof data === "object") {
-          setKitchenOrder(data as KitchenOrder);
+      .then((res) => {
+        if (res && typeof res === "object") {
+          const order = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
+            ? (res as any).data
+            : res;
+          
+          if (order && typeof order === "object" && !Array.isArray(order)) {
+            setKitchenOrder(order as KitchenOrder);
+          }
         }
       })
       .catch(() => {
@@ -335,8 +341,8 @@ const OrdemPendente = () => {
       people: (kitchenOrder.people_quantity as number) || 4,
       client: {
         ...client,
-        phone: (kitchenOrder.client_phone as string) || "(11) 99999-9999",
-        email: (kitchenOrder.client_email as string) || "cliente@email.com",
+        phone: (kitchenOrder.client_phone as string) || (kitchenOrder.cliente as any)?.whatsapp || (kitchenOrder.cliente as any)?.phone || "(11) 99999-9999",
+        email: (kitchenOrder.client_email as string) || (kitchenOrder.cliente as any)?.email || "cliente@email.com",
       },
       status,
       menu: Array.isArray(kitchenOrder.dishes)

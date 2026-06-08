@@ -30,7 +30,9 @@ export function normalizeKitchenOrderTypeLabel(order: KitchenOrder): KitchenOrde
   if (
     normalized.includes("EVENT") ||
     normalized.includes("TOGHETER") ||
+    normalized.includes("TOGETHER") ||
     normalized === "GET_TOGHETER" ||
+    normalized === "GET_TOGETHER" ||
     (normalized.includes("SPECIAL") && hasDishes)
   ) {
     return "Evento";
