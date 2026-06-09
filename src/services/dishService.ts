@@ -2,6 +2,13 @@ import { apiClient, createAuthConfig } from "./apiClient";
 
 export type Dish = Record<string, unknown>;
 
+export type NormalizedIngredient = {
+  name: string;
+  quantityValue: number;
+  unit: string;
+  price: number;
+};
+
 export type NormalizedDish = {
   id: string;
   name: string;
@@ -15,6 +22,9 @@ export type NormalizedDish = {
   themes: string[];
   meal_preap: boolean;
   get_togheter: boolean;
+  ficha_tecnica?: string;
+  receita?: string;
+  ingredients: NormalizedIngredient[];
 };
 
 const sanitizeUrl = (value: string) => value.trim().replace(/^[`"' ]+|[`"' ]+$/g, "");
@@ -47,6 +57,40 @@ const getStringArray = (value: unknown): string[] => {
       .split(",")
       .map((part) => part.trim())
       .filter(Boolean);
+  }
+  return [];
+};
+
+const getIngredients = (value: unknown): NormalizedIngredient[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (item && typeof item === "object") {
+          const record = item as Record<string, unknown>;
+          const ingObj = (record.ingrediente ?? record) as Record<string, unknown>;
+          const name = String(ingObj?.descricao ?? ingObj?.nome ?? ingObj?.name ?? "").trim();
+          const unit = String(ingObj?.unidade ?? ingObj?.unit ?? "").trim();
+          
+          const rawQty = ingObj?.quantidade ?? ingObj?.quantity ?? ingObj?.volume_peso ?? 1;
+          const parsedQty = parseFloat(String(rawQty));
+          const quantityValue = isNaN(parsedQty) ? 1 : parsedQty;
+
+          const rawPrice = ingObj?.valor ?? ingObj?.price ?? 0;
+          const parsedPrice = parseFloat(String(rawPrice));
+          const price = isNaN(parsedPrice) ? 0 : parsedPrice;
+          
+          if (name) {
+            return {
+              name,
+              quantityValue,
+              unit,
+              price,
+            };
+          }
+        }
+        return null;
+      })
+      .filter(Boolean) as NormalizedIngredient[];
   }
   return [];
 };
@@ -92,7 +136,26 @@ export function normalizeDish(dish: Dish): NormalizedDish {
   const meal_preap = dish.meal_preap === true || dish.meal_preap === "true";
   const get_togheter = dish.get_togheter === true || dish.get_togheter === "true";
 
-  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, meal_preap, get_togheter };
+  const fichaTecnicaCandidates: Array<unknown> = [
+    dish.ficha_tecnica,
+    dish.fichaTecnica,
+    dish.ficha_tecnica_url,
+    dish.fichaTecnicaUrl,
+  ];
+  const fichaTecnicaValue = fichaTecnicaCandidates.find((value) => typeof value === "string") as string | undefined;
+  const ficha_tecnica = fichaTecnicaValue?.trim() ? sanitizeUrl(fichaTecnicaValue) : undefined;
+
+  const receitaCandidates: Array<unknown> = [
+    dish.receita,
+    dish.receita_url,
+    dish.receitaUrl,
+  ];
+  const receitaValue = receitaCandidates.find((value) => typeof value === "string") as string | undefined;
+  const receita = receitaValue?.trim() ? sanitizeUrl(receitaValue) : undefined;
+
+  const ingredients = getIngredients(dish.pratos_ingredientes ?? dish.ingredientes ?? dish.ingredients);
+
+  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, meal_preap, get_togheter, ficha_tecnica, receita, ingredients };
 }
 
 export async function listDishes(params?: { token?: string }) {

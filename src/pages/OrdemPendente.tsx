@@ -143,14 +143,44 @@ const OrdemPendente = () => {
   };
 
   // Handler para concluir serviço
-  const handleCompleteService = () => {
-    toast({
-      title: "Serviço concluído com sucesso!",
-      description: "O serviço foi finalizado.",
-    });
+  const handleCompleteService = async () => {
+    const session = loadSession();
+    if (!session?.token || !kitchenOrder?.id) {
+      toast({
+        variant: "destructive",
+        title: "Erro de sessão",
+        description: "Sessão expirada. Por favor, faça login novamente.",
+      });
+      return;
+    }
 
-    setIsServiceCompleted(true);
-    setIsCompleteDialogOpen(false);
+    try {
+      await updateKitchenOrderStatus({
+        token: session.token,
+        id: kitchenOrder.id as number,
+        status: "FINALIZED",
+      });
+
+      toast({
+        title: "Serviço concluído com sucesso!",
+        description: "O serviço foi finalizado.",
+      });
+
+      setIsServiceCompleted(true);
+      setIsCompleteDialogOpen(false);
+
+      if (kitchenOrder) {
+        setKitchenOrder(prev => prev ? { ...prev, status: "FINALIZED" } : null);
+      }
+      navigate('/dashboard-chef');
+    } catch (error) {
+      console.error("Erro ao concluir ordem:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao concluir serviço",
+        description: "Ocorreu um problema ao finalizar a ordem.",
+      });
+    }
   };
 
   const handleAccept = async () => {
@@ -323,7 +353,7 @@ const OrdemPendente = () => {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm">{new Date(ordem.date).toLocaleDateString('pt-BR')} às {ordem.time}</span>
+                  <span className="text-sm">{new Date(ordem.date).toLocaleDateString('pt-BR')}{ordem.time ? ` às ${ordem.time}` : ''}</span>
                 </div>
 
                 {/* Client photo and name below date */}

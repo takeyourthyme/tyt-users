@@ -32,6 +32,7 @@ import {
   normalizeKitchenOrderStatusLabel,
   normalizeKitchenOrderTypeLabel,
   getKitchenOrderCode,
+  getKitchenOrderByCode,
   updateKitchenOrderStatus,
   type KitchenOrder,
 } from "@/services/kitchenOrderService";
@@ -58,7 +59,7 @@ const AprovacoesChef = () => {
     if (!token) return;
     setIsLoading(true);
     listKitchenOrders({ token })
-      .then((data) => {
+      .then(async (data) => {
         const orders = Array.isArray(data)
           ? data
           : (data as { data?: unknown })?.data ?? (data as { orders?: unknown })?.orders;
@@ -71,7 +72,20 @@ const AprovacoesChef = () => {
             const status = normalizeKitchenOrderStatusLabel(order);
             return matchesChef && status === "pendente";
           });
-          setKitchenOrders(filtered);
+          
+          const detailedOrders = await Promise.all(
+            filtered.map(async (order) => {
+              try {
+                const code = getKitchenOrderCode(order);
+                const detail = await getKitchenOrderByCode({ token, code });
+                const detailData = (detail as any).data ?? detail;
+                return detailData as KitchenOrder;
+              } catch (e) {
+                return order;
+              }
+            })
+          );
+          setKitchenOrders(detailedOrders);
         }
       })
       .catch((err) => {
@@ -245,13 +259,13 @@ const AprovacoesChef = () => {
                       <div className="space-y-1 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-gray-900">{type}</span>
-                          <span className="text-xs text-gray-500 font-normal">#{code}</span>
+                          <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{code}</span>
                         </div>
 
                         <div className="text-sm text-gray-600 space-y-0.5">
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                            <span>{dateStr} às {timeStr}</span>
+                            <span>{dateStr}{timeStr ? ` às ${timeStr}` : ''}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <Users className="w-3.5 h-3.5 text-gray-500" />

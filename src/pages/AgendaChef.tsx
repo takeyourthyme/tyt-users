@@ -38,6 +38,7 @@ import {
   normalizeKitchenOrderStatusLabel,
   normalizeKitchenOrderTypeLabel,
   getKitchenOrderCode,
+  getKitchenOrderByCode,
   type KitchenOrder,
 } from "@/services/kitchenOrderService";
 import { getUserPhotoUrl } from "@/services/userService";
@@ -135,18 +136,31 @@ const AgendaChef = () => {
     const session = loadSession();
     if (!session?.token) return;
     listKitchenOrders({ token: session.token })
-      .then((data) => {
+      .then(async (data) => {
         const orders = Array.isArray(data)
           ? data
           : (data as { data?: unknown })?.data ?? (data as { orders?: unknown })?.orders;
         if (Array.isArray(orders)) {
-          const chefUserId = session.userId ?? session.user?.id;
-          const chefProfileId = session.user?.usuario_chef?.id ?? session.user?.chef?.id;
+          const chefUserId = session.userId ?? (session.user as any)?.id;
+          const chefProfileId = (session.user as any)?.usuario_chef?.id ?? (session.user as any)?.chef?.id;
           const filtered = (orders as KitchenOrder[]).filter((order) => {
             const orderChefId = (order.chef as { id?: number } | null)?.id;
             return Number(orderChefId) === Number(chefUserId) || Number(orderChefId) === Number(chefProfileId);
           });
-          setKitchenOrders(filtered);
+
+          const detailedOrders = await Promise.all(
+            filtered.map(async (order) => {
+              try {
+                const code = getKitchenOrderCode(order);
+                const detail = await getKitchenOrderByCode({ token: session.token!, code });
+                const detailData = (detail as any).data ?? detail;
+                return detailData as KitchenOrder;
+              } catch (e) {
+                return order;
+              }
+            })
+          );
+          setKitchenOrders(detailedOrders);
         }
       })
       .catch((err) => {
@@ -389,16 +403,19 @@ const AgendaChef = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="font-medium text-gray-800 text-sm truncate">{item.type}</span>
+                                  <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{item.id}</span>
                                   <Badge className={cn("text-xs pointer-events-none", getStatusColor(item.status))}>
                                     {item.status}
                                   </Badge>
                                 </div>
 
                                 <div className="text-xs text-gray-600 space-y-0.5">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3 flex-shrink-0" />
-                                    <span>{item.time}</span>
-                                  </div>
+                                  {item.time && (
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3 flex-shrink-0" />
+                                      <span>{item.time}</span>
+                                    </div>
+                                  )}
                                   <div className="flex items-center gap-1">
                                     <User className="w-3 h-3 flex-shrink-0" />
                                     <span className="truncate">{item.client.name}</span>
@@ -430,16 +447,19 @@ const AgendaChef = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="font-medium text-gray-800 text-sm">{item.type}</span>
+                                  <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{item.id}</span>
                                   <Badge className={cn("text-xs pointer-events-none", getStatusColor(item.status))}>
                                     {item.status}
                                   </Badge>
                                 </div>
 
                                 <div className="text-xs text-gray-600 space-y-0.5">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3 flex-shrink-0" />
-                                    <span>{item.time}</span>
-                                  </div>
+                                  {item.time && (
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3 flex-shrink-0" />
+                                      <span>{item.time}</span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -594,6 +614,7 @@ const AgendaChef = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-800">{item.type}</span>
+                            <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{item.id}</span>
                             <Badge className={cn("pointer-events-none", getStatusColor(item.status))}>
                               {item.status}
                             </Badge>
@@ -602,7 +623,7 @@ const AgendaChef = () => {
                           <div className="space-y-1 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {new Date(item.date).toLocaleDateString('pt-BR')} às {item.time}
+                              {new Date(item.date).toLocaleDateString('pt-BR')}{item.time ? ` às ${item.time}` : ''}
                             </div>
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
@@ -645,6 +666,7 @@ const AgendaChef = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-800">{item.type}</span>
+                            <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{item.id}</span>
                             <Badge className={cn("pointer-events-none", getStatusColor(item.status))}>
                               {item.status}
                             </Badge>
@@ -653,7 +675,7 @@ const AgendaChef = () => {
                           <div className="space-y-1 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {new Date(item.date).toLocaleDateString('pt-BR')} às {item.time}
+                              {new Date(item.date).toLocaleDateString('pt-BR')}{item.time ? ` às ${item.time}` : ''}
                             </div>
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />

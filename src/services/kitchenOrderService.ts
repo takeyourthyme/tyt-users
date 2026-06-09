@@ -49,7 +49,13 @@ export function normalizeKitchenOrderStatusLabel(order: KitchenOrder): KitchenOr
   const statusRaw = (order.status as string | undefined) ?? (order.estado as string | undefined) ?? "";
   const normalized = String(statusRaw).toUpperCase();
   if (normalized.includes("CANCEL")) return "cancelado";
-  if (normalized.includes("DONE") || normalized.includes("COMPLETE") || normalized.includes("FINISH")) return "concluido";
+  if (
+    normalized.includes("DONE") ||
+    normalized.includes("COMPLETE") ||
+    normalized.includes("FINISH") ||
+    normalized.includes("FINALIZ") ||
+    normalized.includes("FINAL")
+  ) return "concluido";
   if (normalized.includes("CONFIRM")) return "confirmado";
   return "pendente";
 }

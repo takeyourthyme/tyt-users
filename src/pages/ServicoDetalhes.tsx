@@ -40,6 +40,7 @@ import {
   type KitchenOrder,
 } from "@/services/kitchenOrderService";
 import { ChefMenu } from "@/components/ChefMenu";
+import { normalizeDish, type Dish } from "@/services/dishService";
 
 const ServicoDetalhes = () => {
   const navigate = useNavigate();
@@ -109,13 +110,32 @@ const ServicoDetalhes = () => {
 
   const ordensServico = useMemo(() => {
     if (!kitchenOrder) return [];
+
+    let totalIngredientsPrice = 0;
+    if (Array.isArray(kitchenOrder.dishes)) {
+      kitchenOrder.dishes.forEach((item: any) => {
+        if (item && typeof item === 'object' && item.dish) {
+          const normalized = normalizeDish(item.dish as Dish);
+          const dishQty = item.quantity ?? 1;
+
+          if (normalized.ingredients && normalized.ingredients.length > 0) {
+            normalized.ingredients.forEach(ing => {
+              totalIngredientsPrice += ing.price * ing.quantityValue * dishQty;
+            });
+          }
+        }
+      });
+    }
+
+    const valorFormatted = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalIngredientsPrice);
+
     return [{
       id: getKitchenOrderCode(kitchenOrder) || id,
       data: getKitchenOrderDate(kitchenOrder)?.toISOString() || new Date().toISOString(),
-      valor: "R$ 450,00",
+      valor: valorFormatted,
       status: normalizeKitchenOrderStatusLabel(kitchenOrder) === 'concluido' ? "finalizado" : "em_andamento",
       pratos: Array.isArray(kitchenOrder.dishes)
-        ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? { nome: (d.dish as Record<string, unknown>)?.name as string } : { nome: "Prato" })
+        ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? { nome: normalizeDish(d.dish as Dish).name } : { nome: "Prato" })
         : [{ nome: "Menu Personalizado" }]
     }];
   }, [kitchenOrder, id]);
@@ -205,7 +225,7 @@ const ServicoDetalhes = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-gray-500" />
-                      <span>{servico.frequency} às {servico.time}</span>
+                      <span>{servico.frequency}{servico.time ? ` às ${servico.time}` : ''}</span>
                     </div>
                     <div className="flex items-start gap-2">
                       <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />

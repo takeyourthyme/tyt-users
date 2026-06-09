@@ -54,6 +54,17 @@ import {
   updateKitchenOrderStatus,
 } from "@/services/kitchenOrderService";
 import { ChefMenu } from "@/components/ChefMenu";
+import { normalizeDish, type Dish } from "@/services/dishService";
+
+const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "https://tyt-api.vercel.app/").replace(/\/+$/, "");
+
+const resolveMediaUrl = (value?: string) => {
+  if (!value) return undefined;
+  if (/^(https?:)?\/\//.test(value)) return value;
+  if (value.startsWith("data:") || value.startsWith("blob:")) return value;
+  if (value.startsWith("/")) return `${apiBaseUrl}${value}`;
+  return `${apiBaseUrl}/${value}`;
+};
 
 const OrdemDeCozinha = () => {
   const navigate = useNavigate();
@@ -154,16 +165,44 @@ const OrdemDeCozinha = () => {
   };
 
   // Handler para concluir serviço
-  const handleCompleteService = () => {
-    // Aqui você adicionaria a lógica para salvar as notas
-    toast({
-      title: "Serviço concluído com sucesso!",
-      description: "O serviço foi finalizado.",
-    });
+  const handleCompleteService = async () => {
+    const session = loadSession();
+    if (!session?.token || !kitchenOrder?.id) {
+      toast({
+        variant: "destructive",
+        title: "Erro de sessão",
+        description: "Sessão expirada. Por favor, faça login novamente.",
+      });
+      return;
+    }
 
-    // Marca como concluído e fecha o dialog
-    setIsServiceCompleted(true);
-    setIsCompleteDialogOpen(false);
+    try {
+      await updateKitchenOrderStatus({
+        token: session.token,
+        id: kitchenOrder.id as number,
+        status: "FINALIZED",
+      });
+
+      toast({
+        title: "Serviço concluído com sucesso!",
+        description: "O serviço foi finalizado.",
+      });
+
+      setIsServiceCompleted(true);
+      setIsCompleteDialogOpen(false);
+
+      if (kitchenOrder) {
+        setKitchenOrder(prev => prev ? { ...prev, status: "FINALIZED" } : null);
+      }
+      navigate('/dashboard-chef');
+    } catch (error) {
+      console.error("Erro ao concluir ordem:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao concluir serviço",
+        description: "Ocorreu um problema ao finalizar a ordem.",
+      });
+    }
   };
 
   const handleAccept = async () => {
@@ -315,12 +354,81 @@ const OrdemDeCozinha = () => {
       },
       status,
       menu: Array.isArray(kitchenOrder.dishes)
-        ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? (d.dish as Record<string, unknown>)?.name as string : "Prato")
+        ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? (normalizeDish(d.dish as Dish).name) : "Prato")
         : ["Menu Personalizado"],
+      dishes: Array.isArray(kitchenOrder.dishes)
+        ? kitchenOrder.dishes.map(d => {
+            if (typeof d === 'object' && d !== null && 'dish' in d) {
+              return {
+                dish: normalizeDish(d.dish as Dish),
+                quantity: (d as any).quantity as number ?? 1
+              };
+            }
+            return null;
+          }).filter(Boolean) as Array<{ dish: any; quantity: number }>
+        : [],
       observations: (kitchenOrder.observations as string) || (kitchenOrder.client_request as string) || "Sem observações adicionais.",
       budget: "R$ 0,00"
     };
   }, [kitchenOrder, id]);
+
+  // Dynamic shopping list and total price based on consolidated dish ingredients
+  const { shoppingList, totalEstimatedPrice } = useMemo(() => {
+    if (!kitchenOrder || !Array.isArray(kitchenOrder.dishes)) {
+      return { shoppingList: [], totalEstimatedPrice: 0 };
+    }
+    
+    const consolidated = new Map<string, { quantityValue: number; unit: string; totalCost: number }>();
+    
+    kitchenOrder.dishes.forEach((item: any) => {
+      if (item && typeof item === 'object' && item.dish) {
+        const normalized = normalizeDish(item.dish as Dish);
+        const dishQty = item.quantity ?? 1;
+        
+        if (normalized.ingredients && normalized.ingredients.length > 0) {
+          normalized.ingredients.forEach(ing => {
+            const key = ing.name.toLowerCase().trim();
+            const existing = consolidated.get(key);
+            if (existing) {
+              existing.quantityValue += ing.quantityValue * dishQty;
+              existing.totalCost += ing.price * ing.quantityValue * dishQty;
+            } else {
+              consolidated.set(key, {
+                quantityValue: ing.quantityValue * dishQty,
+                unit: ing.unit,
+                totalCost: ing.price * ing.quantityValue * dishQty
+              });
+            }
+          });
+        } else if (Array.isArray(normalized.mainIngredients) && normalized.mainIngredients.length > 0) {
+          normalized.mainIngredients.forEach(ingName => {
+            const key = ingName.toLowerCase().trim();
+            const existing = consolidated.get(key);
+            if (!existing) {
+              consolidated.set(key, {
+                quantityValue: dishQty,
+                unit: "unidade(s)",
+                totalCost: 0
+              });
+            }
+          });
+        }
+      }
+    });
+    
+    const list = Array.from(consolidated.entries()).map(([name, info]) => {
+      const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+      const qtyStr = info.unit ? `${info.quantityValue} ${info.unit}` : `${info.quantityValue}`;
+      return {
+        item: displayName,
+        quantity: qtyStr
+      };
+    });
+    
+    const total = Array.from(consolidated.values()).reduce((acc, curr) => acc + curr.totalCost, 0);
+    
+    return { shoppingList: list, totalEstimatedPrice: total };
+  }, [kitchenOrder]);
 
   if (isLoading) {
     return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Carregando...</div>;
@@ -329,22 +437,6 @@ const OrdemDeCozinha = () => {
   if (!ordem) {
     return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Ordem não encontrada</div>;
   }
-
-  // Dynamic shopping list based on menu
-  const shoppingList = ordem.menu.length > 3 ? [
-    { item: "Ingrediente principal 1", quantity: "1 kg" },
-    { item: "Ingrediente principal 2", quantity: "800g" },
-    { item: "Ingrediente secundário 1", quantity: "500g" },
-    { item: "Ingrediente secundário 2", quantity: "2 pacotes" },
-    { item: "Temperos variados", quantity: "conforme receita" },
-    { item: "Azeite extra virgem", quantity: "1 litro" },
-    { item: "Sal e pimenta", quantity: "a gosto" }
-  ] : [
-    { item: "Ingrediente principal", quantity: "1 kg" },
-    { item: "Ingrediente secundário", quantity: "500g" },
-    { item: "Temperos", quantity: "conforme receita" },
-    { item: "Azeite", quantity: "1 litro" }
-  ];
 
   const getServiceIcon = (type: string) => {
     switch (type) {
@@ -433,7 +525,7 @@ const OrdemDeCozinha = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm">{new Date(ordem.date).toLocaleDateString('pt-BR')} às {ordem.time}</span>
+                    <span className="text-sm">{new Date(ordem.date).toLocaleDateString('pt-BR')}{ordem.time ? ` às ${ordem.time}` : ''}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-gray-500" />
@@ -650,31 +742,83 @@ const OrdemDeCozinha = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {ordem.menu.map((item, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
-                      <img
-                        src={dishImages[item] || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"}
-                        alt={item}
-                        className="w-16 h-16 rounded-lg object-cover"
-                      />
-                      <span className="font-medium">{item}</span>
+                  {ordem.dishes && ordem.dishes.length > 0 ? (
+                    ordem.dishes.map((item, index) => {
+                      const dish = item.dish;
+                      const dishPhoto = dish.photoUrl ? resolveMediaUrl(dish.photoUrl) : undefined;
+                      return (
+                        <div key={index} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                          <img
+                            src={dishPhoto || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop"}
+                            alt={dish.name}
+                            className="w-16 h-16 rounded-lg object-cover"
+                          />
+                          <div className="flex-1">
+                            <span className="font-medium block">{dish.name}</span>
+                            <span className="text-xs text-gray-500 font-medium">Quantidade: {item.quantity}</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="col-span-2 text-center py-6 text-gray-500 text-sm">
+                      Nenhum prato selecionado.
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
           )}
-
+ 
           {/* Technical Sheet and Shopping List Buttons - Only for CONFIRMADO and not Serviço Especial */}
           {ordem.status === "confirmado" && (
             <div className="flex flex-col gap-3">
               {ordem.type !== "Serviço Especial" && (
                 <>
-                  <Button variant="outline" className="w-full">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Ficha Técnica
-                  </Button>
-
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Ficha Técnica
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Ficha Técnica dos Pratos</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3 mt-2">
+                        {ordem.dishes && ordem.dishes.length > 0 ? (
+                          ordem.dishes.map((item, index) => {
+                            const dish = item.dish;
+                            const hasFicha = !!dish.ficha_tecnica;
+                            return (
+                              <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="w-5 h-5 text-gray-400" />
+                                  <span className="font-medium text-sm">{dish.name}</span>
+                                </div>
+                                {hasFicha ? (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => window.open(resolveMediaUrl(dish.ficha_tecnica), '_blank')}
+                                    className="bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900 font-medium"
+                                  >
+                                    <ExternalLink className="w-4 h-4 mr-1" />
+                                    Visualizar
+                                  </Button>
+                                ) : (
+                                  <span className="text-xs text-gray-500 italic">Não disponível</span>
+                                )}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p className="text-sm text-gray-500 text-center py-4">Nenhum prato disponível.</p>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+ 
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full">
@@ -688,36 +832,168 @@ const OrdemDeCozinha = () => {
                       </DialogHeader>
                       <div className="max-h-96 overflow-y-auto">
                         <div className="grid gap-2">
-                          {shoppingList.map((item, index) => (
-                            <div key={index} className="flex items-center gap-3 p-2 border-b border-gray-100">
-                              <Checkbox
-                                id={`item-${index}`}
-                                checked={checkedItems[index] || false}
-                                onCheckedChange={() => toggleCheckItem(index)}
-                              />
-                              <div className="flex-1 flex items-center justify-between">
-                                <label
-                                  htmlFor={`item-${index}`}
-                                  className={`font-medium cursor-pointer ${checkedItems[index] ? 'line-through text-gray-500' : ''}`}
-                                >
-                                  {item.item}
-                                </label>
-                                <span className="text-gray-600">{item.quantity}</span>
+                          {shoppingList.length > 0 ? (
+                            shoppingList.map((item, index) => (
+                              <div key={index} className="flex items-center gap-3 p-2 border-b border-gray-100">
+                                <Checkbox
+                                  id={`item-${index}`}
+                                  checked={checkedItems[index] || false}
+                                  onCheckedChange={() => toggleCheckItem(index)}
+                                />
+                                <div className="flex-1 flex items-center justify-between">
+                                  <label
+                                    htmlFor={`item-${index}`}
+                                    className={`font-medium cursor-pointer ${checkedItems[index] ? 'line-through text-gray-500' : ''}`}
+                                  >
+                                    {item.item}
+                                  </label>
+                                  <span className="text-gray-600">{item.quantity}</span>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-gray-500 text-center py-4">
+                              Nenhum ingrediente cadastrado para estes pratos.
+                            </p>
+                          )}
+                          {totalEstimatedPrice > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <div className="flex justify-between items-center font-semibold text-lg">
+                                <span>Valor Estimado da Compra</span>
+                                <span className="text-green-600">
+                                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalEstimatedPrice)}
+                                </span>
                               </div>
                             </div>
-                          ))}
-                          <div className="mt-4 pt-4 border-t border-gray-200">
-                            <div className="flex justify-between items-center font-semibold text-lg">
-                              <span>Valor Estimado da Compra</span>
-                              <span className="text-green-600">R$ 345,00</span>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                     </DialogContent>
                   </Dialog>
                 </>
               )}
+
+              {/* Receipt and Complete Service */}
+              <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full",
+                      isReceiptSent && "bg-green-600 hover:bg-green-700 text-white border-green-600"
+                    )}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {isReceiptSent ? "Recibo de Compra Enviado" : "Enviar Recibo de Compra"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Enviar Recibo</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="receipt-file">Anexar recibo</Label>
+                      <Input
+                        id="receipt-file"
+                        type="file"
+                        accept="image/*,.pdf"
+                        multiple
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          setUploadedFiles(prev => [...prev, ...files]);
+                        }}
+                      />
+
+                      {/* Lista de arquivos anexados */}
+                      {uploadedFiles.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          <p className="text-sm font-medium text-gray-700">Arquivos anexados:</p>
+                          <div className="space-y-1">
+                            {uploadedFiles.map((file, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
+                                <span className="text-sm text-gray-700 truncate flex-1">{file.name}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 ml-2"
+                                  onClick={() => {
+                                    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+                                  }}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="receipt-value">Valor total das compras</Label>
+                      <Input
+                        id="receipt-value"
+                        type="text"
+                        placeholder="0,00"
+                        value={receiptValue}
+                        onChange={handleReceiptValueChange}
+                      />
+                    </div>
+
+                    <Button className="w-full" onClick={handleSendReceipt}>Enviar</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    className={cn(
+                      "w-full",
+                      isServiceCompleted
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    )}
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    {isServiceCompleted ? "Serviço Concluído" : "Concluir Serviço"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Concluir Serviço</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="service-notes">Nos conte algo importante sobre esse atendimento</Label>
+                      <Textarea
+                        id="service-notes"
+                        placeholder="Descreva como foi o atendimento, observações importantes..."
+                        value={serviceNotes}
+                        onChange={(e) => setServiceNotes(e.target.value)}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="client-notes">Escreva algo para aparecer para você no próximo serviço desse cliente</Label>
+                      <Textarea
+                        id="client-notes"
+                        placeholder="Observações para o próximo atendimento..."
+                        value={clientNotes}
+                        onChange={(e) => setClientNotes(e.target.value)}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={handleCompleteService}
+                    >
+                      Finalizar Serviço
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
         </div>
