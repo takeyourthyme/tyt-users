@@ -148,7 +148,7 @@ export type CreateKitchenOrderInput = {
   observations?: string;
   client_request?: string;
   temas?: number[];
-  dishes: Array<{ dish_id: number; quantity: number }>;
+  dishes: Array<{ dish_id: number; quantity: number; observations?: string }>;
 };
 
 export async function createKitchenOrder(input: CreateKitchenOrderInput) {

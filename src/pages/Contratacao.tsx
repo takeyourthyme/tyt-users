@@ -172,9 +172,9 @@ const Contratacao = () => {
     return 2;
   };
 
-  const extractDishesPayload = (pratosSelecionados: unknown): Array<{ dish_id: number; quantity: number }> => {
+  const extractDishesPayload = (pratosSelecionados: unknown): Array<{ dish_id: number; quantity: number; observations?: string }> => {
     if (!Array.isArray(pratosSelecionados)) return [];
-    const byId = new Map<number, number>();
+    const byId = new Map<number, { quantity: number; observations: string }>();
 
     pratosSelecionados.forEach((item) => {
       if (!item || typeof item !== "object") return;
@@ -197,10 +197,26 @@ const Contratacao = () => {
       const qtyCandidate = record.quantity ?? record.quantidade ?? record.qtd ?? 1;
       const qty = typeof qtyCandidate === "number" ? qtyCandidate : Number(qtyCandidate);
       const quantity = Number.isFinite(qty) && qty > 0 ? qty : 1;
-      byId.set(id, (byId.get(id) ?? 0) + quantity);
+
+      const obsCandidate = record.personalizacao ?? record.observations ?? record.observacao ?? "";
+      const obs = typeof obsCandidate === "string" ? obsCandidate.trim().substring(0, 140) : "";
+
+      const existing = byId.get(id);
+      if (existing) {
+        existing.quantity += quantity;
+        if (obs && !existing.observations) {
+          existing.observations = obs;
+        }
+      } else {
+        byId.set(id, { quantity, observations: obs });
+      }
     });
 
-    return Array.from(byId.entries()).map(([dish_id, quantity]) => ({ dish_id, quantity }));
+    return Array.from(byId.entries()).map(([dish_id, { quantity, observations }]) => ({
+      dish_id,
+      quantity,
+      ...(observations ? { observations } : {}),
+    }));
   };
 
   const concluirContratacao = async (dadosParam?: DadosContratacao) => {
@@ -278,6 +294,9 @@ const Contratacao = () => {
         if (!response) return undefined;
         if (typeof response === "object") {
           const record = response as Record<string, unknown>;
+          if (record.order && typeof record.order === "object" && !Array.isArray(record.order)) {
+            return record.order as Record<string, unknown>;
+          }
           if (record.data && typeof record.data === "object") {
             if (Array.isArray(record.data)) {
               if (record.data.length > 0 && record.data[0] && typeof record.data[0] === "object") {

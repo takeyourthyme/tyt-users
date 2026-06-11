@@ -681,20 +681,20 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
               const categoriaDados = CATEGORIAS_ICONES[prato.categoria as keyof typeof CATEGORIAS_ICONES];
               const IconeCategoria = categoriaDados?.icon || Utensils;
 
-              return <Card key={prato.id} className="overflow-hidden">
+              return <Card key={prato.id} className="overflow-hidden flex flex-col h-full">
                 <div className="relative">
                   <img src={prato.foto} alt={prato.nome} className="w-full h-48 object-cover" />
                   {prato.favorito && <Heart className="absolute top-2 right-2 text-red-500 fill-current" size={20} />}
                   {prato.frequente && <ShoppingCart className="absolute top-2 left-2 text-orange-500 fill-current" size={20} />}
                 </div>
 
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div>
-                      <h3 className="font-semibold text-lg">{prato.nome}</h3>
-                      <p className="text-muted-foreground text-sm">{prato.descricao}</p>
-                    </div>
+                <CardContent className="p-4 flex-1 flex flex-col">
+                  <div className="flex-1 pb-3">
+                    <h3 className="font-semibold text-lg">{prato.nome}</h3>
+                    <p className="text-muted-foreground text-sm">{prato.descricao}</p>
+                  </div>
 
+                  <div className="space-y-3">
                     {/* Tag da categoria */}
                     <div>
                       <Badge className={`${categoriaDados?.color} border font-normal`}>
