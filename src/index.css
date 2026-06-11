@@ -150,4 +150,25 @@
   h6 {
     @apply font-bodoni;
   }
+
+  label:not(.font-normal) {
+    @apply text-primary;
+  }
+
+  input:hover,
+  textarea:hover,
+  select:hover,
+  .border-input:hover {
+    border-color: hsl(var(--primary)) !important;
+  }
+
+  [role="option"]:focus,
+  [role="option"][data-highlighted],
+  [role="menuitem"]:focus,
+  [role="menuitem"][data-highlighted],
+  [data-selected="true"],
+  [data-highlighted] {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
 }

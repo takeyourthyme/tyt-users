@@ -12,6 +12,7 @@ import { TelaSuccesso } from "@/components/contratacao/TelaSuccesso";
 import { useToast } from "@/hooks/use-toast";
 import { loadSession } from "@/services/authService";
 import { createKitchenOrder } from "@/services/kitchenOrderService";
+import IllustrationOrder from "@/assets/illustration-order";
 
 export interface DadosContratacao {
   // Etapa 1
@@ -381,6 +382,7 @@ const Contratacao = () => {
 
       {/* Conteúdo das Etapas */}
       <div className="max-w-4xl mx-auto px-4 py-8">
+        <IllustrationOrder className="mx-auto mb-6" />
         {etapaAtual === 1 && (
           <EtapaEscolhaServico
             dados={dadosContratacao}

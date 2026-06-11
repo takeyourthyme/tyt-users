@@ -51,7 +51,7 @@ const Index = () => {
               </div>
 
               <div className="flex-1 space-y-2">
-                <h3 className="text-h4 font-semibold">Sou Cliente</h3>
+                <h3 className="text-h4 font-light">Sou Cliente</h3>
                 <p className="text-body opacity-90 leading-relaxed">Quero contratar um chef de cozinha para minha casa ou evento</p>
               </div>
 
@@ -85,7 +85,7 @@ const Index = () => {
               </div>
 
               <div className="flex-1 space-y-2">
-                <h3 className="text-h4 font-semibold">Sou Chef</h3>
+                <h3 className="text-h4 font-light">Sou Chef</h3>
                 <p className="text-body opacity-90 leading-relaxed">Quero fazer parte do time TYT e oferecer meus serviços culinários</p>
               </div>
 

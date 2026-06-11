@@ -60,7 +60,7 @@ const ServiceCard = ({
         </div>
 
         <div className="flex-1 space-y-2">
-          <h3 className="text-h4 font-semibold">{title}</h3>
+          <h3 className="text-h4 font-light">{title}</h3>
           <p className="text-body opacity-90 leading-relaxed">{description}</p>
         </div>
 

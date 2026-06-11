@@ -8,6 +8,7 @@ import { Calendar, Users, Utensils } from "lucide-react";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
 import { listKitchenOrders } from "@/services/kitchenOrderService";
+import IllustrationOrder from "@/assets/illustration-order";
 
 interface Props {
   dados: DadosContratacao;
@@ -27,22 +28,43 @@ const servicos = [
     id: 'cozinha-semanal',
     nome: 'Cozinha Semanal',
     descricao: 'Chef em casa toda semana para preparar suas refeições',
-    cor: 'bg-green-500',
-    icone: Utensils
+    icone: Utensils,
+    unselectedBg: 'bg-[#F4FBF7]',
+    unselectedBorder: 'border-[#E1F5EC]',
+    unselectedIconBg: 'bg-[#E1F5EC]',
+    unselectedIconColor: 'text-[#208253]',
+    selectedBg: 'bg-[#E1F5EC]',
+    selectedBorder: 'border-[#208253]',
+    selectedIconBg: 'bg-[#208253]',
+    selectedIconColor: 'text-white'
   },
   {
     id: 'eventos',
     nome: 'Eventos',
     descricao: 'Chef especializado para seus eventos especiais',
-    cor: 'bg-purple-500',
-    icone: Calendar
+    icone: Calendar,
+    unselectedBg: 'bg-[#FAF2F7]',
+    unselectedBorder: 'border-[#F5E5F0]',
+    unselectedIconBg: 'bg-[#F5E5F0]',
+    unselectedIconColor: 'text-[#B04B99]',
+    selectedBg: 'bg-[#F5E5F0]',
+    selectedBorder: 'border-[#B04B99]',
+    selectedIconBg: 'bg-[#B04B99]',
+    selectedIconColor: 'text-white'
   },
   {
     id: 'servicos-especiais',
     nome: 'Serviços Especiais',
     descricao: 'Soluções customizadas para suas necessidades específicas',
-    cor: 'bg-orange-500',
-    icone: Users
+    icone: Users,
+    unselectedBg: 'bg-[#F0F8FA]',
+    unselectedBorder: 'border-[#E0F2F5]',
+    unselectedIconBg: 'bg-[#E0F2F5]',
+    unselectedIconColor: 'text-[#0E7490]',
+    selectedBg: 'bg-[#E0F2F5]',
+    selectedBorder: 'border-[#0E7490]',
+    selectedIconBg: 'bg-[#0E7490]',
+    selectedIconColor: 'text-white'
   }
 ];
 
@@ -151,20 +173,31 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
             const IconeServico = servico.icone;
             const selecionado = servicoSelecionado === servico.id;
 
+            const cardBgBorder = selecionado
+              ? `${servico.selectedBg} ${servico.selectedBorder}`
+              : `${servico.unselectedBg} ${servico.unselectedBorder} hover:border-gray-300`;
+
+            const iconBg = selecionado
+              ? servico.selectedIconBg
+              : servico.unselectedIconBg;
+
+            const iconColor = selecionado
+              ? servico.selectedIconColor
+              : servico.unselectedIconColor;
+
             return (
               <Card
                 key={servico.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-md border ${selecionado ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
+                className={`cursor-pointer transition-all duration-200 hover:shadow-md border ${cardBgBorder}`}
                 onClick={() => setServicoSelecionado(servico.id as DadosContratacao["tipoServico"])}
               >
                 <CardContent className="p-4 md:p-6">
                   {/* Layout mobile: horizontal */}
                   <div className="flex items-center space-x-3 md:hidden">
-                    <div className={`p-2 rounded-full flex-shrink-0 ${selecionado ? servico.cor : 'bg-gray-100'}`}>
+                    <div className={`p-2 rounded-full flex-shrink-0 ${iconBg}`}>
                       <IconeServico
                         size={20}
-                        className={selecionado ? 'text-white' : 'text-gray-600'}
+                        className={iconColor}
                       />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -176,10 +209,10 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
                   {/* Layout desktop: vertical */}
                   <div className="hidden md:block text-center space-y-3">
                     <div className="flex justify-center">
-                      <div className={`p-3 rounded-full ${selecionado ? servico.cor : 'bg-gray-100'}`}>
+                      <div className={`p-3 rounded-full ${iconBg}`}>
                         <IconeServico
                           size={24}
-                          className={selecionado ? 'text-white' : 'text-gray-600'}
+                          className={iconColor}
                         />
                       </div>
                     </div>
