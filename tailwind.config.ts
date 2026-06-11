@@ -19,8 +19,10 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'playfair': ['Playfair Display', 'serif'],
-				'inter': ['Inter', 'sans-serif'],
+				'playfair': ['"Bodoni Book BT"', 'Bodoni Moda', 'serif'],
+				'inter': ['Raleway', 'sans-serif'],
+				'bodoni': ['"Bodoni Book BT"', 'Bodoni Moda', 'serif'],
+				'raleway': ['Raleway', 'sans-serif'],
 			},
 			fontSize: {
 				'h1': ['2.5rem', { lineHeight: '3rem', fontWeight: '700' }], // 40px/48px
