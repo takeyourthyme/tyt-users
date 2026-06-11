@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
 import { listDishes, listHighlightedDishes, normalizeDish, type Dish } from "@/services/dishService";
-import { listDishCategories, type LookupOption } from "@/services/lookupService";
+import { listDishCategories, listThemes, type LookupOption } from "@/services/lookupService";
 
 interface Props {
   dados: DadosContratacao;
@@ -32,6 +32,8 @@ type DishOption = {
   favorito?: boolean;
   frequente?: boolean;
   categorias: string[];
+  themes?: string[];
+  themeIds?: number[];
 };
 
 // Unified mock data for fallback
@@ -45,7 +47,8 @@ const mockDishes: DishOption[] = [
     preco: 18,
     favorito: true,
     categorias: ['entradas'],
-    dishId: 1
+    dishId: 1,
+    themes: ['Noite Italiana', 'Festa Italiana', 'Noite de Massas']
   },
   {
     id: 'e2',
@@ -55,7 +58,8 @@ const mockDishes: DishOption[] = [
     preco: 25,
     favorito: false,
     categorias: ['entradas'],
-    dishId: 2
+    dishId: 2,
+    themes: ['Jantar das Meninas', 'Clássicos Mediterrâneos']
   },
   {
     id: 'e3',
@@ -65,7 +69,8 @@ const mockDishes: DishOption[] = [
     preco: 32,
     frequente: true,
     categorias: ['entradas'],
-    dishId: 3
+    dishId: 3,
+    themes: ['Clássicos Brasileiros']
   },
   {
     id: 'cat-e1',
@@ -73,7 +78,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Grão-de-bico, tahine, azeite, vegetais crudité',
     foto: 'https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?w=400&h=300&fit=crop',
     preco: 20,
-    categorias: ['entradas']
+    categorias: ['entradas'],
+    themes: ['Noite Marroquina', 'Clássicos Mediterrâneos']
   },
   {
     id: 'cat-e2',
@@ -81,7 +87,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Crocantes bolinhos de falafel servidos com molho tahine cremoso',
     foto: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400&h=300&fit=crop',
     preco: 22,
-    categorias: ['entradas']
+    categorias: ['entradas'],
+    themes: ['Noite Marroquina', 'Clássicos Judaicos']
   },
   // Saladas
   {
@@ -92,7 +99,8 @@ const mockDishes: DishOption[] = [
     preco: 22,
     favorito: false,
     categorias: ['saladas'],
-    dishId: 4
+    dishId: 4,
+    themes: ['Almoço de Country Club']
   },
   {
     id: 's2',
@@ -102,7 +110,8 @@ const mockDishes: DishOption[] = [
     preco: 28,
     favorito: true,
     categorias: ['saladas'],
-    dishId: 5
+    dishId: 5,
+    themes: ['Noite Italiana', 'Festa Italiana']
   },
   {
     id: 's3',
@@ -112,7 +121,8 @@ const mockDishes: DishOption[] = [
     preco: 24,
     frequente: false,
     categorias: ['saladas'],
-    dishId: 6
+    dishId: 6,
+    themes: ['Clássicos Mediterrâneos', 'Jantar das Meninas']
   },
   {
     id: 'cat-s1',
@@ -120,7 +130,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Alface americana, camarão grelhado, croutons, parmesão',
     foto: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
     preco: 26,
-    categorias: ['saladas']
+    categorias: ['saladas'],
+    themes: ['Almoço de Country Club']
   },
   {
     id: 'cat-s2',
@@ -128,7 +139,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Mix de folhas, tomate cereja, azeitonas e queijo feta',
     foto: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop',
     preco: 24,
-    categorias: ['saladas']
+    categorias: ['saladas'],
+    themes: ['Clássicos Mediterrâneos']
   },
   // Principais
   {
@@ -139,7 +151,8 @@ const mockDishes: DishOption[] = [
     preco: 58,
     favorito: false,
     categorias: ['principais'],
-    dishId: 7
+    dishId: 7,
+    themes: ['Clássicos Mediterrâneos', 'Jantar das Meninas']
   },
   {
     id: 'p2',
@@ -149,7 +162,8 @@ const mockDishes: DishOption[] = [
     preco: 52,
     frequente: true,
     categorias: ['principais'],
-    dishId: 8
+    dishId: 8,
+    themes: ['Noite Italiana', 'Clássicos Mediterrâneos']
   },
   {
     id: 'p3',
@@ -159,7 +173,8 @@ const mockDishes: DishOption[] = [
     preco: 75,
     favorito: true,
     categorias: ['principais'],
-    dishId: 9
+    dishId: 9,
+    themes: ['Jantar dos Meninos', 'Almoço de Country Club']
   },
   {
     id: 'cat-p1',
@@ -167,7 +182,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Macarrão yakisoba, frango, legumes, molho shoyu',
     foto: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop',
     preco: 45,
-    categorias: ['principais']
+    categorias: ['principais'],
+    themes: ['Comida de Pub']
   },
   {
     id: 'cat-p2',
@@ -175,7 +191,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Arroz arbóreo, cogumelos porcini, parmesão',
     foto: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop',
     preco: 50,
-    categorias: ['principais']
+    categorias: ['principais'],
+    themes: ['Noite de Massas', 'Noite Italiana']
   },
   {
     id: 'cat-p3',
@@ -183,7 +200,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Suculenta picanha grelhada na brasa, temperada apenas com sal grosso',
     foto: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop',
     preco: 68,
-    categorias: ['principais']
+    categorias: ['principais'],
+    themes: ['Clássicos da Churrascaria']
   },
   {
     id: 'cat-p4',
@@ -191,7 +209,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Linguine, vongole, alho, vinho branco, salsa',
     foto: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=400&h=300&fit=crop',
     preco: 55,
-    categorias: ['principais']
+    categorias: ['principais'],
+    themes: ['Noite Italiana', 'Clássicos Mediterrâneos']
   },
   {
     id: 'cat-p5',
@@ -199,7 +218,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Sofisticada lagosta thermidor com molho bechamel cremoso',
     foto: 'https://images.unsplash.com/photo-1625944230945-1b7dd3b949ab?w=400&h=300&fit=crop',
     preco: 120,
-    categorias: ['principais']
+    categorias: ['principais'],
+    themes: ['Jantar Romântico', 'Almoço de Country Club']
   },
   // Sobremesas
   {
@@ -210,7 +230,8 @@ const mockDishes: DishOption[] = [
     preco: 18,
     favorito: true,
     categorias: ['sobremesas'],
-    dishId: 10
+    dishId: 10,
+    themes: ['Noite Italiana', 'Festa Italiana', 'Noite de Massas']
   },
   {
     id: 'so2',
@@ -220,7 +241,8 @@ const mockDishes: DishOption[] = [
     preco: 22,
     frequente: false,
     categorias: ['sobremesas'],
-    dishId: 11
+    dishId: 11,
+    themes: ['Jantar Romântico']
   },
   {
     id: 'so3',
@@ -230,7 +252,8 @@ const mockDishes: DishOption[] = [
     preco: 20,
     favorito: false,
     categorias: ['sobremesas'],
-    dishId: 12
+    dishId: 12,
+    themes: ['Jantar das Meninas']
   },
   {
     id: 'cat-so1',
@@ -238,7 +261,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Sobremesa italiana cremosa com calda de frutas vermelhas',
     foto: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af?w=400&h=300&fit=crop',
     preco: 18,
-    categorias: ['sobremesas']
+    categorias: ['sobremesas'],
+    themes: ['Festa Italiana', 'Noite de Massas']
   },
   {
     id: 'cat-so2',
@@ -246,7 +270,8 @@ const mockDishes: DishOption[] = [
     descricao: 'Brownie de chocolate com sorvete de creme',
     foto: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop',
     preco: 16,
-    categorias: ['sobremesas']
+    categorias: ['sobremesas'],
+    themes: ['Comida de Pub']
   },
   {
     id: 'cat-so3',
@@ -254,9 +279,55 @@ const mockDishes: DishOption[] = [
     descricao: 'Mousse aerado feito com chocolate belga',
     foto: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop',
     preco: 19,
-    categorias: ['sobremesas']
+    categorias: ['sobremesas'],
+    themes: ['Jantar dos Meninos']
   }
 ];
+
+const getFallbackThemeName = (id: string): string => {
+  const map: Record<string, string> = {
+    'noite-italiana': 'Noite Italiana',
+    'classicos-churrascaria': 'Clássicos da Churrascaria',
+    'comida-pub': 'Comida de Pub',
+    'jantar-meninas': 'Jantar das Meninas',
+    'jantar-meninos': 'Jantar dos Meninos',
+    'classicos-brasileiros': 'Clássicos Brasileiros',
+    'mediterraneos': 'Clássicos Mediterrâneos',
+    'judaicos': 'Clássicos Judaicos',
+    'almoco-country': 'Almoço de Country Club',
+    'noite-marroquina': 'Noite Marroquina',
+    'festa-espanhola': 'Festa Espanhola',
+    'festa-italiana': 'Festa Italiana',
+    'noite-massas': 'Noite de Massas',
+    'petiscos-especiais': 'Petiscos Especiais',
+    'acao-gracas': 'Ação de Graças',
+    'noite-natal': 'Noite de Natal',
+    'oktoberfest': 'Oktoberfest',
+    'jantar-romantico': 'Jantar Romântico'
+  };
+  return map[id] || id;
+};
+
+const isDishInTheme = (prato: DishOption, temaId: string, selectedThemeName?: string) => {
+  if (!temaId) return true;
+  
+  const numericThemeId = parseInt(temaId, 10);
+  if (!isNaN(numericThemeId) && prato.themeIds?.includes(numericThemeId)) {
+    return true;
+  }
+
+  const themeName = selectedThemeName || getFallbackThemeName(temaId);
+  const normTheme = themeName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  
+  if (prato.themes) {
+    return prato.themes.some((tName) => {
+      const normDishTheme = tName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      return normDishTheme === normTheme;
+    });
+  }
+
+  return false;
+};
 
 export const EscolhaPratosEventos: React.FC<Props> = ({
   dados,
@@ -353,13 +424,52 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
               foto: normalized.photoUrl || placeholder,
               preco: 0,
               categorias: hasCategories ? normalized.categories : ["prato"],
+              themes: normalized.themes,
+              themeIds: normalized.themeIds,
             };
           })
           .filter((v): v is DishOption & { dishId: number } => Boolean(v));
 
-        setCatalogDishes(mapped.length > 0 ? mapped : mockDishes);
+        let selectedThemeName = "";
+        if (dados.temaSelecionado) {
+          try {
+            const themesList = await listThemes({ token });
+            const found = themesList.find(t => t.id === dados.temaSelecionado);
+            if (found) selectedThemeName = found.nome;
+          } catch (e) {
+            console.warn("Could not load themes list for matching:", e);
+          }
+        }
+
+        const allDishes = mapped.length > 0 ? mapped : mockDishes;
+        const filteredDishes = allDishes.filter(prato => 
+          dados.temaSelecionado ? isDishInTheme(prato, dados.temaSelecionado, selectedThemeName) : true
+        );
+
+        setCatalogDishes(filteredDishes);
+
+        if (!dados.pratosSelecionados || dados.pratosSelecionados.length === 0) {
+          setPratosSelecionados(filteredDishes);
+          if (filteredDishes.length > 5) {
+            setNivelServico('banquete');
+          } else {
+            setNivelServico('classico');
+          }
+        }
       } catch {
-        setCatalogDishes(mockDishes);
+        const fallbackThemeName = dados.temaSelecionado ? getFallbackThemeName(dados.temaSelecionado) : "";
+        const filteredMock = mockDishes.filter(prato =>
+          dados.temaSelecionado ? isDishInTheme(prato, dados.temaSelecionado, fallbackThemeName) : true
+        );
+        setCatalogDishes(filteredMock);
+        if (!dados.pratosSelecionados || dados.pratosSelecionados.length === 0) {
+          setPratosSelecionados(filteredMock);
+          if (filteredMock.length > 5) {
+            setNivelServico('banquete');
+          } else {
+            setNivelServico('classico');
+          }
+        }
         setCategorias([
           { id: "entradas", label: "Entradas" },
           { id: "saladas", label: "Saladas" },
@@ -372,7 +482,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
     };
 
     void loadData();
-  }, []);
+  }, [dados.temaSelecionado, dados.pratosSelecionados]);
 
   const togglePrato = (prato: DishOption) => {
     const isSelected = pratosSelecionados.some((p) => p.id === prato.id);

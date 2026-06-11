@@ -198,12 +198,12 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
         if (themes.length > 0) {
           const placeholder = "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200&h=800&fit=crop";
           const mappedThemes: ThemeCard[] = themes.map((t) => {
-            const key = themePhotoByName.normalize(t.label);
-            const photo = themePhotoByName.map.get(key) ?? placeholder;
+            const key = themePhotoByName.normalize(t.nome);
+            const photo = t.foto || (themePhotoByName.map.get(key) ?? placeholder);
             return {
               id: t.id,
-              nome: t.label,
-              descricao: t.label,
+              nome: t.nome,
+              descricao: t.descricao,
               foto: photo,
             };
           });

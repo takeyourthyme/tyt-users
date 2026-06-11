@@ -20,6 +20,7 @@ export type NormalizedDish = {
   mainIngredients: string[];
   culinaryPreferences: string[];
   themes: string[];
+  themeIds?: number[];
   meal_preap: boolean;
   get_togheter: boolean;
   ficha_tecnica?: string;
@@ -38,7 +39,7 @@ const getStringArray = (value: unknown): string[] => {
         if (item && typeof item === "object") {
           const record = item as Record<string, unknown>;
           const res: string[] = [];
-          const candidate = record.descricao ?? record.nome ?? record.name ?? record.label ?? record.title;
+          const candidate = record.nome ?? record.nome_prato ?? record.name ?? record.label ?? record.title ?? record.descricao;
           if (typeof candidate === "string") {
             res.push(candidate);
           } else if (typeof candidate === "number") {
@@ -133,6 +134,32 @@ export function normalizeDish(dish: Dish): NormalizedDish {
   const culinaryPreferences = getStringArray(dish.pratos_pref_culinarias ?? dish.pref_culinarias ?? dish.prefCulinarias ?? dish.culinaryPreferences);
   const themes = getStringArray(dish.pratos_temas ?? dish.temas ?? dish.themes);
 
+  const getThemeIds = (value: unknown): number[] => {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => {
+          if (item && typeof item === "object") {
+            const record = item as Record<string, unknown>;
+            const id = record.id ?? record.id_tema;
+            if (typeof id === "number") return id;
+            if (typeof id === "string") {
+              const parsed = parseInt(id, 10);
+              if (!isNaN(parsed)) return parsed;
+            }
+          } else if (typeof item === "number") {
+            return item;
+          } else if (typeof item === "string") {
+            const parsed = parseInt(item, 10);
+            if (!isNaN(parsed)) return parsed;
+          }
+          return null;
+        })
+        .filter((v): v is number => v !== null);
+    }
+    return [];
+  };
+  const themeIds = getThemeIds(dish.pratos_temas ?? dish.temas ?? dish.themes);
+
   const meal_preap = dish.meal_preap === true || dish.meal_preap === "true";
   const get_togheter = dish.get_togheter === true || dish.get_togheter === "true";
 
@@ -155,7 +182,7 @@ export function normalizeDish(dish: Dish): NormalizedDish {
 
   const ingredients = getIngredients(dish.pratos_ingredientes ?? dish.ingredientes ?? dish.ingredients);
 
-  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, meal_preap, get_togheter, ficha_tecnica, receita, ingredients };
+  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, themeIds, meal_preap, get_togheter, ficha_tecnica, receita, ingredients };
 }
 
 export async function listDishes(params?: { token?: string }) {
