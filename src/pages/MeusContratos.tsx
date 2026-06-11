@@ -110,7 +110,7 @@ const MeusContratos = () => {
             }
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     });
   }, [activeContracts, pendingContracts, contractsDetails]);
 
@@ -209,14 +209,14 @@ const MeusContratos = () => {
             const time = getKitchenOrderTime(detail);
             const location = getKitchenOrderLocation(detail);
             const borderClass =
-              type === "Cozinha Semanal" ? "border-green-200" : type === "Evento" ? "border-purple-200" : "border-orange-200";
+              type === "Cozinha Semanal" ? "border-[#E1F5EC]" : type === "Evento" ? "border-[#F5E5F0]" : "border-[#E0F2F5]";
 
             return (
               <Card key={code || `${type}-${index}`} className={`bg-white shadow-md ${borderClass}`}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${type === "Cozinha Semanal" ? "bg-green-500" : type === "Evento" ? "bg-purple-500" : "bg-orange-500"}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${type === "Cozinha Semanal" ? "bg-[#A6D8B5]" : type === "Evento" ? "bg-[#BC008F]" : "bg-[#89CDD2]"}`}>
                         {type === "Cozinha Semanal" ? <ChefHat className="w-4 h-4 text-white" /> : <Calendar className="w-4 h-4 text-white" />}
                       </div>
                       <span className="text-lg text-gray-800">{type}</span>
@@ -251,7 +251,7 @@ const MeusContratos = () => {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button
                       variant="outline"
-                      className={`flex-1 ${type === "Cozinha Semanal" ? "border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800" : type === "Evento" ? "border-purple-300 text-purple-700 hover:bg-purple-50 hover:text-purple-800" : "border-orange-300 text-orange-700 hover:bg-orange-50 hover:text-orange-800"}`}
+                      className={`flex-1`}
                       disabled={!code}
                       onClick={() => navigate(`/detalhes-contrato/${code}`)}
                     >
@@ -276,8 +276,8 @@ const MeusContratos = () => {
             {filtroAtivo === "ativos"
               ? "Você não possui contratos ativos no momento."
               : filtroAtivo === "pendentes"
-              ? "Você não possui contratos pendentes no momento."
-              : "Você não possui contratos anteriores."}
+                ? "Você não possui contratos pendentes no momento."
+                : "Você não possui contratos anteriores."}
           </p>
           {(filtroAtivo === "ativos" || filtroAtivo === "pendentes") && <Button onClick={() => navigate("/dashboard-cliente")}>
             Contratar novo serviço

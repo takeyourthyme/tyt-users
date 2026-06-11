@@ -48,23 +48,24 @@ const typeConfig: Record<
 > = {
   "Cozinha Semanal": {
     title: "Cozinha Semanal",
-    borderClass: "border-green-200",
-    iconBgClass: "bg-green-500",
+    borderClass: "border-[#E1F5EC] border-2 shadow-sm",
+    iconBgClass: "bg-[#A6D8B5]",
     icon: ChefHat,
   },
   Evento: {
     title: "Evento",
-    borderClass: "border-purple-200",
-    iconBgClass: "bg-purple-500",
+    borderClass: "border-[#F5E5F0] border-2 shadow-sm",
+    iconBgClass: "bg-[#BC008F]",
     icon: Calendar,
   },
   "Serviço Especial": {
     title: "Serviço Especial",
-    borderClass: "border-orange-200",
-    iconBgClass: "bg-orange-500",
+    borderClass: "border-[#E0F2F5] border-2 shadow-sm",
+    iconBgClass: "bg-[#89CDD2]",
     icon: Calendar,
   },
 };
+
 
 const DashboardCliente = () => {
   const navigate = useNavigate();
@@ -163,7 +164,7 @@ const DashboardCliente = () => {
             }
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     });
   }, [activeOrders, activeOrdersDetails]);
 
@@ -328,20 +329,20 @@ const DashboardCliente = () => {
 
       {/* CTAs */}
       <div className="grid md:grid-cols-2 gap-4">
-        <Card className="bg-white border-tyt-blue-200 shadow-lg">
+        <Card className="bg-white border-[#E0F2F5] shadow-lg">
           <CardContent className="p-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-tyt-blue-700 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-tyt-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
                   <ChefHat className="w-6 h-6 text-white" />
                 </div>
-                <h4 className="text-h4 font-semibold text-gray-800">Contratar novo serviço</h4>
+                <h4 className="text-xl font-bodoni font-normal text-gray-800">Contratar novo serviço</h4>
               </div>
               <p className="text-sm text-gray-600">
                 Meal Prep, eventos ou serviços especiais personalizados
               </p>
               <Button
-                className="w-full bg-tyt-blue-700 hover:bg-tyt-blue-800"
+                className="w-full bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
                 onClick={() => navigate("/contratacao-logado")}
               >
                 Começar agora
@@ -350,17 +351,17 @@ const DashboardCliente = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-tyt-yellow-300 shadow-lg">
+        <Card className="bg-white border-gray-200 shadow-lg">
           <CardContent className="p-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-tyt-yellow-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-tyt-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Eye className="w-6 h-6 text-gray-800" />
                 </div>
-                <h4 className="text-h4 font-semibold text-gray-800">Conhecer nosso cardápio</h4>
+                <h4 className="text-xl font-bodoni font-normal text-gray-800">Conhecer nosso cardápio</h4>
               </div>
               <p className="text-sm text-gray-600">Cozinha Semanal, Cheff para eventos ou serviços especiais personalizados</p>
-              <Button variant="outline" className="w-full border-tyt-yellow-500 text-tyt-yellow-700 hover:bg-tyt-yellow-50 hover:text-tyt-yellow-800" onClick={() => navigate("/cardapio")}>
+              <Button variant="outline" className="w-full border-tyt-yellow-500 text-gray-800 hover:text-tyt-blue-700 hover:bg-tyt-yellow-50" onClick={() => navigate("/cardapio")}>
                 Ver cardápio
               </Button>
             </div>
