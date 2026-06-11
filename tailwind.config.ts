@@ -25,12 +25,12 @@ export default {
 				'raleway': ['Raleway', 'sans-serif'],
 			},
 			fontSize: {
-				'h1': ['2.5rem', { lineHeight: '3rem', fontWeight: '700' }], // 40px/48px
-				'h2': ['2rem', { lineHeight: '2.5rem', fontWeight: '700' }], // 32px/40px
-				'h3': ['1.5rem', { lineHeight: '2rem', fontWeight: '600' }], // 24px/32px
-				'h4': ['1.25rem', { lineHeight: '1.75rem', fontWeight: '600' }], // 20px/28px
-				'body': ['1rem', { lineHeight: '1.5rem', fontWeight: '400' }], // 16px/24px
-				'caption': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }], // 14px/20px
+				'h1': ['2.5rem', { lineHeight: '3rem' }], // 40px/48px
+				'h2': ['2rem', { lineHeight: '2.5rem' }], // 32px/40px
+				'h3': ['1.5rem', { lineHeight: '2rem' }], // 24px/32px
+				'h4': ['1.25rem', { lineHeight: '1.75rem' }], // 20px/28px
+				'body': ['1rem', { lineHeight: '1.5rem' }], // 16px/24px
+				'caption': ['0.875rem', { lineHeight: '1.25rem' }], // 14px/20px
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -38,7 +38,7 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
-				
+
 				// TYT Brand Colors
 				'tyt-yellow': {
 					500: 'hsl(var(--tyt-yellow-500))',
@@ -48,7 +48,7 @@ export default {
 					200: 'hsl(var(--tyt-blue-200))',
 					700: 'hsl(var(--tyt-blue-700))',
 				},
-				
+
 				// Neutral Colors
 				'gray': {
 					900: 'hsl(var(--gray-900))',
@@ -56,7 +56,7 @@ export default {
 					500: 'hsl(var(--gray-500))',
 					200: 'hsl(var(--gray-200))',
 				},
-				
+
 				// Feedback Colors
 				'success': {
 					600: 'hsl(var(--success-600))',
@@ -70,7 +70,7 @@ export default {
 				'info': {
 					600: 'hsl(var(--info-600))',
 				},
-				
+
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
