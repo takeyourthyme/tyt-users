@@ -63,7 +63,7 @@ const CadastroChefSucesso = () => {
 
               {/* Lista de etapas */}
               <div className="space-y-3">
-                <h3 className="text-h4 font-semibold text-gray-900 mb-4">Etapas do Processo:</h3>
+                <h3 className="text-h4 font-light text-gray-900 mb-4">Etapas do Processo:</h3>
 
                 {steps.map((step, index) => (
                   <div
@@ -72,21 +72,21 @@ const CadastroChefSucesso = () => {
                   >
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${step.completed
-                          ? "bg-green-500"
-                          : "bg-gray-300"
+                        ? "bg-green-500"
+                        : "bg-gray-300"
                         }`}
                     >
                       <Check
                         className={`w-5 h-5 ${step.completed
-                            ? "text-white"
-                            : "text-gray-500"
+                          ? "text-white"
+                          : "text-gray-500"
                           }`}
                       />
                     </div>
                     <span
                       className={`text-body font-medium ${step.completed
-                          ? "text-gray-900"
-                          : "text-gray-500"
+                        ? "text-gray-900"
+                        : "text-gray-500"
                         }`}
                     >
                       {step.title}

@@ -85,7 +85,7 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
         <div className="text-tyt-yellow-400 flex-shrink-0">
           <LogoText linkTo="/dashboard-cliente" />
         </div>
-        
+
         {/* Menu Hamburger */}
         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
           <SheetTrigger asChild>
@@ -100,7 +100,7 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
                 Gerencie sua conta e serviços
               </SheetDescription>
             </SheetHeader>
-            
+
             {/* User Welcome Card */}
             <div className="mt-3 p-3 bg-gray-50 rounded-lg border flex-shrink-0">
               <div className="flex items-center gap-2">
@@ -121,22 +121,21 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
                   )}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-800 text-sm">{fullName}</h4>
+                  <h4 className="font-light text-gray-800 text-sm">{fullName}</h4>
                   <p className="text-xs text-gray-600">Bem-vinda!</p>
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-4 space-y-1 flex-1 overflow-y-auto">
               {menuItems.map((item, index) => (
-                <Button 
-                  key={index} 
+                <Button
+                  key={index}
                   variant={item.highlighted ? "default" : "ghost"}
-                  className={`w-full justify-start h-10 ${
-                    item.highlighted 
-                      ? "bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white" 
+                  className={`w-full justify-start h-10 ${item.highlighted
+                      ? "bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
                       : "hover:bg-gray-100"
-                  }`}
+                    }`}
                   disabled={Boolean(item.disabled)}
                   onClick={() => {
                     if (item.disabled) return;
@@ -153,12 +152,12 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
                 </Button>
               ))}
             </div>
-            
+
             {/* Logo no final do menu */}
             <div className="mt-3 pt-3 border-t border-gray-200 flex justify-center flex-shrink-0">
-              <img 
-                src={logoCompleta} 
-                alt="Logo Take Your Thyme" 
+              <img
+                src={logoCompleta}
+                alt="Logo Take Your Thyme"
                 className="h-6 w-auto opacity-80"
               />
             </div>

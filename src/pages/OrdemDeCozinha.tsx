@@ -358,14 +358,14 @@ const OrdemDeCozinha = () => {
         : ["Menu Personalizado"],
       dishes: Array.isArray(kitchenOrder.dishes)
         ? kitchenOrder.dishes.map(d => {
-            if (typeof d === 'object' && d !== null && 'dish' in d) {
-              return {
-                dish: normalizeDish(d.dish as Dish),
-                quantity: (d as any).quantity as number ?? 1
-              };
-            }
-            return null;
-          }).filter(Boolean) as Array<{ dish: any; quantity: number }>
+          if (typeof d === 'object' && d !== null && 'dish' in d) {
+            return {
+              dish: normalizeDish(d.dish as Dish),
+              quantity: (d as any).quantity as number ?? 1
+            };
+          }
+          return null;
+        }).filter(Boolean) as Array<{ dish: any; quantity: number }>
         : [],
       observations: (kitchenOrder.observations as string) || (kitchenOrder.client_request as string) || "Sem observações adicionais.",
       budget: "R$ 0,00"
@@ -377,14 +377,14 @@ const OrdemDeCozinha = () => {
     if (!kitchenOrder || !Array.isArray(kitchenOrder.dishes)) {
       return { shoppingList: [], totalEstimatedPrice: 0 };
     }
-    
+
     const consolidated = new Map<string, { quantityValue: number; unit: string; totalCost: number }>();
-    
+
     kitchenOrder.dishes.forEach((item: any) => {
       if (item && typeof item === 'object' && item.dish) {
         const normalized = normalizeDish(item.dish as Dish);
         const dishQty = item.quantity ?? 1;
-        
+
         if (normalized.ingredients && normalized.ingredients.length > 0) {
           normalized.ingredients.forEach(ing => {
             const key = ing.name.toLowerCase().trim();
@@ -415,7 +415,7 @@ const OrdemDeCozinha = () => {
         }
       }
     });
-    
+
     const list = Array.from(consolidated.entries()).map(([name, info]) => {
       const displayName = name.charAt(0).toUpperCase() + name.slice(1);
       const qtyStr = info.unit ? `${info.quantityValue} ${info.unit}` : `${info.quantityValue}`;
@@ -424,9 +424,9 @@ const OrdemDeCozinha = () => {
         quantity: qtyStr
       };
     });
-    
+
     const total = Array.from(consolidated.values()).reduce((acc, curr) => acc + curr.totalCost, 0);
-    
+
     return { shoppingList: list, totalEstimatedPrice: total };
   }, [kitchenOrder]);
 
@@ -495,7 +495,7 @@ const OrdemDeCozinha = () => {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Ordem de Cozinha</h1>
+            <h1 className="text-2xl font-light text-gray-900">Ordem de Cozinha</h1>
             <p className="text-gray-600">Detalhes do serviço agendado</p>
           </div>
         </div>
@@ -553,7 +553,7 @@ const OrdemDeCozinha = () => {
                   className="w-16 h-16 rounded-full object-cover"
                 />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{ordem.client.name}</h3>
+                  <h3 className="font-light text-lg">{ordem.client.name}</h3>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Phone className="w-4 h-4" />
@@ -657,7 +657,7 @@ const OrdemDeCozinha = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Valor do serviço:</span>
-                  <span className="font-semibold text-lg">{ordem.budget}</span>
+                  <span className="font-light text-lg">{ordem.budget}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Data do pagamento:</span>
@@ -769,7 +769,7 @@ const OrdemDeCozinha = () => {
               </CardContent>
             </Card>
           )}
- 
+
           {/* Technical Sheet and Shopping List Buttons - Only for CONFIRMADO and not Serviço Especial */}
           {ordem.status === "confirmado" && (
             <div className="flex flex-col gap-3">
@@ -818,7 +818,7 @@ const OrdemDeCozinha = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
- 
+
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full">
@@ -858,7 +858,7 @@ const OrdemDeCozinha = () => {
                           )}
                           {totalEstimatedPrice > 0 && (
                             <div className="mt-4 pt-4 border-t border-gray-200">
-                              <div className="flex justify-between items-center font-semibold text-lg">
+                              <div className="flex justify-between items-center font-light text-lg">
                                 <span>Valor Estimado da Compra</span>
                                 <span className="text-green-600">
                                   {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalEstimatedPrice)}

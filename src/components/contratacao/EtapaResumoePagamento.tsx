@@ -225,7 +225,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                       return (
                         <div key={diaIndex} className="space-y-2">
                           <div className="flex items-center justify-between border-b pb-1">
-                            <span className="text-sm font-semibold">{diaEntrega.dia} - {diaEntrega.periodo}</span>
+                            <span className="text-sm font-light">{diaEntrega.dia} - {diaEntrega.periodo}</span>
                             <span className="text-xs text-muted-foreground">{pratosDoDia.length} pratos</span>
                           </div>
                           <div className="space-y-1">
@@ -290,7 +290,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                   <span className="font-medium">R$ {precoCompras.toFixed(2)}</span>
                 </div>
                 <hr />
-                <div className="flex justify-between font-bold text-lg">
+                <div className="flex justify-between font-light text-lg">
                   <span>Total:</span>
                   <span>R$ {total.toFixed(2)}</span>
                 </div>

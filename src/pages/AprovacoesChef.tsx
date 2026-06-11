@@ -72,7 +72,7 @@ const AprovacoesChef = () => {
             const status = normalizeKitchenOrderStatusLabel(order);
             return matchesChef && status === "pendente";
           });
-          
+
           const detailedOrders = await Promise.all(
             filtered.map(async (order) => {
               try {
@@ -217,7 +217,7 @@ const AprovacoesChef = () => {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Aprovações Pendentes</h1>
+            <h1 className="text-2xl font-light text-gray-900">Aprovações Pendentes</h1>
             <p className="text-gray-600">Serviços que aguardam seu aceite ou recusa</p>
           </div>
         </div>
@@ -231,7 +231,7 @@ const AprovacoesChef = () => {
           <Card className="border border-gray-200">
             <CardContent className="p-12 text-center flex flex-col items-center justify-center space-y-3">
               <Inbox className="w-12 h-12 text-gray-400" />
-              <h3 className="font-semibold text-lg text-gray-800">Tudo limpo por aqui!</h3>
+              <h3 className="font-light text-lg text-gray-800">Tudo limpo por aqui!</h3>
               <p className="text-sm text-gray-600">Nenhum serviço pendente de aprovação no momento.</p>
             </CardContent>
           </Card>
@@ -258,7 +258,7 @@ const AprovacoesChef = () => {
 
                       <div className="space-y-1 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-gray-900">{type}</span>
+                          <span className="font-light text-gray-900">{type}</span>
                           <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{code}</span>
                         </div>
 

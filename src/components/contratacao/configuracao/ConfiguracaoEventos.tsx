@@ -274,7 +274,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
       <CardContent className="p-6 space-y-6">
         {/* Quantidade de Pessoas */}
         <div className="space-y-3">
-          <Label className="text-base font-semibold">Quantidade de pessoas</Label>
+          <Label className="text-base font-light">Quantidade de pessoas</Label>
           <p className="text-sm text-gray-500">Nos ajude a dimensionar as porções ideais para seu evento</p>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(Math.max(1, quantidadePessoas - 1))} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
@@ -290,7 +290,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
         {/* Data do Evento e Horários */}
         <div className="grid md:grid-cols-3 gap-4">
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Data do evento</Label>
+            <Label className="text-base font-light">Data do evento</Label>
             <p className="text-sm text-gray-500">Quando será seu evento especial?</p>
             <Popover>
               <PopoverTrigger asChild>
@@ -309,7 +309,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
 
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Label className="text-base font-semibold">Horário de início</Label>
+              <Label className="text-base font-light">Horário de início</Label>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-5 w-5">
@@ -332,7 +332,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Horário de fim</Label>
+            <Label className="text-base font-light">Horário de fim</Label>
             <p className="text-sm text-gray-500">Até que horas servir?</p>
             <Input type="time" value={horarioFim} onChange={e => setHorarioFim(e.target.value)} className={cn("border-input bg-background", errors.horarioFim && "border-red-500")} />
           </div>
@@ -340,7 +340,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
 
         {/* Preferências Culinárias */}
         <div className="space-y-3">
-          <Label className="text-base font-semibold">Preferências Culinárias</Label>
+          <Label className="text-base font-light">Preferências Culinárias</Label>
           <p className="text-sm text-gray-500">Tem alguma preferência alimentar que devemos saber?</p>
           <div className="flex flex-wrap gap-2">
             {isLoadingLookups
@@ -363,7 +363,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
 
         {/* Tipos de Cozinha */}
         <div className="space-y-3">
-          <Label className="text-base font-semibold">Tipos de Cozinha</Label>
+          <Label className="text-base font-light">Tipos de Cozinha</Label>
           <p className="text-sm text-gray-500">Quais sabores do mundo vocês mais apreciam?</p>
           <div className="flex flex-wrap gap-2">
             {isLoadingLookups
@@ -387,7 +387,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
         {/* Escolha um Tema */}
         <div className="space-y-4">
           <div>
-            <Label className="text-base font-semibold">Escolha um tema</Label>
+            <Label className="text-base font-light">Escolha um tema</Label>
             <p className="text-sm text-gray-500 mt-1">Qual atmosfera combina mais com seu evento?</p>
           </div>
 
@@ -416,7 +416,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
                     <img src={tema.foto} alt={tema.nome} className="w-full h-48 object-cover rounded-lg bg-gray-100" />
                     <div className="flex-1 flex flex-col justify-between space-y-3">
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-lg leading-tight min-h-[3.5rem] flex items-center">{tema.nome}</h4>
+                        <h4 className="font-light text-lg leading-tight min-h-[3.5rem] flex items-center">{tema.nome}</h4>
                         <p className="text-sm text-gray-600 leading-relaxed min-h-[4rem] line-clamp-3">{tema.descricao}</p>
                       </div>
                       <Button

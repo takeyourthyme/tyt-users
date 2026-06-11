@@ -288,7 +288,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
 
   const matchesCategory = (pratoCategorias: string[], targetCategoryId: string) => {
     if (!pratoCategorias || !Array.isArray(pratoCategorias)) return false;
-    
+
     if (pratoCategorias.includes(targetCategoryId)) return true;
 
     const targetCategory = categorias.find(c => c.id === targetCategoryId);
@@ -470,7 +470,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
 
     return <div className="space-y-4" key={categoriaId}>
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{titulo}</h3>
+        <h3 className="text-lg font-light">{titulo}</h3>
         <Badge variant="outline">
           {categoriaSelecionados.length}
         </Badge>
@@ -495,7 +495,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
 
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold">{prato.nome}</h4>
+                    <h4 className="font-light">{prato.nome}</h4>
                     {prato.favorito && <Heart className="text-red-500 fill-current" size={16} />}
                     {prato.frequente && <Flame className="text-orange-500 fill-current" size={16} />}
                   </div>
@@ -512,25 +512,25 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle className="text-xl font-bold">{prato.nome}</DialogTitle>
+                        <DialogTitle className="text-xl font-light">{prato.nome}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
                         <img src={prato.foto} alt={prato.nome} className="w-full h-64 object-cover rounded-lg" />
                         <div className="space-y-3">
                           <div>
-                            <h4 className="font-semibold text-sm">Descrição</h4>
+                            <h4 className="font-light text-sm">Descrição</h4>
                             <p className="text-sm">{prato.descricao}</p>
                           </div>
 
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <h4 className="font-semibold">Categoria</h4>
+                              <h4 className="font-light">Categoria</h4>
                               <p className="capitalize">{titulo}</p>
                             </div>
                           </div>
 
                           {(prato.favorito || prato.frequente) && <div>
-                            <h4 className="font-semibold text-sm">Características</h4>
+                            <h4 className="font-light text-sm">Características</h4>
                             <div className="flex gap-2 mt-1">
                               {prato.favorito && <Badge variant="outline" className="text-xs">
                                 <Heart className="w-3 h-3 mr-1 text-red-500 fill-current" />
@@ -544,7 +544,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                           </div>}
 
                           <div>
-                            <h4 className="font-semibold text-sm">Informações adicionais</h4>
+                            <h4 className="font-light text-sm">Informações adicionais</h4>
                             <p className="text-sm text-muted-foreground">
                               Este prato faz parte do nosso cardápio especial para eventos.
                               Preparado com ingredientes frescos e técnicas culinárias refinadas.
@@ -594,7 +594,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-4">
-              <h3 className="text-base font-semibold">Nível de Serviço</h3>
+              <h3 className="text-base font-light">Nível de Serviço</h3>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -607,14 +607,14 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold">Clássico</h4>
+                      <h4 className="font-light">Clássico</h4>
                       <p className="text-sm text-muted-foreground">
                         Os convidados serão bem servidos em quantidades de comida e opções comuns em eventos.
                         Ninguém vai ficar com fome. (Até 5 pratos no total)
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-semibold">Banquete</h4>
+                      <h4 className="font-light">Banquete</h4>
                       <p className="text-sm text-muted-foreground">
                         Um número maior de opções no buffet com mais variedade de pratos.
                         (Até 10 pratos no total)
@@ -710,7 +710,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
               const pratosDaCategoria = pratosSelecionados.filter((p) => matchesCategory(p.categorias, cat.id));
               return (
                 <div key={cat.id}>
-                  <h4 className="font-semibold capitalize mb-2">{cat.label}</h4>
+                  <h4 className="font-light capitalize mb-2">{cat.label}</h4>
                   <div className="space-y-1 mb-4">
                     {pratosDaCategoria.map((prato) => (
                       <div key={prato.id} className="flex justify-between text-sm">
@@ -757,7 +757,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                 </div>
                 <span>R$ {precoCompras.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm font-bold border-t pt-2 mt-2">
+              <div className="flex justify-between text-sm font-light border-t pt-2 mt-2">
                 <span>Total:</span>
                 <span>R$ {total.toFixed(2)}</span>
               </div>
@@ -851,9 +851,9 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
 
                         {/* Informações do prato */}
                         <div className="flex-1">
-                          <h4 className="font-semibold mb-1">{prato.nome}</h4>
+                          <h4 className="font-light mb-1">{prato.nome}</h4>
                           <p className="text-sm text-muted-foreground mb-2">{prato.descricao}</p>
-                          <p className="text-sm font-semibold text-primary">R$ {prato.preco.toFixed(2)}</p>
+                          <p className="text-sm font-light text-primary">R$ {prato.preco.toFixed(2)}</p>
                         </div>
 
                         {/* Botões de ação */}
@@ -900,7 +900,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
         {pratoDetalhesDialog && (
           <>
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">{pratoDetalhesDialog.nome}</DialogTitle>
+              <DialogTitle className="text-xl font-light">{pratoDetalhesDialog.nome}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <img
@@ -910,19 +910,19 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
               />
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-semibold text-sm">Descrição</h4>
+                  <h4 className="font-light text-sm">Descrição</h4>
                   <p className="text-sm">{pratoDetalhesDialog.descricao}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <h4 className="font-semibold">Preço</h4>
+                    <h4 className="font-light">Preço</h4>
                     <p>R$ {pratoDetalhesDialog.preco.toFixed(2)}</p>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-sm">Informações adicionais</h4>
+                  <h4 className="font-light text-sm">Informações adicionais</h4>
                   <p className="text-sm text-muted-foreground">
                     Este prato faz parte do nosso catálogo completo.
                     Preparado com ingredientes frescos e técnicas culinárias refinadas.

@@ -203,7 +203,7 @@ const DashboardCliente = () => {
 
           {/* Welcome Text */}
           <div>
-            <h2 className="text-h3 font-semibold text-gray-800 mb-1">
+            <h2 className="text-h3 font-light text-gray-800 mb-1">
               {getTimeBasedGreeting()}, {clientFirstName}! 👋
             </h2>
             <p className="text-body text-gray-600">
@@ -215,7 +215,7 @@ const DashboardCliente = () => {
 
       {/* Active Services */}
       <div className="space-y-4">
-        <h3 className="text-h4 font-semibold text-gray-800">
+        <h3 className="text-h4 font-light text-gray-800">
           Serviços Ativos {isLoading ? "" : `(${activeOrders.length})`}
         </h3>
 

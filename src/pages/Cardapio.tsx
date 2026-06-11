@@ -35,249 +35,6 @@ interface Prato {
 
 const FAVORITES_STORAGE_KEY = "cardapio-favorites";
 
-const DADOS_MOCKADOS: Prato[] = [
-  {
-    id: "1",
-    nome: "Salmão Grelhado Mediterrâneo",
-    foto: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop",
-    resumo: "Salmão fresco, azeite de oliva, limão siciliano",
-    descricao: "Delicioso salmão grelhado com temperos mediterrâneos, servido com legumes sazonais e molho de ervas finas.",
-    fotos: [
-      "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&h=400&fit=crop",
-      "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&h=400&fit=crop"
-    ],
-    categoria: "peixes",
-    preferencias: ["sem fritura", "rica em proteínas", "mediterrânea"],
-    ingredientes: ["frutos do mar"],
-    tiposCozinha: ["mediterrânea"],
-    favorito: false
-  },
-  {
-    id: "2",
-    nome: "Risotto de Cogumelos Porcini",
-    foto: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop",
-    resumo: "Arroz arbóreo, cogumelos porcini, parmesão",
-    descricao: "Cremoso risotto preparado com cogumelos porcini frescos e finalizado com parmesão envelhecido.",
-    fotos: [
-      "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&h=400&fit=crop",
-      "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=600&h=400&fit=crop"
-    ],
-    categoria: "massas",
-    preferencias: ["vegetariano"],
-    ingredientes: ["laticínios", "glúten"],
-    tiposCozinha: ["italiana"],
-    favorito: false
-  },
-  {
-    id: "3",
-    nome: "Hambúrguer Vegano de Quinoa",
-    foto: "https://images.unsplash.com/photo-1551782450-17144efb9c50?w=400&h=300&fit=crop",
-    resumo: "Quinoa, grão-de-bico, avocado, pão integral",
-    descricao: "Hambúrguer artesanal vegano feito com quinoa e grão-de-bico, servido com avocado e molho tahine.",
-    fotos: [
-      "https://images.unsplash.com/photo-1551782450-17144efb9c50?w=600&h=400&fit=crop",
-      "https://images.unsplash.com/photo-1525059696034-4967a729002e?w=600&h=400&fit=crop"
-    ],
-    categoria: "proteína vegetal",
-    preferencias: ["vegano", "orgânica", "rica em proteínas"],
-    ingredientes: ["glúten"],
-    tiposCozinha: ["contemporânea"],
-    favorito: false
-  },
-  {
-    id: "4",
-    nome: "Yakisoba de Frango",
-    foto: yakisobaFrango,
-    resumo: "Macarrão yakisoba, frango, legumes, molho shoyu",
-    descricao: "Tradicional yakisoba japonês com frango grelhado, legumes frescos e molho shoyu especial.",
-    fotos: [
-      yakisobaFrango,
-      "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600&h=400&fit=crop"
-    ],
-    categoria: "carnes brancas",
-    preferencias: ["rica em proteínas"],
-    ingredientes: ["glúten", "soja"],
-    tiposCozinha: ["japonesa", "asiática"],
-    favorito: false
-  },
-  {
-    id: "5",
-    nome: "Picanha na Brasa",
-    foto: "https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop",
-    resumo: "Picanha nobre, sal grosso, farofa, vinagrete",
-    descricao: "Suculenta picanha grelhada na brasa, temperada apenas com sal grosso, acompanha farofa e vinagrete.",
-    fotos: [
-      "https://images.unsplash.com/photo-1558030006-450675393462?w=600&h=400&fit=crop",
-      "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=400&fit=crop"
-    ],
-    categoria: "carnes vermelhas",
-    preferencias: ["rica em proteínas"],
-    ingredientes: [],
-    tiposCozinha: ["brasileira"],
-    favorito: false
-  },
-  {
-    id: "6",
-    nome: "Salada Caesar com Camarão",
-    foto: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop",
-    resumo: "Alface americana, camarão grelhado, croutons, parmesão",
-    descricao: "Clássica salada caesar com camarões grelhados, croutons crocantes e molho caesar tradicional.",
-    fotos: [
-      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&h=400&fit=crop",
-      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&h=400&fit=crop"
-    ],
-    categoria: "saladas",
-    preferencias: ["light", "rica em proteínas"],
-    ingredientes: ["frutos do mar", "laticínios", "glúten", "ovo"],
-    tiposCozinha: ["mediterrânea"],
-    favorito: false
-  },
-  {
-    id: "7",
-    nome: "Paella Valenciana",
-    foto: "https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=400&h=300&fit=crop",
-    resumo: "Arroz bomba, frango, coelho, judión, açafrão",
-    descricao: "Autêntica paella valenciana com frango, coelho, judión verde e o melhor açafrão espanhol.",
-    fotos: [
-      "https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=600&h=400&fit=crop",
-      "https://images.unsplash.com/photo-1515443961218-a51367888e4b?w=600&h=400&fit=crop"
-    ],
-    categoria: "grãos",
-    preferencias: ["rica em proteínas"],
-    ingredientes: [],
-    tiposCozinha: ["espanhola", "mediterrânea"],
-    favorito: false
-  },
-  {
-    id: "8",
-    nome: "Sopa de Miso com Tofu",
-    foto: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=300&fit=crop",
-    resumo: "Miso vermelho, tofu sedoso, cebolinha, alga wakame",
-    descricao: "Tradicional sopa japonesa de miso com tofu sedoso, alga wakame e cebolinha fresca.",
-    fotos: [
-      "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&h=400&fit=crop",
-      "https://images.unsplash.com/photo-1553621042-f6e147245754?w=600&h=400&fit=crop"
-    ],
-    categoria: "sopas",
-    preferencias: ["vegano", "baixo sal", "light"],
-    ingredientes: ["soja"],
-    tiposCozinha: ["japonesa", "asiática"],
-    favorito: false
-  },
-  {
-    id: "9",
-    nome: "Tacos de Carnitas",
-    foto: tacosCarnitas,
-    resumo: "Porco desfiado, tortilla, cebola roxa, cilantro",
-    descricao: "Autênticos tacos mexicanos com carnitas de porco cozida lentamente, cebola roxa e cilantro fresco.",
-    fotos: [
-      tacosCarnitas,
-      "https://images.unsplash.com/photo-1565299585323-38174c813d9d?w=600&h=400&fit=crop"
-    ],
-    categoria: "comidas rápidas",
-    preferencias: ["picante"],
-    ingredientes: ["carne de porco", "glúten"],
-    tiposCozinha: ["mexicana"],
-    favorito: false
-  },
-  {
-    id: "10",
-    nome: "Moussaka Grega",
-    foto: moussakaGrega,
-    resumo: "Berinjela, carne moída, molho bechamel, queijo",
-    descricao: "Tradicional moussaka grega com camadas de berinjela, carne temperada e cremoso molho bechamel.",
-    fotos: [
-      moussakaGrega,
-      "https://images.unsplash.com/photo-1551248429-40975aa4de74?w=600&h=400&fit=crop"
-    ],
-    categoria: "carnes vermelhas",
-    preferencias: ["rica em proteínas", "mediterrânea"],
-    ingredientes: ["laticínios", "glúten"],
-    tiposCozinha: ["grega", "mediterrânea"],
-    favorito: false
-  },
-  {
-    id: "11",
-    nome: "Linguine alle Vongole",
-    foto: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=400&h=300&fit=crop",
-    resumo: "Linguine, vongole, alho, vinho branco, salsa",
-    descricao: "Clássico prato italiano com linguine al dente, vongole frescas, alho, vinho branco e salsa.",
-    fotos: [
-      "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=600&h=400&fit=crop",
-      "https://images.unsplash.com/photo-1563379091339-03246963d96c?w=600&h=400&fit=crop"
-    ],
-    categoria: "massas",
-    preferencias: ["rica em proteínas"],
-    ingredientes: ["frutos do mar", "glúten", "alho"],
-    tiposCozinha: ["italiana", "mediterrânea"],
-    favorito: false
-  },
-  {
-    id: "12",
-    nome: "Falafel com Tahine",
-    foto: "https://images.unsplash.com/photo-1621852004158-f3bc188ace2d?w=400&h=300&fit=crop",
-    resumo: "Grão-de-bico, tahine, pepino, tomate, pita",
-    descricao: "Crocantes bolinhos de falafel servidos com molho tahine cremoso, salada fresca e pão pita.",
-    fotos: [
-      "https://images.unsplash.com/photo-1621852004158-f3bc188ace2d?w=600&h=400&fit=crop",
-      "https://images.unsplash.com/photo-1571197119297-4f39f3b967c4?w=600&h=400&fit=crop"
-    ],
-    categoria: "proteína vegetal",
-    preferencias: ["vegano", "rica em proteínas"],
-    ingredientes: ["glúten"],
-    tiposCozinha: ["árabe", "mediterrânea"],
-    favorito: false
-  },
-  {
-    id: "13",
-    nome: "Lagosta Thermidor",
-    foto: lagostaThermidor,
-    resumo: "Lagosta, molho bechamel, queijo gruyère, conhaque",
-    descricao: "Sofisticada lagosta thermidor com molho bechamel cremoso, queijo gruyère e toque de conhaque.",
-    fotos: [
-      lagostaThermidor,
-      "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&h=400&fit=crop"
-    ],
-    categoria: "mariscos",
-    preferencias: ["rica em proteínas"],
-    ingredientes: ["frutos do mar", "laticínios"],
-    tiposCozinha: ["francesa", "mediterrânea"],
-    favorito: false
-  },
-  {
-    id: "14",
-    nome: "Schnitzel Vienense",
-    foto: schnitzelVienense,
-    resumo: "Escalope de vitela, farinha de rosca, batatas",
-    descricao: "Tradicional schnitzel vienense com escalope de vitela empanado, servido com batatas sauté e limão.",
-    fotos: [
-      schnitzelVienense,
-      "https://images.unsplash.com/photo-1594041388841-2d4be31a4b8a?w=600&h=400&fit=crop"
-    ],
-    categoria: "carnes brancas",
-    preferencias: ["rica em proteínas"],
-    ingredientes: ["glúten", "ovo"],
-    tiposCozinha: ["alemã"],
-    favorito: false
-  },
-  {
-    id: "15",
-    nome: "Hummus com Vegetais",
-    foto: hummusVegetais,
-    resumo: "Grão-de-bico, tahine, azeite, vegetais crudité",
-    descricao: "Cremoso hummus tradicional servido com vegetais frescos cortados em bastões para acompanhar.",
-    fotos: [
-      hummusVegetais,
-      "https://images.unsplash.com/photo-1571197119297-4f39f3b967c4?w=600&h=400&fit=crop"
-    ],
-    categoria: "proteína vegetal",
-    preferencias: ["vegano", "light", "orgânica"],
-    ingredientes: [],
-    tiposCozinha: ["árabe", "mediterrânea"],
-    favorito: false
-  }
-];
-
 const CATEGORIAS_ICONES = {
   "massas": { icon: Utensils, color: "bg-orange-100 text-orange-700 border-orange-200" },
   "peixes": { icon: Fish, color: "bg-blue-100 text-blue-700 border-blue-200" },
@@ -375,10 +132,6 @@ export default function Cardapio() {
         const pratosCarregados = list.map(mapDishToPrato).filter((p) => p.id);
         setPratos(pratosCarregados);
         setPratosFiltrados(pratosCarregados);
-      } catch {
-        const fallback = DADOS_MOCKADOS.map((p) => ({ ...p, favorito: parsedFavorites.includes(p.id) }));
-        setPratos(fallback);
-        setPratosFiltrados(fallback);
       } finally {
         setIsLoading(false);
       }
@@ -479,7 +232,7 @@ export default function Cardapio() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold">Cardápio</h1>
+          <h1 className="text-2xl font-light">Cardápio</h1>
         </div>
 
         {/* Pesquisa e Filtros */}
@@ -508,7 +261,7 @@ export default function Cardapio() {
             <Card className="bg-card/60 backdrop-blur border-2">
               <CardContent className="p-4 space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-semibold">Filtros Avançados</h3>
+                  <h3 className="font-light">Filtros Avançados</h3>
                   <Button variant="ghost" size="sm" onClick={limparFiltros}>
                     Limpar Filtros
                   </Button>
@@ -678,7 +431,7 @@ export default function Cardapio() {
                   />
                   <div className="space-y-2">
                     <div className="flex items-start justify-between">
-                      <h3 className="font-semibold text-lg">{prato.nome}</h3>
+                      <h3 className="font-light text-lg">{prato.nome}</h3>
                       <Button
                         variant="ghost"
                         size="icon"

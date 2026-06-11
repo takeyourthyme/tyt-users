@@ -81,7 +81,7 @@ const EditarDadosPessoais = () => {
         if (!data || typeof data !== "object" || Array.isArray(data)) return;
         setUser(data as Record<string, unknown>);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [token, userId, user]);
 
   useEffect(() => {
@@ -231,11 +231,11 @@ const EditarDadosPessoais = () => {
 
     try {
       setIsPasswordSubmitting(true);
-      await changePassword({ 
-        token, 
-        email: formData.email, 
-        senhaAtual: passwordData.senhaAtual, 
-        novaSenha: passwordData.novaSenha 
+      await changePassword({
+        token,
+        email: formData.email,
+        senhaAtual: passwordData.senhaAtual,
+        novaSenha: passwordData.novaSenha
       });
       toast({ title: "Senha alterada!", description: "Sua senha foi atualizada com sucesso." });
       setPasswordData({ senhaAtual: "", novaSenha: "", confirmarSenha: "" });
@@ -271,218 +271,218 @@ const EditarDadosPessoais = () => {
 
   const photoUrl = getUserPhotoUrl(user ?? undefined) ?? formData.foto;
   return <div className="min-h-screen bg-white pt-20">
-      <AppHeader />
-      
-      <div className="container mx-auto px-4 py-6">
-        {/* Título da página */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard-cliente")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">Minha Conta</h1>
-        </div>
+    <AppHeader />
 
-        <div className="max-w-2xl mx-auto space-y-6">
-          {/* Foto de Perfil */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Foto do Perfil
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center gap-4">
-                <Avatar className="h-32 w-32">
-                  <AvatarImage src={photoUrl || undefined} />
-                  <AvatarFallback>{(formData.nome || "Cliente").slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <Button variant="outline" size="sm" disabled>
-                  <Camera className="h-4 w-4 mr-2" />
-                  Alterar Foto
-                </Button>
+    <div className="container mx-auto px-4 py-6">
+      {/* Título da página */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard-cliente")}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-light">Minha Conta</h1>
+      </div>
+
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Foto de Perfil */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Foto do Perfil
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="h-32 w-32">
+                <AvatarImage src={photoUrl || undefined} />
+                <AvatarFallback>{(formData.nome || "Cliente").slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <Button variant="outline" size="sm" disabled>
+                <Camera className="h-4 w-4 mr-2" />
+                Alterar Foto
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dados Pessoais */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Dados Pessoais
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome Completo *</Label>
+                <Input id="nome" value={formData.nome} onChange={e => handleInputChange("nome", e.target.value)} className={errors.nome ? "border-red-500" : ""} />
+                {errors.nome && <p className="text-sm text-red-500">{errors.nome}</p>}
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Dados Pessoais */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Dados Pessoais
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome Completo *</Label>
-                  <Input id="nome" value={formData.nome} onChange={e => handleInputChange("nome", e.target.value)} className={errors.nome ? "border-red-500" : ""} />
-                  {errors.nome && <p className="text-sm text-red-500">{errors.nome}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dataNascimento">Data de Nascimento</Label>
-                  <Input id="dataNascimento" type="date" value={formData.dataNascimento} onChange={e => handleInputChange("dataNascimento", e.target.value)} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail *</Label>
-                  <Input id="email" type="email" value={formData.email} onChange={e => handleInputChange("email", e.target.value)} className={errors.email ? "border-red-500" : ""} />
-                  {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="whatsapp">WhatsApp *</Label>
-                  <Input id="whatsapp" value={formData.whatsapp} onChange={e => handleInputChange("whatsapp", e.target.value)} className={errors.whatsapp ? "border-red-500" : ""} inputMode="tel" />
-                  {errors.whatsapp && <p className="text-sm text-red-500">{errors.whatsapp}</p>}
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                <Input id="dataNascimento" type="date" value={formData.dataNascimento} onChange={e => handleInputChange("dataNascimento", e.target.value)} />
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Endereço */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Endereço
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cep">CEP *</Label>
-                  <Input id="cep" value={formData.cep} onChange={e => handleInputChange("cep", e.target.value)} className={errors.cep ? "border-red-500" : ""} />
-                  {errors.cep && <p className="text-sm text-red-500">{errors.cep}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="endereco">Endereço *</Label>
-                  <Input id="endereco" value={formData.endereco} onChange={e => handleInputChange("endereco", e.target.value)} className={errors.endereco ? "border-red-500" : ""} />
-                  {errors.endereco && <p className="text-sm text-red-500">{errors.endereco}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="numero">Número</Label>
-                  <Input id="numero" value={formData.numero} onChange={e => handleInputChange("numero", e.target.value)} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="complemento">Complemento</Label>
-                  <Input id="complemento" value={formData.complemento} onChange={e => handleInputChange("complemento", e.target.value)} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bairro">Bairro</Label>
-                  <Input id="bairro" value={formData.bairro} onChange={e => handleInputChange("bairro", e.target.value)} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="cidade">Cidade</Label>
-                  <Input id="cidade" value={formData.cidade} onChange={e => handleInputChange("cidade", e.target.value)} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="estado">Estado</Label>
-                  <Input id="estado" value={formData.estado} onChange={e => handleInputChange("estado", e.target.value)} />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail *</Label>
+                <Input id="email" type="email" value={formData.email} onChange={e => handleInputChange("email", e.target.value)} className={errors.email ? "border-red-500" : ""} />
+                {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Comprovante de Endereço */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileImage className="h-5 w-5" />
-                Comprovante de Endereço
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Comprovante Atual */}
-              <div className="bg-gray-50 p-4 rounded-lg border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FileImage className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium">conta_luz_atual.pdf</p>
-                      <p className="text-sm text-gray-500">Enviado em 15/01/2024</p>
-                    </div>
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp">WhatsApp *</Label>
+                <Input id="whatsapp" value={formData.whatsapp} onChange={e => handleInputChange("whatsapp", e.target.value)} className={errors.whatsapp ? "border-red-500" : ""} inputMode="tel" />
+                {errors.whatsapp && <p className="text-sm text-red-500">{errors.whatsapp}</p>}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Endereço */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Endereço
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cep">CEP *</Label>
+                <Input id="cep" value={formData.cep} onChange={e => handleInputChange("cep", e.target.value)} className={errors.cep ? "border-red-500" : ""} />
+                {errors.cep && <p className="text-sm text-red-500">{errors.cep}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="endereco">Endereço *</Label>
+                <Input id="endereco" value={formData.endereco} onChange={e => handleInputChange("endereco", e.target.value)} className={errors.endereco ? "border-red-500" : ""} />
+                {errors.endereco && <p className="text-sm text-red-500">{errors.endereco}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="numero">Número</Label>
+                <Input id="numero" value={formData.numero} onChange={e => handleInputChange("numero", e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="complemento">Complemento</Label>
+                <Input id="complemento" value={formData.complemento} onChange={e => handleInputChange("complemento", e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bairro">Bairro</Label>
+                <Input id="bairro" value={formData.bairro} onChange={e => handleInputChange("bairro", e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cidade">Cidade</Label>
+                <Input id="cidade" value={formData.cidade} onChange={e => handleInputChange("cidade", e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="estado">Estado</Label>
+                <Input id="estado" value={formData.estado} onChange={e => handleInputChange("estado", e.target.value)} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Comprovante de Endereço */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileImage className="h-5 w-5" />
+              Comprovante de Endereço
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Comprovante Atual */}
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <FileImage className="h-6 w-6 text-blue-600" />
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Trocar
-                  </Button>
+                  <div>
+                    <p className="font-medium">conta_luz_atual.pdf</p>
+                    <p className="text-sm text-gray-500">Enviado em 15/01/2024</p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Alterar Senha */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Alterar Senha
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="senhaAtual">Senha Atual</Label>
-                  <Input 
-                    id="senhaAtual" 
-                    type="password" 
-                    value={passwordData.senhaAtual} 
-                    onChange={e => setPasswordData(prev => ({ ...prev, senhaAtual: e.target.value }))} 
-                  />
-                </div>
-                <div className="hidden md:block" />
-                <div className="space-y-2">
-                  <Label htmlFor="novaSenha">Nova Senha</Label>
-                  <Input 
-                    id="novaSenha" 
-                    type="password" 
-                    value={passwordData.novaSenha} 
-                    onChange={e => setPasswordData(prev => ({ ...prev, novaSenha: e.target.value }))} 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmarSenha">Confirmar Nova Senha</Label>
-                  <Input 
-                    id="confirmarSenha" 
-                    type="password" 
-                    value={passwordData.confirmarSenha} 
-                    onChange={e => setPasswordData(prev => ({ ...prev, confirmarSenha: e.target.value }))} 
-                  />
-                </div>
-              </div>
-              <div className="pt-2">
-                <Button 
-                  onClick={handlePasswordChange} 
-                  variant="outline" 
-                  disabled={isPasswordSubmitting}
-                >
-                  {isPasswordSubmitting ? "Alterando..." : "Atualizar Senha"}
+                <Button variant="outline" size="sm">
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Trocar
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Botões de Ação */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-6">
-            <Button variant="outline" onClick={handleCancel} className="flex-1">
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} className="flex-1" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : "Salvar Alterações"}
-            </Button>
-          </div>
+        {/* Alterar Senha */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Alterar Senha
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="senhaAtual">Senha Atual</Label>
+                <Input
+                  id="senhaAtual"
+                  type="password"
+                  value={passwordData.senhaAtual}
+                  onChange={e => setPasswordData(prev => ({ ...prev, senhaAtual: e.target.value }))}
+                />
+              </div>
+              <div className="hidden md:block" />
+              <div className="space-y-2">
+                <Label htmlFor="novaSenha">Nova Senha</Label>
+                <Input
+                  id="novaSenha"
+                  type="password"
+                  value={passwordData.novaSenha}
+                  onChange={e => setPasswordData(prev => ({ ...prev, novaSenha: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmarSenha">Confirmar Nova Senha</Label>
+                <Input
+                  id="confirmarSenha"
+                  type="password"
+                  value={passwordData.confirmarSenha}
+                  onChange={e => setPasswordData(prev => ({ ...prev, confirmarSenha: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="pt-2">
+              <Button
+                onClick={handlePasswordChange}
+                variant="outline"
+                disabled={isPasswordSubmitting}
+              >
+                {isPasswordSubmitting ? "Alterando..." : "Atualizar Senha"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Botões de Ação */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-6">
+          <Button variant="outline" onClick={handleCancel} className="flex-1">
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} className="flex-1" disabled={isSubmitting}>
+            {isSubmitting ? "Salvando..." : "Salvar Alterações"}
+          </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  </div>;
 };
 export default EditarDadosPessoais;

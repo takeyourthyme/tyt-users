@@ -130,7 +130,7 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-light text-gray-900 mb-2">
           Vamos começar
         </h1>
         <p className="text-gray-600">
@@ -140,7 +140,7 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
 
       {/* Seleção de Cidade */}
       <div className="space-y-3">
-        <Label className="text-lg font-semibold">Cidade</Label>
+        <Label className="text-lg font-light">Cidade</Label>
         <p className="text-sm text-gray-500 mb-3">
           Selecione a cidade onde você precisa que o serviço seja executado
         </p>
@@ -164,7 +164,7 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
 
       {/* Seleção de Serviço */}
       <div className="space-y-3">
-        <Label className="text-lg font-semibold">Serviço Desejado</Label>
+        <Label className="text-lg font-light">Serviço Desejado</Label>
         <p className="text-sm text-gray-500 mb-3">
           Escolha o tipo de serviço que melhor atende sua necessidade
         </p>
@@ -201,7 +201,7 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-base text-gray-900 leading-tight">{servico.nome}</h3>
+                      <h3 className="font-light text-base text-gray-900 leading-tight">{servico.nome}</h3>
                       <p className="text-xs text-gray-600 mt-1 leading-tight">{servico.descricao}</p>
                     </div>
                   </div>
@@ -216,7 +216,7 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
                         />
                       </div>
                     </div>
-                    <h3 className="font-semibold text-lg text-gray-900">{servico.nome}</h3>
+                    <h3 className="font-light text-lg text-gray-900">{servico.nome}</h3>
                     <p className="text-sm text-gray-600">{servico.descricao}</p>
                   </div>
                 </CardContent>

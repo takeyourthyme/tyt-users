@@ -250,7 +250,7 @@ const DashboardChef = () => {
 
             {/* Welcome and Stats */}
             <div className="flex-1">
-              <h2 className="text-h3 font-semibold text-gray-800 mb-3">
+              <h2 className="text-h3 font-light text-gray-800 mb-3">
                 {getTimeBasedGreeting()}, {chefFirstName}! 👨‍🍳
               </h2>
 
@@ -259,7 +259,7 @@ const DashboardChef = () => {
                   <TrendingUp className="w-4 h-4 text-pink-600" />
                   <div>
                     <div className="text-xs text-gray-500">Tempo de TYT</div>
-                    <div className="text-sm font-semibold text-gray-800">—</div>
+                    <div className="text-sm font-light text-gray-800">—</div>
                   </div>
                 </div>
 
@@ -267,7 +267,7 @@ const DashboardChef = () => {
                   <Star className="w-4 h-4 text-purple-600 fill-purple-600" />
                   <div>
                     <div className="text-xs text-gray-500">Sua avaliação</div>
-                    <div className="text-sm font-semibold text-gray-800">{stats.avaliacaoMedia}</div>
+                    <div className="text-sm font-light text-gray-800">{stats.avaliacaoMedia}</div>
                   </div>
                 </div>
               </div>
@@ -293,7 +293,7 @@ const DashboardChef = () => {
                     <button.icon className="h-5 w-5 text-gray-500" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base text-gray-800">{button.label}</h3>
+                    <h3 className="font-light text-base text-gray-800">{button.label}</h3>
                   </div>
                 </div>
               </CardContent>

@@ -115,14 +115,14 @@ const MeusPagamentos = () => {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Meus Pagamentos</h1>
+            <h1 className="text-2xl font-light text-gray-900">Meus Pagamentos</h1>
             <p className="text-gray-600">Acompanhe seus recebimentos e ganhos</p>
           </div>
         </div>
 
         {/* Seus Ganhos */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Seus Ganhos</h2>
+          <h2 className="text-lg font-light text-gray-800 mb-4">Seus Ganhos</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="bg-white border-gray-200">
               <CardContent className="p-4 text-center">

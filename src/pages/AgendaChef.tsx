@@ -326,7 +326,7 @@ const AgendaChef = () => {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Minha Agenda</h1>
+            <h1 className="text-2xl font-light text-gray-900">Minha Agenda</h1>
             <p className="text-gray-600">Gerencie seus compromissos e horários</p>
           </div>
         </div>
@@ -336,7 +336,7 @@ const AgendaChef = () => {
           {/* Calendar Section */}
           <Card className="p-6 flex flex-col h-full lg:min-h-[480px]">
             <CardHeader className="p-0 mb-4 flex-shrink-0">
-              <CardTitle className="text-lg font-semibold">Calendário</CardTitle>
+              <CardTitle className="text-lg font-light">Calendário</CardTitle>
             </CardHeader>
             <CardContent className="p-0 flex-1">
               <CalendarComponent
@@ -363,7 +363,7 @@ const AgendaChef = () => {
                   hasEvent: (date) => dateHasEvents(date)
                 }}
                 modifiersClassNames={{
-                  hasEvent: "bg-tyt-yellow-500/20 text-tyt-yellow-700 font-semibold rounded-md relative after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:bg-tyt-yellow-600 after:rounded-full"
+                  hasEvent: "bg-tyt-yellow-500/20 text-tyt-yellow-700 font-light rounded-md relative after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:bg-tyt-yellow-600 after:rounded-full"
                 }}
               />
             </CardContent>
@@ -372,7 +372,7 @@ const AgendaChef = () => {
           {/* Events Section */}
           <Card className="p-6">
             <CardHeader className="p-0 mb-4">
-              <CardTitle className="text-lg font-semibold">
+              <CardTitle className="text-lg font-light">
                 Serviços do dia {selectedDate.toLocaleDateString('pt-BR')}
               </CardTitle>
             </CardHeader>
@@ -502,7 +502,7 @@ const AgendaChef = () => {
         {/* Search and Filter Section */}
         <div className="space-y-4" id="proximos-compromissos">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-800">
+            <h3 className="text-lg font-light text-gray-800">
               {sectionTitle}
             </h3>
           </div>

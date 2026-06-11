@@ -52,52 +52,52 @@ export const EtapaIdentificacao: React.FC<Props> = ({
     navigate('/cadastro');
   };
   return <div className="max-w-md mx-auto space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Login</h1>
-        <p className="text-gray-600">Faça login com seus dados para  continuar com sua contratação</p>
-      </div>
+    <div className="text-center">
+      <h1 className="text-3xl font-light text-gray-900 mb-2">Login</h1>
+      <p className="text-gray-600">Faça login com seus dados para  continuar com sua contratação</p>
+    </div>
 
-      <Card>
-        <CardContent className="p-6 space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input
-              id="email"
-              placeholder="seuemail@exemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              inputMode="email"
-              autoComplete="email"
-            />
-          </div>
+    <Card>
+      <CardContent className="p-6 space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="email">E-mail</Label>
+          <Input
+            id="email"
+            placeholder="seuemail@exemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            inputMode="email"
+            autoComplete="email"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Senha</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+        </div>
 
-          <Button onClick={handleLogin} disabled={!email || !password || isSubmitting} className="w-full">
-            {isSubmitting ? "Entrando..." : "Entrar"}
-          </Button>
-
-          <div className="text-center">
-            <Button variant="link" onClick={irParaCadastro} className="text-sm">
-              Não tenho conta, criar uma agora
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onVoltar}>
-          Voltar
+        <Button onClick={handleLogin} disabled={!email || !password || isSubmitting} className="w-full">
+          {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
-      </div>
-    </div>;
+
+        <div className="text-center">
+          <Button variant="link" onClick={irParaCadastro} className="text-sm">
+            Não tenho conta, criar uma agora
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+
+    <div className="flex justify-between">
+      <Button variant="outline" onClick={onVoltar}>
+        Voltar
+      </Button>
+    </div>
+  </div>;
 };

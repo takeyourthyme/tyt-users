@@ -40,7 +40,7 @@ const ServicosAtivos = () => {
             const orderChefId = (order.chef as { id?: number } | null)?.id;
             return Number(orderChefId) === Number(chefUserId) || Number(orderChefId) === Number(chefProfileId);
           });
-          
+
           const detailedOrders = await Promise.all(
             filtered.map(async (order) => {
               try {
@@ -56,7 +56,7 @@ const ServicosAtivos = () => {
           setKitchenOrders(detailedOrders);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const servicosAtivos = useMemo(() => {
@@ -132,141 +132,141 @@ const ServicosAtivos = () => {
     }
   };
   return <div className="min-h-screen bg-gray-50 pt-20">
-      {/* Chef AppBar */}
-      <ChefMenu activeItem="servicos-ativos" />
+    {/* Chef AppBar */}
+    <ChefMenu activeItem="servicos-ativos" />
 
-      {/* Main Content */}
-      <main className="p-4 space-y-6 max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard-chef')} className="text-gray-600 hover:text-gray-900 p-2">
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Serviços Ativos</h1>
-            <p className="text-gray-600">Acompanhe os serviços semanais fixos aqui.</p>
-          </div>
+    {/* Main Content */}
+    <main className="p-4 space-y-6 max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard-chef')} className="text-gray-600 hover:text-gray-900 p-2">
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-light text-gray-900">Serviços Ativos</h1>
+          <p className="text-gray-600">Acompanhe os serviços semanais fixos aqui.</p>
         </div>
+      </div>
 
-        {/* Services List */}
-        <div className="space-y-4">
-          {servicosAtivos.map(servico => {
+      {/* Services List */}
+      <div className="space-y-4">
+        {servicosAtivos.map(servico => {
           const IconComponent = getServiceIcon(servico.type);
           return <Card key={servico.id} className="bg-white border-gray-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/servico-detalhes/${servico.id}`)}>
-                <CardContent className="p-4">
-                  {/* Desktop Layout */}
-                  <div className="hidden md:flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className={`w-10 h-10 ${getServiceColor(servico.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
-                        <IconComponent className="w-5 h-5 text-white" />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-gray-800">{servico.type}</span>
-                          <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{servico.id}</span>
-                          <Badge className={cn("pointer-events-none", getStatusColor(servico.status))}>
-                            {getStatusLabel(servico.status)}
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            Próximo: {new Date(servico.nextSession).toLocaleDateString('pt-BR')}{servico.time ? ` às ${servico.time}` : ''}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {servico.frequency}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {servico.location}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Client info on desktop */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <img src={servico.client.photo} alt={servico.client.name} className="w-8 h-8 rounded-full object-cover" />
-                        <span className="text-sm text-gray-700 font-medium">{servico.client.name}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Desktop: Icon only */}
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="p-2 h-8 w-8 flex-shrink-0" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/servico-detalhes/${servico.id}`);
-                      }}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
+            <CardContent className="p-4">
+              {/* Desktop Layout */}
+              <div className="hidden md:flex items-start justify-between gap-3">
+                <div className="flex items-start gap-4 flex-1">
+                  <div className={`w-10 h-10 ${getServiceColor(servico.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
+                    <IconComponent className="w-5 h-5 text-white" />
                   </div>
 
-                  {/* Mobile Layout */}
-                  <div className="md:hidden">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className={`w-10 h-10 ${getServiceColor(servico.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
-                        <IconComponent className="w-5 h-5 text-white" />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-gray-800">{servico.type}</span>
-                          <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{servico.id}</span>
-                          <Badge className={cn("pointer-events-none", getStatusColor(servico.status))}>
-                            {getStatusLabel(servico.status)}
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            Próximo: {new Date(servico.nextSession).toLocaleDateString('pt-BR')}{servico.time ? ` às ${servico.time}` : ''}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {servico.frequency}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {servico.location}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-gray-800">{servico.type}</span>
+                      <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{servico.id}</span>
+                      <Badge className={cn("pointer-events-none", getStatusColor(servico.status))}>
+                        {getStatusLabel(servico.status)}
+                      </Badge>
                     </div>
-                    
-                    {/* Client info below on mobile */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <img src={servico.client.photo} alt={servico.client.name} className="w-7 h-7 rounded-full object-cover" />
-                        <span className="text-sm text-gray-700 font-medium">{servico.client.name}</span>
+
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        Próximo: {new Date(servico.nextSession).toLocaleDateString('pt-BR')}{servico.time ? ` às ${servico.time}` : ''}
                       </div>
-                      
-                      {/* Mobile: Button with text */}
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="px-3 py-1 h-auto text-xs" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/servico-detalhes/${servico.id}`);
-                        }}
-                      >
-                        <Eye className="w-3 h-3 mr-1" />
-                        VER DETALHES
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {servico.frequency}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {servico.location}
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>;
+
+                  {/* Client info on desktop */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <img src={servico.client.photo} alt={servico.client.name} className="w-8 h-8 rounded-full object-cover" />
+                    <span className="text-sm text-gray-700 font-medium">{servico.client.name}</span>
+                  </div>
+                </div>
+
+                {/* Desktop: Icon only */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="p-2 h-8 w-8 flex-shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/servico-detalhes/${servico.id}`);
+                  }}
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Mobile Layout */}
+              <div className="md:hidden">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className={`w-10 h-10 ${getServiceColor(servico.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
+                    <IconComponent className="w-5 h-5 text-white" />
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-gray-800">{servico.type}</span>
+                      <span className="text-xs text-gray-500 font-normal bg-gray-100 px-1.5 py-0.5 rounded">#{servico.id}</span>
+                      <Badge className={cn("pointer-events-none", getStatusColor(servico.status))}>
+                        {getStatusLabel(servico.status)}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        Próximo: {new Date(servico.nextSession).toLocaleDateString('pt-BR')}{servico.time ? ` às ${servico.time}` : ''}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {servico.frequency}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {servico.location}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Client info below on mobile */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <img src={servico.client.photo} alt={servico.client.name} className="w-7 h-7 rounded-full object-cover" />
+                    <span className="text-sm text-gray-700 font-medium">{servico.client.name}</span>
+                  </div>
+
+                  {/* Mobile: Button with text */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="px-3 py-1 h-auto text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/servico-detalhes/${servico.id}`);
+                    }}
+                  >
+                    <Eye className="w-3 h-3 mr-1" />
+                    VER DETALHES
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>;
         })}
-        </div>
-      </main>
-    </div>;
+      </div>
+    </main>
+  </div>;
 };
 export default ServicosAtivos;

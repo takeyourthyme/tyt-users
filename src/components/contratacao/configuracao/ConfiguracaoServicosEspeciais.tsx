@@ -76,147 +76,147 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
     }
   };
   return <div className="space-y-8">
-      <div className="text-center">
-        <p className="text-gray-600">
-          Vamos entender melhor suas expectativas para te guiar na melhor opção de serviço.
-        </p>
-      </div>
+    <div className="text-center">
+      <p className="text-gray-600">
+        Vamos entender melhor suas expectativas para te guiar na melhor opção de serviço.
+      </p>
+    </div>
 
-      <Card>
-        <CardContent className="p-6 space-y-6">
-          {/* Quantidade de Pessoas */}
+    <Card>
+      <CardContent className="p-6 space-y-6">
+        {/* Quantidade de Pessoas */}
+        <div className="space-y-3">
+          <Label className={cn("text-base font-light", errors.quantidadePessoas && "text-red-500")}>
+            Quantidade de pessoas
+          </Label>
+          <p className="text-sm text-gray-500">
+            Informe o número de pessoas que irão participar do evento para calcularmos as porções adequadas.
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="h-10 w-10 rounded-md border-gray-300 text-gray-600 hover:bg-gray-50" onClick={() => setQuantidadePessoas(Math.max(1, quantidadePessoas - 1))}>
+              <Minus size={16} />
+            </Button>
+            <Input type="number" value={quantidadePessoas} onChange={e => setQuantidadePessoas(parseInt(e.target.value) || 1)} className="h-10 w-20 text-center rounded-md border-gray-300 text-gray-900" min="1" />
+            <Button variant="outline" className="h-10 w-10 rounded-md border-gray-300 text-gray-600 hover:bg-gray-50" onClick={() => setQuantidadePessoas(quantidadePessoas + 1)}>
+              <Plus size={16} />
+            </Button>
+          </div>
+        </div>
+
+        {/* Data e Horários em uma linha */}
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* Data do Evento */}
           <div className="space-y-3">
-            <Label className={cn("text-base font-semibold", errors.quantidadePessoas && "text-red-500")}>
-              Quantidade de pessoas
+            <Label className={cn("text-base font-light", errors.dataEvento && "text-red-500")}>
+              Data do evento
             </Label>
             <p className="text-sm text-gray-500">
-              Informe o número de pessoas que irão participar do evento para calcularmos as porções adequadas.
+              Quando o evento acontecerá.
             </p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" className="h-10 w-10 rounded-md border-gray-300 text-gray-600 hover:bg-gray-50" onClick={() => setQuantidadePessoas(Math.max(1, quantidadePessoas - 1))}>
-                <Minus size={16} />
-              </Button>
-              <Input type="number" value={quantidadePessoas} onChange={e => setQuantidadePessoas(parseInt(e.target.value) || 1)} className="h-10 w-20 text-center rounded-md border-gray-300 text-gray-900" min="1" />
-              <Button variant="outline" className="h-10 w-10 rounded-md border-gray-300 text-gray-600 hover:bg-gray-50" onClick={() => setQuantidadePessoas(quantidadePessoas + 1)}>
-                <Plus size={16} />
-              </Button>
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal border rounded-md px-3 py-2 text-sm ring-offset-background",
+                    errors.dataEvento ? "border-red-500 text-red-500" : "border-input text-gray-900",
+                    !dataEvento && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dataEvento ? (
+                    format(dataEvento, "PPP", { locale: ptBR })
+                  ) : (
+                    <span>Selecione a data</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dataEvento}
+                  onSelect={(date) => {
+                    if (date) {
+                      setDataEvento(date);
+                      setErrors((prev) => ({
+                        ...prev,
+                        dataEvento: false,
+                      }));
+                    }
+                  }}
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return date < today;
+                  }}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
-          {/* Data e Horários em uma linha */}
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Data do Evento */}
-            <div className="space-y-3">
-              <Label className={cn("text-base font-semibold", errors.dataEvento && "text-red-500")}>
-                Data do evento
+          {/* Horário de Início */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Label className={cn("text-base font-light", errors.horarioInicio && "text-red-500")}>
+                Horário de Início
               </Label>
-              <p className="text-sm text-gray-500">
-                Quando o evento acontecerá.
-              </p>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal border rounded-md px-3 py-2 text-sm ring-offset-background",
-                      errors.dataEvento ? "border-red-500 text-red-500" : "border-input text-gray-900",
-                      !dataEvento && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dataEvento ? (
-                      format(dataEvento, "PPP", { locale: ptBR })
-                    ) : (
-                      <span>Selecione a data</span>
-                    )}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-5 w-5">
+                    <Info size={14} />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dataEvento}
-                    onSelect={(date) => {
-                      if (date) {
-                        setDataEvento(date);
-                        setErrors((prev) => ({
-                          ...prev,
-                          dataEvento: false,
-                        }));
-                      }
-                    }}
-                    disabled={(date) => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      return date < today;
-                    }}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Informações sobre Horário</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-gray-600">
+                    Insira aqui a hora que você deseja que a comida seja servida/consumida
+                    e a hora que você quer que o serviço seja interrompido/concluído.
+                  </p>
+                </DialogContent>
+              </Dialog>
             </div>
-
-            {/* Horário de Início */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Label className={cn("text-base font-semibold", errors.horarioInicio && "text-red-500")}>
-                  Horário de Início
-                </Label>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-5 w-5">
-                      <Info size={14} />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Informações sobre Horário</DialogTitle>
-                    </DialogHeader>
-                    <p className="text-sm text-gray-600">
-                      Insira aqui a hora que você deseja que a comida seja servida/consumida 
-                      e a hora que você quer que o serviço seja interrompido/concluído.
-                    </p>
-                  </DialogContent>
-                </Dialog>
-              </div>
-              <p className="text-sm text-gray-500">Em que   comida deve ser servida.</p>
-              <Input type="time" value={horarioInicio} onChange={e => {
+            <p className="text-sm text-gray-500">Em que   comida deve ser servida.</p>
+            <Input type="time" value={horarioInicio} onChange={e => {
               setHorarioInicio(e.target.value);
               setErrors(prev => ({
                 ...prev,
                 horarioInicio: false
               }));
             }} className={cn("h-10 rounded-md border-gray-300 text-gray-900", errors.horarioInicio && "border-red-500")} />
-            </div>
+          </div>
 
-            {/* Horário de Fim */}
-            <div className="space-y-3">
-              <Label className={cn("text-base font-semibold", errors.horarioFim && "text-red-500")}>
-                Horário de Fim
-              </Label>
-              <p className="text-sm text-gray-500">
-                Quando o serviço deve terminar.
-              </p>
-              <Input type="time" value={horarioFim} onChange={e => {
+          {/* Horário de Fim */}
+          <div className="space-y-3">
+            <Label className={cn("text-base font-light", errors.horarioFim && "text-red-500")}>
+              Horário de Fim
+            </Label>
+            <p className="text-sm text-gray-500">
+              Quando o serviço deve terminar.
+            </p>
+            <Input type="time" value={horarioFim} onChange={e => {
               setHorarioFim(e.target.value);
               setErrors(prev => ({
                 ...prev,
                 horarioFim: false
               }));
             }} className={cn("h-10 rounded-md border-gray-300 text-gray-900", errors.horarioFim && "border-red-500")} />
-            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </CardContent>
+    </Card>
 
-      {/* Botões */}
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onVoltar}>
-          Voltar
-        </Button>
-        <Button onClick={handleAvancar}>
-          Avançar
-        </Button>
-      </div>
-    </div>;
+    {/* Botões */}
+    <div className="flex justify-between">
+      <Button variant="outline" onClick={onVoltar}>
+        Voltar
+      </Button>
+      <Button onClick={handleAvancar}>
+        Avançar
+      </Button>
+    </div>
+  </div>;
 };

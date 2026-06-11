@@ -149,7 +149,7 @@ const MeusContratos = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard-cliente")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-bold">Serviços </h1>
+        <h1 className="text-2xl font-light">Serviços </h1>
       </div>
 
       {/* Filtros */}
@@ -269,7 +269,7 @@ const MeusContratos = () => {
       {!isLoading && contratosFiltrados.length === 0 && <Card className="bg-white shadow-md">
         <CardContent className="p-8 text-center">
           <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          <h3 className="text-lg font-light text-gray-800 mb-2">
             Nenhum contrato {filtroAtivo === "ativos" ? "ativo" : filtroAtivo === "pendentes" ? "pendente" : "antigo"} encontrado
           </h3>
           <p className="text-gray-600 mb-4">

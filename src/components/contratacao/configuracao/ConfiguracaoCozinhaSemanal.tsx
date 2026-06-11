@@ -194,7 +194,7 @@ export const ConfiguracaoCozinhaSemanal: React.FC<Props> = ({
     setSelectedItems: (items: string[]) => void,
   ) => (
     <div className="space-y-3">
-      <Label className="text-base font-semibold">{title}</Label>
+      <Label className="text-base font-light">{title}</Label>
       <p className="text-sm text-gray-500">{description}</p>
       <div className="flex flex-wrap gap-2">
         {isLoadingLookups
@@ -261,7 +261,7 @@ export const ConfiguracaoCozinhaSemanal: React.FC<Props> = ({
       <CardContent className="p-6 space-y-6">
         {/* Tamanho da Porção */}
         <div className="space-y-3">
-          <Label className={`text-base font-semibold ${errosValidacao.tamanho ? 'text-red-600' : ''}`}>Tamanho de Porção *</Label>
+          <Label className={`text-base font-light ${errosValidacao.tamanho ? 'text-red-600' : ''}`}>Tamanho de Porção *</Label>
           <p className="text-sm text-gray-500">Escolha o tamanho ideal para o número de pessoas da sua casa</p>
           <RadioGroup value={tamanhoSelecionado} onValueChange={setTamanhoSelecionado}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -325,7 +325,7 @@ export const ConfiguracaoCozinhaSemanal: React.FC<Props> = ({
 
         {/* Dias da Semana */}
         <div className="space-y-3">
-          <Label className={`text-base font-semibold ${errosValidacao.dia ? 'text-red-600' : ''}`}>
+          <Label className={`text-base font-light ${errosValidacao.dia ? 'text-red-600' : ''}`}>
             Dias da Semana *
           </Label>
           <p className="text-sm text-gray-500">

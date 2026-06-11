@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Calendar, 
-  ChefHat, 
+import {
+  Calendar,
+  ChefHat,
   Clock,
   MapPin,
   User,
@@ -242,7 +242,7 @@ const DashboardChef = () => {
       {/* Main Content */}
       <main className="p-4 space-y-6 max-w-4xl mx-auto">
         {/* Welcome Message */}
-        <div 
+        <div
           className="bg-white rounded-lg p-6 border border-gray-200 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
           onClick={() => navigate('/editar-cadastro-chef')}
         >
@@ -255,25 +255,25 @@ const DashboardChef = () => {
               </div>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Olá, {chefName}</h1>
+              <h1 className="text-2xl font-light text-gray-900">Olá, {chefName}</h1>
               <p className="text-gray-600">Aqui está o resumo da sua semana</p>
             </div>
           </div>
-          
+
           <div className="mt-6 flex items-center gap-6">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-pink-600" />
               <div>
                 <div className="text-xs text-gray-500">Tempo de TYT</div>
-                <div className="text-sm font-semibold text-gray-800">{chefData.timeWithTYT}</div>
+                <div className="text-sm font-light text-gray-800">{chefData.timeWithTYT}</div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-purple-600 fill-purple-600" />
               <div>
                 <div className="text-xs text-gray-500">Sua avaliação</div>
-                <div className="text-sm font-semibold text-gray-800">{stats.avaliacaoMedia}</div>
+                <div className="text-sm font-light text-gray-800">{stats.avaliacaoMedia}</div>
               </div>
             </div>
           </div>
@@ -281,41 +281,41 @@ const DashboardChef = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-4">
-          <Card 
+          <Card
             className="bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
             onClick={() => navigate('/agenda-chef#proximos-compromissos')}
           >
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold">{stats.servicosRealizados}</div>
+              <div className="text-2xl font-light">{stats.servicosRealizados}</div>
               <div className="text-xs opacity-90">Serviços realizados</div>
             </CardContent>
           </Card>
-          
-          <Card 
+
+          <Card
             className="bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
             onClick={() => navigate('/agenda-chef#proximos-compromissos')}
           >
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold">{stats.agendados}</div>
+              <div className="text-2xl font-light">{stats.agendados}</div>
               <div className="text-xs opacity-90">Agendados</div>
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="bg-gradient-to-br from-orange-500 to-orange-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
             onClick={() => navigate('/agenda-chef#proximos-compromissos')}
           >
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold">{stats.aguardandoAprovacao}</div>
+              <div className="text-2xl font-light">{stats.aguardandoAprovacao}</div>
               <div className="text-xs opacity-90">Aguardando aprovação</div>
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
           >
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold">5</div>
+              <div className="text-2xl font-light">5</div>
               <div className="text-xs opacity-90">Pendente de aprovação</div>
             </CardContent>
           </Card>
@@ -323,16 +323,16 @@ const DashboardChef = () => {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-4">
-          <Button 
+          <Button
             variant="outline"
-            className="py-6 text-base font-semibold border-2"
+            className="py-6 text-base font-light border-2"
             onClick={() => navigate('/agenda-chef')}
           >
             <Calendar className="w-5 h-5 mr-2" />
             Ver Agenda
           </Button>
-          <Button 
-            className="bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white py-6 text-base font-semibold"
+          <Button
+            className="bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white py-6 text-base font-light"
             onClick={() => navigate('/guia-chef')}
           >
             <BookOpen className="w-5 h-5 mr-2" />
@@ -344,7 +344,7 @@ const DashboardChef = () => {
         <Collapsible open={aguardandoOpen} onOpenChange={setAguardandoOpen} className="space-y-4">
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between p-3 h-auto hover:bg-gray-100 border border-gray-300 rounded-lg">
-              <h3 className="text-h4 font-semibold text-gray-800">
+              <h3 className="text-h4 font-light text-gray-800">
                 Aguardando aprovação ({newServices.length})
               </h3>
               <ChevronDown className={`w-5 h-5 transition-transform ${aguardandoOpen ? 'rotate-180' : ''}`} />
@@ -363,7 +363,7 @@ const DashboardChef = () => {
                         <div className={`w-10 h-10 ${getServiceColor(service.type)} rounded-full flex items-center justify-center flex-shrink-0`}>
                           <IconComponent className="w-5 h-5 text-white" />
                         </div>
-                        
+
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-800">{service.type}</span>
@@ -381,19 +381,19 @@ const DashboardChef = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={service.client.photo} 
+                          <img
+                            src={service.client.photo}
                             alt={service.client.name}
                             className="w-8 h-8 rounded-full object-cover"
                           />
                           <span className="text-sm text-gray-600">{service.client.name}</span>
                         </div>
-                        
-                        <Button 
-                          size="sm" 
+
+                        <Button
+                          size="sm"
                           variant="outline"
                           className="p-2 h-8 w-8"
                           onClick={(e) => {
@@ -412,7 +412,7 @@ const DashboardChef = () => {
                         <div className={`w-10 h-10 ${getServiceColor(service.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
                           <IconComponent className="w-5 h-5 text-white" />
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-800">{service.type}</span>
@@ -430,20 +430,20 @@ const DashboardChef = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Client info and button below on mobile */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={service.client.photo} 
+                          <img
+                            src={service.client.photo}
                             alt={service.client.name}
                             className="w-7 h-7 rounded-full object-cover"
                           />
                           <span className="text-sm text-gray-700 font-medium">{service.client.name}</span>
                         </div>
-                        
-                        <Button 
-                          size="sm" 
+
+                        <Button
+                          size="sm"
                           variant="outline"
                           className="px-3 py-1 h-auto text-xs"
                           onClick={(e) => {
@@ -467,7 +467,7 @@ const DashboardChef = () => {
         <Collapsible open={pendenteComprovanteOpen} onOpenChange={setPendenteComprovanteOpen} className="space-y-4">
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between p-3 h-auto hover:bg-gray-100 border border-gray-300 rounded-lg">
-              <h3 className="text-h4 font-semibold text-gray-800">
+              <h3 className="text-h4 font-light text-gray-800">
                 Pendentes ({pendingReceipt.length + pendingCompletion.length})
               </h3>
               <ChevronDown className={`w-5 h-5 transition-transform ${pendenteComprovanteOpen ? 'rotate-180' : ''}`} />
@@ -486,7 +486,7 @@ const DashboardChef = () => {
                         <div className={`w-10 h-10 ${getServiceColor(service.type)} rounded-full flex items-center justify-center flex-shrink-0`}>
                           <IconComponent className="w-5 h-5 text-white" />
                         </div>
-                        
+
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-800">{service.type}</span>
@@ -501,28 +501,28 @@ const DashboardChef = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={service.client.photo} 
+                          <img
+                            src={service.client.photo}
                             alt={service.client.name}
                             className="w-8 h-8 rounded-full object-cover"
                           />
                           <span className="text-sm text-gray-600">{service.client.name}</span>
                         </div>
-                        
+
                         <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             className="p-2 h-8 w-8"
                             onClick={() => navigate(`/ordem-de-cozinha/${service.id}`)}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             className="px-3"
                             onClick={(e) => {
@@ -533,8 +533,8 @@ const DashboardChef = () => {
                             <Upload className="w-4 h-4 mr-1" />
                             Recibo
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             className="px-3"
                             onClick={(e) => {
@@ -556,7 +556,7 @@ const DashboardChef = () => {
                         <div className={`w-10 h-10 ${getServiceColor(service.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
                           <IconComponent className="w-5 h-5 text-white" />
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-800">{service.type}</span>
@@ -571,20 +571,20 @@ const DashboardChef = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={service.client.photo} 
+                          <img
+                            src={service.client.photo}
                             alt={service.client.name}
                             className="w-7 h-7 rounded-full object-cover"
                           />
                           <span className="text-sm text-gray-700 font-medium">{service.client.name}</span>
                         </div>
-                        
+
                         <div className="flex gap-2 flex-wrap">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             className="flex-1 min-w-[100px]"
                             onClick={() => navigate(`/ordem-de-cozinha/${service.id}`)}
@@ -592,8 +592,8 @@ const DashboardChef = () => {
                             <Eye className="w-3 h-3 mr-1" />
                             Detalhes
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             className="flex-1 min-w-[100px]"
                             onClick={(e) => {
@@ -604,8 +604,8 @@ const DashboardChef = () => {
                             <Upload className="w-3 h-3 mr-1" />
                             Recibo
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             className="flex-1 min-w-[100px]"
                             onClick={(e) => {
@@ -631,7 +631,7 @@ const DashboardChef = () => {
         <Collapsible open={ordensOpen} onOpenChange={setOrdensOpen} className="space-y-4">
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between p-3 h-auto hover:bg-gray-100 border border-gray-300 rounded-lg">
-              <h3 className="text-h4 font-semibold text-gray-800">
+              <h3 className="text-h4 font-light text-gray-800">
                 Ordens da Semana ({weekOrders.length})
               </h3>
               <ChevronDown className={`w-5 h-5 transition-transform ${ordensOpen ? 'rotate-180' : ''}`} />
@@ -650,7 +650,7 @@ const DashboardChef = () => {
                         <div className={`w-10 h-10 ${getServiceColor(order.type)} rounded-full flex items-center justify-center flex-shrink-0`}>
                           <IconComponent className="w-5 h-5 text-white" />
                         </div>
-                        
+
                         <div>
                           <div className="font-medium text-gray-800 mb-1">{order.type}</div>
                           <div className="flex items-center gap-1 text-sm text-gray-600">
@@ -663,19 +663,19 @@ const DashboardChef = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={order.client.photo} 
+                          <img
+                            src={order.client.photo}
                             alt={order.client.name}
                             className="w-8 h-8 rounded-full object-cover"
                           />
                           <span className="text-sm text-gray-600">{order.client.name}</span>
                         </div>
-                        
-                        <Button 
-                          size="sm" 
+
+                        <Button
+                          size="sm"
                           variant="outline"
                           className="p-2 h-8 w-8"
                           onClick={(e) => {
@@ -694,7 +694,7 @@ const DashboardChef = () => {
                         <div className={`w-10 h-10 ${getServiceColor(order.type)} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
                           <IconComponent className="w-5 h-5 text-white" />
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="font-medium text-gray-800 mb-1">{order.type}</div>
                           <div className="flex items-center gap-1 text-sm text-gray-600">
@@ -707,20 +707,20 @@ const DashboardChef = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Client info and button below on mobile */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={order.client.photo} 
+                          <img
+                            src={order.client.photo}
                             alt={order.client.name}
                             className="w-7 h-7 rounded-full object-cover"
                           />
                           <span className="text-sm text-gray-700 font-medium">{order.client.name}</span>
                         </div>
-                        
-                        <Button 
-                          size="sm" 
+
+                        <Button
+                          size="sm"
                           variant="outline"
                           className="px-3 py-1 h-auto text-xs"
                           onClick={(e) => {
@@ -742,7 +742,7 @@ const DashboardChef = () => {
 
         {/* Ver Pagamentos Button */}
         <div className="text-center">
-          <Button 
+          <Button
             className="bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900 px-8 py-2 w-full"
             disabled
             onClick={() => navigate('/meus-pagamentos')}
@@ -793,7 +793,7 @@ const DashboardChef = () => {
               />
             </div>
             <div className="flex gap-2">
-              <Button 
+              <Button
                 variant="outline"
                 className="flex-1"
                 onClick={() => {
@@ -804,7 +804,7 @@ const DashboardChef = () => {
               >
                 Cancelar
               </Button>
-              <Button 
+              <Button
                 className="flex-1 bg-tyt-blue-700 hover:bg-tyt-blue-800"
                 disabled={!uploadedFile || !receiptValue}
                 onClick={() => {
@@ -848,7 +848,7 @@ const DashboardChef = () => {
                 className="min-h-[100px]"
               />
             </div>
-            <Button 
+            <Button
               className="w-full bg-green-600 hover:bg-green-700"
               onClick={() => {
                 setCompletionDialogOpen(false);

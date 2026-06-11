@@ -130,7 +130,7 @@ const DetalheContrato = () => {
   const navigate = useNavigate();
   const { id: contratoId } = useParams();
   const { toast } = useToast();
-  
+
   const session = useMemo(() => loadSession(), []);
   const token = session?.token;
 
@@ -150,13 +150,13 @@ const DetalheContrato = () => {
           const order = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
             ? (res as any).data
             : res;
-          
+
           if (order && typeof order === "object" && !Array.isArray(order)) {
             setApiOrder(order as KitchenOrder);
             return;
           }
         }
-        
+
         toast({
           variant: "destructive",
           title: "Erro ao carregar detalhes",
@@ -280,7 +280,7 @@ const DetalheContrato = () => {
   const proposalStatus = useMemo(() => {
     if (!apiOrder) return null;
     if (rawProposals.length === 0) return null;
-    
+
     const orderStatus = String(apiOrder.status).toUpperCase();
     if (orderStatus === "CONFIRMED") return "ACCEPTED";
     if (orderStatus === "DECLINED" || orderStatus === "CANCELLED") return "DECLINED";
@@ -371,7 +371,7 @@ const DetalheContrato = () => {
           </Button>
           <div className="flex-1">
             <div className="flex items-center justify-between gap-3">
-              <h1 className="text-2xl font-bold">{type}</h1>
+              <h1 className="text-2xl font-light">{type}</h1>
               <Badge variant="outline" className={`px-2.5 py-1 ${statusInfo.color}`}>
                 <AlertCircle className="w-3.5 h-3.5 mr-1" />
                 {statusInfo.label}
@@ -384,28 +384,28 @@ const DetalheContrato = () => {
         {/* Order details */}
         <Card className="bg-white shadow-sm border border-gray-100">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-800">Detalhes do Serviço</CardTitle>
+            <CardTitle className="text-lg font-light text-gray-800">Detalhes do Serviço</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
             <div className="flex items-start gap-3">
               <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
               <div>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Data</p>
-                <p className="font-semibold text-gray-800 mt-0.5">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
+                <p className="font-light text-gray-800 mt-0.5">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
               <div>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Horário</p>
-                <p className="font-semibold text-gray-800 mt-0.5">{time || "—"}</p>
+                <p className="font-light text-gray-800 mt-0.5">{time || "—"}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
               <div>
                 <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Local de Atendimento</p>
-                <p className="font-semibold text-gray-800 mt-0.5">{location || "—"}</p>
+                <p className="font-light text-gray-800 mt-0.5">{location || "—"}</p>
               </div>
             </div>
           </CardContent>
@@ -420,19 +420,19 @@ const DetalheContrato = () => {
         {/* Chef details */}
         <Card className="bg-white shadow-sm border border-gray-100">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-800">Chef Atribuído</CardTitle>
+            <CardTitle className="text-lg font-light text-gray-800">Chef Atribuído</CardTitle>
           </CardHeader>
           <CardContent>
             {chefInfo ? (
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16 border border-gray-200">
                   {chefInfo.photo ? <AvatarImage src={resolveMediaUrl(chefInfo.photo)} className="object-cover" /> : null}
-                  <AvatarFallback className="bg-gray-100 text-gray-600 font-bold">
+                  <AvatarFallback className="bg-gray-100 text-gray-600 font-light">
                     {chefInfo.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800 text-base">{chefInfo.name}</h3>
+                  <h3 className="font-light text-gray-800 text-base">{chefInfo.name}</h3>
                   <p className="text-xs text-gray-500 mt-0.5">Parceiro TYT Verificado</p>
                   {chefInfo.phone && (
                     <div className="flex gap-4 mt-2">
@@ -469,7 +469,7 @@ const DetalheContrato = () => {
         {dishes.length > 0 && (
           <Card className="bg-white shadow-sm border border-gray-100">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <CardTitle className="text-lg font-light text-gray-800 flex items-center gap-2">
                 <Utensils className="h-5 w-5 text-gray-500" />
                 Menu Selecionado
               </CardTitle>
@@ -491,11 +491,11 @@ const DetalheContrato = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-sm font-semibold text-gray-800">{dishName}</p>
+                          <p className="text-sm font-light text-gray-800">{dishName}</p>
                           <p className="text-xs text-gray-500 mt-0.5">{item.dish?.descricao ?? ""}</p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="bg-gray-100 text-gray-800 px-2 py-0.5 text-xs font-semibold">
+                      <Badge variant="secondary" className="bg-gray-100 text-gray-800 px-2 py-0.5 text-xs font-light">
                         Quantidade: {qty}
                       </Badge>
                     </div>
@@ -510,7 +510,7 @@ const DetalheContrato = () => {
         {type === "Serviço Especial" && clientRequest && (
           <Card className="bg-white shadow-sm border border-gray-100">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <CardTitle className="text-lg font-light text-gray-800 flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-gray-500" />
                 Suas Necessidades
               </CardTitle>
@@ -527,7 +527,7 @@ const DetalheContrato = () => {
         {type === "Serviço Especial" && (
           <Card className="bg-white shadow-sm border border-gray-100">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <CardTitle className="text-lg font-light text-gray-800 flex items-center gap-2">
                 <Receipt className="h-5 w-5 text-gray-500" />
                 Orçamento e Itens da Proposta
               </CardTitle>
@@ -539,17 +539,16 @@ const DetalheContrato = () => {
                     {proposalItems.map((item, index) => (
                       <div
                         key={index}
-                        className={`p-3 flex justify-between items-center text-sm ${
-                          index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                        }`}
+                        className={`p-3 flex justify-between items-center text-sm ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                          }`}
                       >
                         <span className="text-gray-700 font-medium">{item.description}</span>
-                        <span className="text-gray-950 font-bold">
+                        <span className="text-gray-950 font-light">
                           {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.price)}
                         </span>
                       </div>
                     ))}
-                    <div className="p-3 bg-primary/5 flex justify-between items-center text-sm font-bold border-t-2 border-primary/20">
+                    <div className="p-3 bg-primary/5 flex justify-between items-center text-sm font-light border-t-2 border-primary/20">
                       <span className="text-gray-800">Total da Proposta</span>
                       <span className="text-primary text-base">
                         {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}
@@ -562,7 +561,7 @@ const DetalheContrato = () => {
                       <Button
                         onClick={handleAcceptProposal}
                         disabled={isAcceptingProposal || isDecliningProposal}
-                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold h-11"
+                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-light h-11"
                       >
                         <CreditCard className="h-4 w-4 mr-2" />
                         {isAcceptingProposal ? "Processando Pagamento..." : `Aceitar e Pagar - ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}`}
@@ -571,7 +570,7 @@ const DetalheContrato = () => {
                         variant="outline"
                         onClick={handleDeclineProposal}
                         disabled={isAcceptingProposal || isDecliningProposal}
-                        className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold h-11"
+                        className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-light h-11"
                       >
                         <AlertTriangle className="h-4 w-4 mr-2" />
                         {isDecliningProposal ? "Recusando Proposta..." : "Recusar Proposta"}
@@ -579,13 +578,13 @@ const DetalheContrato = () => {
                     </div>
                   )}
                   {proposalStatus === "ACCEPTED" && (
-                    <div className="p-3 bg-green-50 text-green-800 rounded-lg border border-green-200 text-sm font-semibold flex items-center gap-2">
+                    <div className="p-3 bg-green-50 text-green-800 rounded-lg border border-green-200 text-sm font-light flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
                       Você aceitou esta proposta. O pagamento foi efetuado.
                     </div>
                   )}
                   {proposalStatus === "DECLINED" && (
-                    <div className="p-3 bg-red-50 text-red-800 rounded-lg border border-red-200 text-sm font-semibold flex items-center gap-2">
+                    <div className="p-3 bg-red-50 text-red-800 rounded-lg border border-red-200 text-sm font-light flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4" />
                       Esta proposta foi recusada. Aguarde o envio de uma nova proposta.
                     </div>
@@ -607,7 +606,7 @@ const DetalheContrato = () => {
           <div className="space-y-3">
             {status === "pendente" && (
               <Button
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-light"
                 size="lg"
                 onClick={() =>
                   navigate("/contratacao-logado", {
@@ -621,8 +620,8 @@ const DetalheContrato = () => {
                           Number(apiOrder.people_quantity) <= 2
                             ? "pequena"
                             : Number(apiOrder.people_quantity) <= 4
-                            ? "media"
-                            : "grande",
+                              ? "media"
+                              : "grande",
                         categorias: [],
                         preferencias: [],
                         ingredientes: [],

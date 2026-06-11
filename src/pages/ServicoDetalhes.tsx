@@ -194,7 +194,7 @@ const ServicoDetalhes = () => {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Detalhes do Serviço</h1>
+            <h1 className="text-2xl font-light text-gray-900">Detalhes do Serviço</h1>
             <p className="text-gray-600">Informações completas do contrato</p>
           </div>
         </div>
@@ -264,7 +264,7 @@ const ServicoDetalhes = () => {
                   className="w-16 h-16 rounded-full object-cover"
                 />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{servico.client.name}</h3>
+                  <h3 className="font-light text-lg">{servico.client.name}</h3>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Phone className="w-4 h-4" />

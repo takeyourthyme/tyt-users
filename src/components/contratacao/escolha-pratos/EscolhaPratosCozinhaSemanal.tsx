@@ -639,7 +639,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
                     </Badge>
                   )}
                   <div className="flex flex-col items-center gap-1 w-full">
-                    <span className="font-semibold text-xs">{diaEntrega.dia}</span>
+                    <span className="font-light text-xs">{diaEntrega.dia}</span>
                     <span className="text-xs opacity-75">{diaEntrega.periodo}</span>
                   </div>
                 </Button>
@@ -690,7 +690,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
 
                 <CardContent className="p-4 flex-1 flex flex-col">
                   <div className="flex-1 pb-3">
-                    <h3 className="font-semibold text-lg">{prato.nome}</h3>
+                    <h3 className="font-light text-lg">{prato.nome}</h3>
                     <p className="text-muted-foreground text-sm">{prato.descricao}</p>
                   </div>
 
@@ -752,7 +752,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
                 return (
                   <div key={diaIndex} className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-semibold">
+                      <h4 className="text-sm font-light">
                         {diaEntrega.dia} - {diaEntrega.periodo}
                       </h4>
                       <Badge variant={pratosDoDia.length >= 1 ? "default" : "secondary"}>
@@ -823,7 +823,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
                 </div>
                 <span className="font-medium">R$ {precoCompras.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between font-semibold">
+              <div className="flex justify-between font-light">
                 <span>Total:</span>
                 <span>R$ {total.toFixed(2)}</span>
               </div>
@@ -870,7 +870,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
               >
                 <Minus className="h-4 w-4" />
               </Button>
-              <span className="font-semibold text-lg min-w-[40px] text-center">
+              <span className="font-light text-lg min-w-[40px] text-center">
                 {quantidadePersonalizacao}
               </span>
               <Button

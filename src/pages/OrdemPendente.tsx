@@ -73,7 +73,7 @@ const OrdemPendente = () => {
           const order = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
             ? (res as any).data
             : res;
-          
+
           if (order && typeof order === "object" && !Array.isArray(order)) {
             setKitchenOrder(order as KitchenOrder);
           }
@@ -330,7 +330,7 @@ const OrdemPendente = () => {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Pendente de Comprovante</h1>
+            <h1 className="text-2xl font-light text-gray-900">Pendente de Comprovante</h1>
           </div>
         </div>
 

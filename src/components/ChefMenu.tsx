@@ -107,7 +107,7 @@ export const ChefMenu = ({ hasActiveFilter = false, onGoAgenda, activeItem }: Ch
                     )}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800 text-sm">{chefName}</h4>
+                    <h4 className="font-light text-gray-800 text-sm">{chefName}</h4>
                     <p className="text-xs text-gray-600">Bem-vindo!</p>
                   </div>
                 </div>
@@ -116,8 +116,8 @@ export const ChefMenu = ({ hasActiveFilter = false, onGoAgenda, activeItem }: Ch
               <div className="mt-4 space-y-2 flex-1 overflow-y-auto">
                 <Button
                   variant={activeItem === 'dashboard' ? 'default' : 'ghost'}
-                  className={activeItem === 'dashboard' 
-                    ? "w-full justify-start h-12 text-base bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white" 
+                  className={activeItem === 'dashboard'
+                    ? "w-full justify-start h-12 text-base bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
                     : "w-full justify-start h-12 text-base hover:bg-gray-100"
                   }
                   onClick={() => handleMenuAction('dashboard')}
@@ -125,7 +125,7 @@ export const ChefMenu = ({ hasActiveFilter = false, onGoAgenda, activeItem }: Ch
                   <ChefHat className="w-5 h-5 mr-3" />
                   Dashboard
                 </Button>
-                
+
                 <Button
                   variant={(activeItem === 'agenda' && !hasActiveFilter) ? 'default' : 'ghost'}
                   className={(activeItem === 'agenda' && !hasActiveFilter)

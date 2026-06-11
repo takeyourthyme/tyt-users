@@ -577,11 +577,11 @@ const EditarCadastroChef = () => {
 
     try {
       setIsPasswordSubmitting(true);
-      await changePassword({ 
-        token, 
-        email: form.getValues("email"), 
-        senhaAtual: passwordData.senhaAtual, 
-        novaSenha: passwordData.novaSenha 
+      await changePassword({
+        token,
+        email: form.getValues("email"),
+        senhaAtual: passwordData.senhaAtual,
+        novaSenha: passwordData.novaSenha
       });
       toast({ title: "Senha alterada!", description: "Sua senha foi atualizada com sucesso." });
       setPasswordData({ senhaAtual: "", novaSenha: "", confirmarSenha: "" });
@@ -650,7 +650,7 @@ const EditarCadastroChef = () => {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   {/* Dados Pessoais */}
                   <div className="space-y-4">
-                    <h3 className="text-h3 font-semibold text-gray-800 border-b pb-2">Dados Pessoais</h3>
+                    <h3 className="text-h3 font-light text-gray-800 border-b pb-2">Dados Pessoais</h3>
 
                     <FormField control={form.control} name="name" render={({ field }) => (
                       <FormItem>
@@ -713,7 +713,7 @@ const EditarCadastroChef = () => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b pb-2">
                       <MapPin className="w-5 h-5 text-tyt-yellow-600" />
-                      <h3 className="text-h3 font-semibold text-gray-800">Localização</h3>
+                      <h3 className="text-h3 font-light text-gray-800">Localização</h3>
                     </div>
 
                     <FormField control={form.control} name="cep" render={({ field }) => (
@@ -841,7 +841,7 @@ const EditarCadastroChef = () => {
 
                   {/* Sobre Você */}
                   <div className="space-y-4">
-                    <h3 className="text-h3 font-semibold text-gray-800 border-b pb-2">Sobre Você</h3>
+                    <h3 className="text-h3 font-light text-gray-800 border-b pb-2">Sobre Você</h3>
 
                     {/* Photo Upload */}
                     <div className="space-y-3">
@@ -1158,38 +1158,38 @@ const EditarCadastroChef = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="senhaAtual">Senha Atual</Label>
-                  <Input 
-                    id="senhaAtual" 
-                    type="password" 
-                    value={passwordData.senhaAtual} 
-                    onChange={e => setPasswordData(prev => ({ ...prev, senhaAtual: e.target.value }))} 
+                  <Input
+                    id="senhaAtual"
+                    type="password"
+                    value={passwordData.senhaAtual}
+                    onChange={e => setPasswordData(prev => ({ ...prev, senhaAtual: e.target.value }))}
                   />
                 </div>
                 <div className="hidden md:block" />
                 <div className="space-y-2">
                   <Label htmlFor="novaSenha">Nova Senha</Label>
-                  <Input 
-                    id="novaSenha" 
-                    type="password" 
-                    value={passwordData.novaSenha} 
-                    onChange={e => setPasswordData(prev => ({ ...prev, novaSenha: e.target.value }))} 
+                  <Input
+                    id="novaSenha"
+                    type="password"
+                    value={passwordData.novaSenha}
+                    onChange={e => setPasswordData(prev => ({ ...prev, novaSenha: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirmarSenha">Confirmar Nova Senha</Label>
-                  <Input 
-                    id="confirmarSenha" 
-                    type="password" 
-                    value={passwordData.confirmarSenha} 
-                    onChange={e => setPasswordData(prev => ({ ...prev, confirmarSenha: e.target.value }))} 
+                  <Input
+                    id="confirmarSenha"
+                    type="password"
+                    value={passwordData.confirmarSenha}
+                    onChange={e => setPasswordData(prev => ({ ...prev, confirmarSenha: e.target.value }))}
                   />
                 </div>
               </div>
               <div className="pt-2">
-                <Button 
+                <Button
                   type="button"
-                  onClick={handlePasswordChange} 
-                  variant="outline" 
+                  onClick={handlePasswordChange}
+                  variant="outline"
                   disabled={isPasswordSubmitting}
                 >
                   {isPasswordSubmitting ? "Alterando..." : "Atualizar Senha"}

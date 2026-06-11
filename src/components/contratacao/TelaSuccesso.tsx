@@ -19,9 +19,9 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codi
           {/* Animação de Sucesso */}
           <div className="flex justify-center">
             <div className="relative">
-              <CheckCircle 
-                size={80} 
-                className="text-green-500 animate-pulse" 
+              <CheckCircle
+                size={80}
+                className="text-green-500 animate-pulse"
               />
               <div className="absolute inset-0 rounded-full bg-green-500 opacity-20 animate-ping"></div>
             </div>
@@ -29,11 +29,11 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codi
 
           {/* Título */}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-light text-gray-900 mb-2">
               {isServicoEspecial ? 'Solicitação Enviada!' : 'Contratação Realizada!'}
             </h1>
             <p className="text-gray-600">
-              {isServicoEspecial 
+              {isServicoEspecial
                 ? 'Recebemos sua solicitação de serviço especial'
                 : 'Sua contratação foi confirmada com sucesso'
               }
@@ -45,7 +45,7 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codi
             <p className="text-sm text-gray-600 mb-1">
               Código de Referência:
             </p>
-            <p className="text-lg font-mono font-bold text-gray-900">
+            <p className="text-lg font-mono font-light text-gray-900">
               {codigoReferencia || "—"}
             </p>
           </div>
@@ -54,7 +54,7 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codi
           <div className="text-sm text-gray-600 space-y-2">
             {isServicoEspecial ? (
               <>
-                <p className="font-semibold text-gray-900">
+                <p className="font-light text-gray-900">
                   Em breve o time da Take Your Thyme entrará em contato!
                 </p>
                 <p>
@@ -79,7 +79,7 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codi
           </div>
 
           {/* Botão */}
-          <Button 
+          <Button
             onClick={onIrDashboard}
             className="w-full"
             size="lg"
