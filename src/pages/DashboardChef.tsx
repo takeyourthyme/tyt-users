@@ -98,8 +98,9 @@ const DashboardChef = () => {
           ? data
           : (data as { data?: unknown })?.data ?? (data as { orders?: unknown })?.orders;
         if (Array.isArray(orders)) {
-          const chefUserId = session.userId ?? session.user?.id;
-          const chefProfileId = session.user?.usuario_chef?.id ?? session.user?.chef?.id;
+          const sessionUser = session.user as { id?: number; usuario_chef?: { id?: number }; chef?: { id?: number } } | undefined;
+          const chefUserId = session.userId ?? sessionUser?.id;
+          const chefProfileId = sessionUser?.usuario_chef?.id ?? sessionUser?.chef?.id;
           const filtered = (orders as KitchenOrder[]).filter((order) => {
             const orderChefId = (order.chef as { id?: number } | null)?.id;
             return Number(orderChefId) === Number(chefUserId) || Number(orderChefId) === Number(chefProfileId);
