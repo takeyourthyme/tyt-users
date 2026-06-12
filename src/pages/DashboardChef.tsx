@@ -161,22 +161,22 @@ const DashboardChef = () => {
   const actionButtons = [
     {
       icon: CalendarCheck,
-      label: "Serviços Semanais",
-      description: "Veja seus serviços semanais",
+      label: "Meal Prep",
+      description: "Veja seus Meal Preps",
       onClick: () => handleNavigateToAgenda("servicos-semanais"),
       color: "from-green-500 to-green-600",
     },
     {
       icon: Briefcase,
-      label: "Eventos",
-      description: "Veja seus eventos agendados",
+      label: "Get Together",
+      description: "Veja seus Get Togethers",
       onClick: () => handleNavigateToAgenda("eventos"),
       color: "from-purple-500 to-purple-600",
     },
     {
       icon: ClipboardList,
-      label: "Serviços Especiais",
-      description: "Veja seus serviços especiais",
+      label: "Special Service",
+      description: "Veja seus Special Services",
       onClick: () => handleNavigateToAgenda("servicos-especiais"),
       color: "from-orange-500 to-orange-600",
     },

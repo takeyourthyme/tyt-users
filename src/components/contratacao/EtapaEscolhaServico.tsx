@@ -26,7 +26,7 @@ const fallbackCities = [
 const servicos = [
   {
     id: 'cozinha-semanal',
-    nome: 'Cozinha Semanal',
+    nome: 'Meal Prep',
     descricao: 'Chef em casa toda semana para preparar suas refeições',
     icone: Utensils,
     unselectedBg: 'bg-[#F4FBF7]',
@@ -40,7 +40,7 @@ const servicos = [
   },
   {
     id: 'eventos',
-    nome: 'Eventos',
+    nome: 'Get Together',
     descricao: 'Chef especializado para seus eventos especiais',
     icone: Calendar,
     unselectedBg: 'bg-[#FAF2F7]',
@@ -54,7 +54,7 @@ const servicos = [
   },
   {
     id: 'servicos-especiais',
-    nome: 'Serviços Especiais',
+    nome: 'Special Service',
     descricao: 'Soluções customizadas para suas necessidades específicas',
     icone: Users,
     unselectedBg: 'bg-[#F0F8FA]',

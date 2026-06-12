@@ -191,7 +191,6 @@ const Cadastro = () => {
 
     const missing: string[] = [];
     if (!photoFile) missing.push("sua foto");
-    if (!addressProofFile) missing.push("comprovante de endereço");
     setMissingFiles(missing);
 
     if (missing.length > 0) {
@@ -650,7 +649,7 @@ const Cadastro = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-h2">Anexos</CardTitle>
                 <CardDescription>
-                  Envie sua foto e comprovante de endereço
+                  Envie sua foto e comprovante de endereço (opcional)
                 </CardDescription>
               </CardHeader>
 
@@ -747,17 +746,17 @@ const Cadastro = () => {
                     <div className="space-y-4">
                       <h3 className="text-h3 flex items-center gap-2">
                         <MapPin className="w-5 h-5 text-primary" />
-                        Comprovante de endereço
+                        Comprovante de endereço (opcional)
                       </h3>
 
-                      <div className={`border-2 border-dashed rounded-lg p-6 ${attemptedSubmit && !addressProofPreview ? 'border-destructive bg-destructive/5' : 'border-muted-foreground/25'}`}>
+                      <div className="border-2 border-dashed rounded-lg p-6 border-muted-foreground/25">
                         {!addressProofPreview ? (
                           <div className="text-center">
                             <div className="w-12 h-12 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
                               <Camera className="w-6 h-6 text-muted-foreground" />
                             </div>
                             <p className="text-sm text-muted-foreground mb-4">
-                              Envie uma foto do seu comprovante de endereço
+                              Envie uma foto do seu comprovante de endereço (opcional)
                             </p>
                             <input
                               type="file"

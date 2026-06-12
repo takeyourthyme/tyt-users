@@ -44,7 +44,7 @@ const HistoricoPagamento = () => {
       id: 3,
       data: "2024-01-05",
       tipo: "credito",
-      servico: "evento",
+      servico: "Get Together",
       referencia: "TYT-2024-003",
       valor: 1200.00,
       temComprovante: true,
@@ -78,7 +78,7 @@ const HistoricoPagamento = () => {
       id: 6,
       data: "2023-12-10",
       tipo: "credito",
-      servico: "evento",
+      servico: "Get Together",
       referencia: "TYT-2023-043",
       valor: 850.00,
       temComprovante: true,
@@ -101,9 +101,9 @@ const HistoricoPagamento = () => {
       case "jantar":
       case "almoco":
         return <ChefHat className="h-4 w-4 text-green-600" />;
-      case "evento":
+      case "Get Together":
         return <PartyPopper className="h-4 w-4 text-purple-600" />;
-      case "especial":
+      case "Special Service":
         return <Users className="h-4 w-4 text-orange-600" />;
       default:
         return <ChefHat className="h-4 w-4 text-green-600" />;

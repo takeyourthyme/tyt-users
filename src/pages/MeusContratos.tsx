@@ -209,15 +209,15 @@ const MeusContratos = () => {
             const time = getKitchenOrderTime(detail);
             const location = getKitchenOrderLocation(detail);
             const borderClass =
-              type === "Cozinha Semanal" ? "border-[#E1F5EC]" : type === "Evento" ? "border-[#F5E5F0]" : "border-[#E0F2F5]";
+              type === "Meal Prep" ? "border-[#E1F5EC]" : type === "Get Together" ? "border-[#F5E5F0]" : "border-[#E0F2F5]";
 
             return (
               <Card key={code || `${type}-${index}`} className={`bg-white shadow-md ${borderClass}`}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${type === "Cozinha Semanal" ? "bg-[#A6D8B5]" : type === "Evento" ? "bg-[#BC008F]" : "bg-[#89CDD2]"}`}>
-                        {type === "Cozinha Semanal" ? <ChefHat className="w-4 h-4 text-white" /> : <Calendar className="w-4 h-4 text-white" />}
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${type === "Meal Prep" ? "bg-[#A6D8B5]" : type === "Get Together" ? "bg-[#BC008F]" : "bg-[#89CDD2]"}`}>
+                        {type === "Meal Prep" ? <ChefHat className="w-4 h-4 text-white" /> : <Calendar className="w-4 h-4 text-white" />}
                       </div>
                       <span className="text-lg text-gray-800">{type}</span>
                     </CardTitle>

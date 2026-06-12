@@ -161,9 +161,9 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
               <div className="flex justify-between">
                 <span>Tipo de Serviço:</span>
                 <span className="font-medium">
-                  {dados.tipoServico === 'cozinha-semanal' && 'Cozinha Semanal'}
-                  {dados.tipoServico === 'eventos' && 'Eventos'}
-                  {dados.tipoServico === 'servicos-especiais' && 'Serviços Especiais'}
+                  {dados.tipoServico === 'cozinha-semanal' && 'Meal Prep'}
+                  {dados.tipoServico === 'eventos' && 'Get Together'}
+                  {dados.tipoServico === 'servicos-especiais' && 'Special Service'}
                 </span>
               </div>
 

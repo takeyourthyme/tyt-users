@@ -88,7 +88,7 @@ const DashboardChef = () => {
   const pendingReceipt = [
     {
       id: 1,
-      type: "Cozinha Semanal",
+      type: "Meal Prep",
       icon: ChefHat,
       date: "2025-01-20",
       time: "14:00",
@@ -100,7 +100,7 @@ const DashboardChef = () => {
     },
     {
       id: 2,
-      type: "Evento",
+      type: "Get Together",
       icon: Calendar,
       date: "2025-01-22",
       time: "19:00",
@@ -116,7 +116,7 @@ const DashboardChef = () => {
   const pendingCompletion = [
     {
       id: 3,
-      type: "Serviço Especial",
+      type: "Special Service",
       icon: Clock,
       date: "2025-01-18",
       time: "12:00",
@@ -128,7 +128,7 @@ const DashboardChef = () => {
     },
     {
       id: 4,
-      type: "Cozinha Semanal",
+      type: "Meal Prep",
       icon: ChefHat,
       date: "2025-01-19",
       time: "15:00",
@@ -144,7 +144,7 @@ const DashboardChef = () => {
   const newServices = [
     {
       id: 1,
-      type: "Cozinha Semanal",
+      type: "Meal Prep",
       icon: ChefHat,
       date: "2025-01-27",
       time: "14:00",
@@ -156,7 +156,7 @@ const DashboardChef = () => {
     },
     {
       id: 2,
-      type: "Evento",
+      type: "Get Together",
       icon: Calendar,
       date: "2025-01-28",
       time: "19:00",
@@ -172,7 +172,7 @@ const DashboardChef = () => {
   const weekOrders = [
     {
       id: 1,
-      type: "Cozinha Semanal",
+      type: "Meal Prep",
       icon: ChefHat,
       date: "2025-01-27",
       time: "14:00",
@@ -184,7 +184,7 @@ const DashboardChef = () => {
     },
     {
       id: 2,
-      type: "Serviço Especial",
+      type: "Special Service",
       icon: Clock,
       date: "2025-01-28",
       time: "12:00",
@@ -196,7 +196,7 @@ const DashboardChef = () => {
     },
     {
       id: 3,
-      type: "Evento",
+      type: "Get Together",
       icon: Calendar,
       date: "2025-01-29",
       time: "19:00",
@@ -210,11 +210,11 @@ const DashboardChef = () => {
 
   const getServiceIcon = (type: string) => {
     switch (type) {
-      case "Cozinha Semanal":
+      case "Meal Prep":
         return ChefHat;
-      case "Evento":
+      case "Get Together":
         return Calendar;
-      case "Serviço Especial":
+      case "Special Service":
         return Clock;
       default:
         return ChefHat;
@@ -223,11 +223,11 @@ const DashboardChef = () => {
 
   const getServiceColor = (type: string) => {
     switch (type) {
-      case "Cozinha Semanal":
+      case "Meal Prep":
         return "bg-green-500";
-      case "Evento":
+      case "Get Together":
         return "bg-purple-500";
-      case "Serviço Especial":
+      case "Special Service":
         return "bg-orange-500";
       default:
         return "bg-gray-500";

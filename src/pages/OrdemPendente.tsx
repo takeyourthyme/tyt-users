@@ -275,11 +275,11 @@ const OrdemPendente = () => {
 
   const getServiceIcon = (type: string) => {
     switch (type) {
-      case "Cozinha Semanal":
+      case "Meal Prep":
         return ChefHat;
-      case "Evento":
+      case "Get Together":
         return Calendar;
-      case "Serviço Especial":
+      case "Special Service":
         return Clock;
       default:
         return ChefHat;
@@ -288,11 +288,11 @@ const OrdemPendente = () => {
 
   const getServiceColor = (type: string) => {
     switch (type) {
-      case "Cozinha Semanal":
+      case "Meal Prep":
         return "bg-green-500";
-      case "Evento":
+      case "Get Together":
         return "bg-purple-500";
-      case "Serviço Especial":
+      case "Special Service":
         return "bg-orange-500";
       default:
         return "bg-gray-500";

@@ -2,7 +2,7 @@ import { apiClient, createAuthConfig } from "./apiClient";
 
 export type KitchenOrder = Record<string, unknown>;
 
-export type KitchenOrderTypeLabel = "Cozinha Semanal" | "Evento" | "Serviço Especial";
+export type KitchenOrderTypeLabel = "Meal Prep" | "Get Together" | "Special Service";
 export type KitchenOrderStatusLabel = "pendente" | "confirmado" | "concluido" | "cancelado";
 
 export function normalizeKitchenOrderTypeLabel(order: KitchenOrder): KitchenOrderTypeLabel {
@@ -21,7 +21,7 @@ export function normalizeKitchenOrderTypeLabel(order: KitchenOrder): KitchenOrde
     (order.solicitacaoCliente as string | undefined);
 
   if (normalized.includes("MEAL") || normalized.includes("PREP") || normalized.includes("WEEK") || normalized === "MEAL_PREAP") {
-    return "Cozinha Semanal";
+    return "Meal Prep";
   }
 
   const dishes = (order.dishes as unknown[] | undefined) ?? (order.pratos as unknown[] | undefined) ?? [];
@@ -35,14 +35,14 @@ export function normalizeKitchenOrderTypeLabel(order: KitchenOrder): KitchenOrde
     normalized === "GET_TOGETHER" ||
     (normalized.includes("SPECIAL") && hasDishes)
   ) {
-    return "Evento";
+    return "Get Together";
   }
 
   if (normalized.includes("SPECIAL") || normalized.includes("CUSTOM") || Boolean(clientRequest)) {
-    return "Serviço Especial";
+    return "Special Service";
   }
 
-  return "Cozinha Semanal";
+  return "Meal Prep";
 }
 
 export function normalizeKitchenOrderStatusLabel(order: KitchenOrder): KitchenOrderStatusLabel {

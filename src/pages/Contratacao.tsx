@@ -19,7 +19,7 @@ export interface DadosContratacao {
   cidade: string;
   tipoServico: 'cozinha-semanal' | 'eventos' | 'servicos-especiais' | '';
 
-  // Etapa 2 - Cozinha Semanal
+  // Etapa 2 - Meal Prep
   tamanhoPortacao?: 'pequena' | 'media' | 'grande';
   categorias?: string[];
   preferencias?: string[];
@@ -27,14 +27,14 @@ export interface DadosContratacao {
   tiposCozinha?: string[];
   diasEntrega?: Array<{ dia: string; periodo: string }>;
 
-  // Etapa 2 - Eventos
+  // Etapa 2 - Get Together
   quantidadePessoas?: number;
   dataEvento?: Date;
   horarioInicio?: string;
   horarioFim?: string;
   temaSelecionado?: string;
 
-  // Etapa 2 - Serviços Especiais
+  // Etapa 2 - Special Service
   orcamentoEstimado?: number;
   orcamentoTipo?: 'servico' | 'pessoa';
 

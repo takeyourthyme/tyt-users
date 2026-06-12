@@ -947,8 +947,8 @@ const CadastroChef = () => {
                     <FormLabel>Disponível para</FormLabel>
                     <div className="space-y-2">
                       {[
-                        { label: "Cozinha Semanal", value: "cozinha_semanal" },
-                        { label: "Eventos", value: "eventos" }
+                        { label: "Meal Prep", value: "cozinha_semanal" },
+                        { label: "Get Together", value: "eventos" }
                       ].map((option) => (
                         <div key={option.value} className="flex items-center space-x-2">
                           <Checkbox

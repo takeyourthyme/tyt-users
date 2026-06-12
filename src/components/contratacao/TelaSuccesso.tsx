@@ -34,7 +34,7 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codi
             </h1>
             <p className="text-gray-600">
               {isServicoEspecial
-                ? 'Recebemos sua solicitação de serviço especial'
+                ? 'Recebemos sua solicitação de Special Service'
                 : 'Sua contratação foi confirmada com sucesso'
               }
             </p>
@@ -59,7 +59,7 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codi
                 </p>
                 <p>
                   Nossa equipe irá analisar sua solicitação e entrar em contato em até 24 horas
-                  para discutir os detalhes do seu serviço especial e elaborar um orçamento personalizado.
+                  para discutir os detalhes do seu Special Service e elaborar um orçamento personalizado.
                 </p>
                 <p>
                   Você pode acompanhar o status da sua solicitação no seu dashboard.

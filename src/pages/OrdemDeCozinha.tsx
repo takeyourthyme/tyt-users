@@ -440,11 +440,11 @@ const OrdemDeCozinha = () => {
 
   const getServiceIcon = (type: string) => {
     switch (type) {
-      case "Cozinha Semanal":
+      case "Meal Prep":
         return ChefHat;
-      case "Evento":
+      case "Get Together":
         return Calendar;
-      case "Serviço Especial":
+      case "Special Service":
         return Clock;
       default:
         return ChefHat;
@@ -453,11 +453,11 @@ const OrdemDeCozinha = () => {
 
   const getServiceColor = (type: string) => {
     switch (type) {
-      case "Cozinha Semanal":
+      case "Meal Prep":
         return "bg-green-500";
-      case "Evento":
+      case "Get Together":
         return "bg-purple-500";
-      case "Serviço Especial":
+      case "Special Service":
         return "bg-orange-500";
       default:
         return "bg-gray-500";
@@ -734,8 +734,8 @@ const OrdemDeCozinha = () => {
             </div>
           )}
 
-          {/* Menu - Only for CONFIRMADO status and NOT Serviço Especial */}
-          {ordem.status === "confirmado" && ordem.type !== "Serviço Especial" && (
+          {/* Menu - Only for CONFIRMADO status and NOT Special Service */}
+          {ordem.status === "confirmado" && ordem.type !== "Special Service" && (
             <Card>
               <CardHeader>
                 <CardTitle>Menu Planejado</CardTitle>
@@ -770,10 +770,10 @@ const OrdemDeCozinha = () => {
             </Card>
           )}
 
-          {/* Technical Sheet and Shopping List Buttons - Only for CONFIRMADO and not Serviço Especial */}
+          {/* Technical Sheet and Shopping List Buttons - Only for CONFIRMADO and not Special Service */}
           {ordem.status === "confirmado" && (
             <div className="flex flex-col gap-3">
-              {ordem.type !== "Serviço Especial" && (
+              {ordem.type !== "Special Service" && (
                 <>
                   <Dialog>
                     <DialogTrigger asChild>

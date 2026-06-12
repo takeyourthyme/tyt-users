@@ -97,9 +97,9 @@ const AgendaChef = () => {
       // Apply filter from navigation state
       setAppliedFilters(prev => ({
         ...prev,
-        serviceType: state.filter === "servicos-semanais" ? "Cozinha Semanal" :
-          state.filter === "eventos" ? "Evento" :
-            state.filter === "servicos-especiais" ? "Serviço Especial" : "",
+        serviceType: state.filter === "servicos-semanais" ? "Meal Prep" :
+          state.filter === "eventos" ? "Get Together" :
+            state.filter === "servicos-especiais" ? "Special Service" : "",
         status: state.filter === "pendentes" ? "confirmado" : "",
         isPendentesFilter: state.filter === "pendentes"
       }));
@@ -109,11 +109,11 @@ const AgendaChef = () => {
 
       // Update section title based on filter
       if (state.filter === "servicos-semanais") {
-        setSectionTitle("Serviços Semanais");
+        setSectionTitle("Meal Prep");
       } else if (state.filter === "eventos") {
-        setSectionTitle("Eventos");
+        setSectionTitle("Get Together");
       } else if (state.filter === "servicos-especiais") {
-        setSectionTitle("Serviços Especiais");
+        setSectionTitle("Special Service");
       } else if (state.filter === "pendentes") {
         setSectionTitle("Serviços Pendentes de Comprovante");
       }
@@ -220,8 +220,8 @@ const AgendaChef = () => {
 
       const matchesStatus = !appliedFilters.status || item.status === appliedFilters.status;
 
-      // Special filter for "Pendentes de Comprovante": exclude "Serviço Especial"
-      const isPendentesFilterValid = !appliedFilters.isPendentesFilter || item.type !== "Serviço Especial";
+      // Special filter for "Pendentes de Comprovante": exclude "Special Service"
+      const isPendentesFilterValid = !appliedFilters.isPendentesFilter || item.type !== "Special Service";
 
       return matchesQuickSearch && matchesClientName && matchesDateRange && matchesServiceType && matchesStatus && isPendentesFilterValid;
     }).sort((a, b) => {
@@ -265,11 +265,11 @@ const AgendaChef = () => {
 
   const getServiceIcon = (type: string) => {
     switch (type) {
-      case "Cozinha Semanal":
+      case "Meal Prep":
         return ChefHat;
-      case "Evento":
+      case "Get Together":
         return Calendar;
-      case "Serviço Especial":
+      case "Special Service":
         return Clock;
       default:
         return ChefHat;
@@ -278,11 +278,11 @@ const AgendaChef = () => {
 
   const getServiceColor = (type: string) => {
     switch (type) {
-      case "Cozinha Semanal":
+      case "Meal Prep":
         return "bg-green-500";
-      case "Evento":
+      case "Get Together":
         return "bg-purple-500";
-      case "Serviço Especial":
+      case "Special Service":
         return "bg-orange-500";
       default:
         return "bg-gray-500";
@@ -568,9 +568,9 @@ const AgendaChef = () => {
                       <SelectValue placeholder="Selecione o tipo..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Cozinha Semanal">Cozinha Semanal</SelectItem>
-                      <SelectItem value="Evento">Evento</SelectItem>
-                      <SelectItem value="Serviço Especial">Serviço Especial</SelectItem>
+                      <SelectItem value="Meal Prep">Meal Prep</SelectItem>
+                      <SelectItem value="Get Together">Get Together</SelectItem>
+                      <SelectItem value="Special Service">Special Service</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

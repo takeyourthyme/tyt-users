@@ -507,7 +507,7 @@ const DetalheContrato = () => {
         )}
 
         {/* Special Service Needs Description */}
-        {type === "Serviço Especial" && clientRequest && (
+        {type === "Special Service" && clientRequest && (
           <Card className="bg-white shadow-sm border border-gray-100">
             <CardHeader>
               <CardTitle className="text-lg font-light text-gray-800 flex items-center gap-2">
@@ -524,7 +524,7 @@ const DetalheContrato = () => {
         )}
 
         {/* Special Service Proposal Details */}
-        {type === "Serviço Especial" && (
+        {type === "Special Service" && (
           <Card className="bg-white shadow-sm border border-gray-100">
             <CardHeader>
               <CardTitle className="text-lg font-light text-gray-800 flex items-center gap-2">
@@ -602,7 +602,7 @@ const DetalheContrato = () => {
         )}
 
         {/* Action Buttons for Meal Prep */}
-        {type === "Cozinha Semanal" && (
+        {type === "Meal Prep" && (
           <div className="space-y-3">
             {status === "pendente" && (
               <Button

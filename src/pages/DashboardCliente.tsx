@@ -46,20 +46,20 @@ const typeConfig: Record<
   ReturnType<typeof normalizeKitchenOrderTypeLabel>,
   { title: string; borderClass: string; iconBgClass: string; icon: typeof ChefHat }
 > = {
-  "Cozinha Semanal": {
-    title: "Cozinha Semanal",
+  "Meal Prep": {
+    title: "Meal Prep",
     borderClass: "border-[#E1F5EC] border-2 shadow-sm",
     iconBgClass: "bg-[#A6D8B5]",
     icon: ChefHat,
   },
-  Evento: {
-    title: "Evento",
+  "Get Together": {
+    title: "Get Together",
     borderClass: "border-[#F5E5F0] border-2 shadow-sm",
     iconBgClass: "bg-[#BC008F]",
     icon: Calendar,
   },
-  "Serviço Especial": {
-    title: "Serviço Especial",
+  "Special Service": {
+    title: "Special Service",
     borderClass: "border-[#E0F2F5] border-2 shadow-sm",
     iconBgClass: "bg-[#89CDD2]",
     icon: Calendar,
@@ -339,7 +339,7 @@ const DashboardCliente = () => {
                 <h4 className="text-xl font-bodoni font-normal text-gray-800">Contratar novo serviço</h4>
               </div>
               <p className="text-sm text-gray-600">
-                Meal Prep, eventos ou serviços especiais personalizados
+                Meal Prep, Get Together ou Special Service
               </p>
               <Button
                 className="w-full bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
@@ -358,11 +358,11 @@ const DashboardCliente = () => {
                 <div className="w-12 h-12 bg-tyt-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <Eye className="w-6 h-6 text-gray-800" />
                 </div>
-                <h4 className="text-xl font-bodoni font-normal text-gray-800">Conhecer nosso cardápio</h4>
+                <h4 className="text-xl font-bodoni font-normal text-gray-800">Conhecer nossos pratos</h4>
               </div>
-              <p className="text-sm text-gray-600">Cozinha Semanal, Cheff para eventos ou serviços especiais personalizados</p>
+              <p className="text-sm text-gray-600">Não se preocupe mais com seu jantar, conheça nossos pratos</p>
               <Button variant="outline" className="w-full border-tyt-yellow-500 text-gray-800 hover:text-tyt-blue-700 hover:bg-tyt-yellow-50" onClick={() => navigate("/cardapio")}>
-                Ver cardápio
+                Ver pratos
               </Button>
             </div>
           </CardContent>
