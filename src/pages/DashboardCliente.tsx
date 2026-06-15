@@ -361,7 +361,7 @@ const DashboardCliente = () => {
                 <h4 className="text-xl font-bodoni font-normal text-gray-800">Conhecer nossos pratos</h4>
               </div>
               <p className="text-sm text-gray-600">Não se preocupe mais com seu jantar, conheça nossos pratos</p>
-              <Button variant="outline" className="w-full border-tyt-yellow-500 text-gray-800 hover:text-tyt-blue-700 hover:bg-tyt-yellow-50" onClick={() => navigate("/cardapio")}>
+              <Button variant="outline" className="w-full border-tyt-yellow-500 text-gray-800 hover:text-tyt-blue-700 hover:bg-tyt-yellow-50" onClick={() => navigate("/pratos")}>
                 Ver pratos
               </Button>
             </div>

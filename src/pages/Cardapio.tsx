@@ -232,7 +232,7 @@ export default function Cardapio() {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-light">Cardápio</h1>
+          <h1 className="text-2xl font-light">Pratos</h1>
         </div>
 
         {/* Pesquisa e Filtros */}
@@ -405,11 +405,13 @@ export default function Cardapio() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading
             ? Array.from({ length: 9 }).map((_, index) => (
-              <Card key={index} className="overflow-hidden">
-                <div className="p-4 space-y-4">
-                  <Skeleton className="w-full h-48" />
-                  <Skeleton className="h-5 w-2/3" />
-                  <Skeleton className="h-4 w-full" />
+              <Card key={index} className="overflow-hidden h-full flex flex-col">
+                <div className="p-4 space-y-4 flex flex-col flex-1 justify-between">
+                  <div className="space-y-4">
+                    <Skeleton className="w-full h-48" />
+                    <Skeleton className="h-5 w-2/3" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
                   <div className="flex items-center justify-between">
                     <Skeleton className="h-6 w-24" />
                     <Skeleton className="h-8 w-16" />
@@ -420,16 +422,16 @@ export default function Cardapio() {
             : pratosFiltrados.map(prato => (
               <Card
                 key={prato.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col"
                 onClick={() => navigate(`/prato/${prato.id}`)}
               >
-                <div className="p-4">
+                <div className="p-4 flex flex-col flex-1">
                   <img
                     src={prato.foto}
                     alt={prato.nome}
                     className="w-full h-48 object-cover rounded-lg mb-4"
                   />
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex flex-col flex-1">
                     <div className="flex items-start justify-between">
                       <h3 className="font-light text-lg">{prato.nome}</h3>
                       <Button
@@ -445,8 +447,8 @@ export default function Cardapio() {
                         />
                       </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground">{prato.resumo}</p>
-                    <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground flex-1">{prato.resumo}</p>
+                    <div className="flex items-center justify-between pt-2">
                       {(() => {
                         const categoryEntry = CATEGORIAS_ICONES[prato.categoria as keyof typeof CATEGORIAS_ICONES];
                         const CategoryIcon = categoryEntry?.icon ?? Tag;

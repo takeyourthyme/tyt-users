@@ -39,7 +39,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   useStatusBarColor();
-  
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -55,7 +55,7 @@ const AppContent = () => {
       <Route path="/esqueci-senha" element={<GuestRoute><EsqueciSenha /></GuestRoute>} />
 
       {/* Public Client Routes (Blocked for Chefs) */}
-      <Route path="/cardapio" element={<PublicClientRoute><Cardapio /></PublicClientRoute>} />
+      <Route path="/pratos" element={<PublicClientRoute><Cardapio /></PublicClientRoute>} />
       <Route path="/prato/:id" element={<PublicClientRoute><PratoDetalhes /></PublicClientRoute>} />
       <Route path="/contratacao" element={<PublicClientRoute><Contratacao /></PublicClientRoute>} />
 

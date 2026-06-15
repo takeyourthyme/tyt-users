@@ -66,8 +66,8 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
     disabled: true
   }, {
     icon: Book,
-    label: "Ver Cardápio",
-    route: "/cardapio"
+    label: "Ver Pratos",
+    route: "/pratos"
   }, {
     icon: MessageCircle,
     label: "Suporte",
@@ -133,8 +133,8 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
                   key={index}
                   variant={item.highlighted ? "default" : "ghost"}
                   className={`w-full justify-start h-10 ${item.highlighted
-                      ? "bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
-                      : "hover:bg-gray-100"
+                    ? "bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
+                    : "hover:bg-gray-100"
                     }`}
                   disabled={Boolean(item.disabled)}
                   onClick={() => {

@@ -60,7 +60,7 @@ export const ChefRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
  * PublicClientRoute
  * Allows unauthenticated guests and logged-in clients.
  * Blocks chefs (redirects to /dashboard-chef).
- * Used for pages like /cardapio, /prato/:id, /contratacao.
+ * Used for pages like /pratos, /prato/:id, /contratacao.
  */
 export const PublicClientRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const session = loadSession();
