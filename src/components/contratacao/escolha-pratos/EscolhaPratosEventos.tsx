@@ -422,7 +422,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
               nome: normalized.name,
               descricao: normalized.description,
               foto: normalized.photoUrl || placeholder,
-              preco: 0,
+              preco: normalized.price,
               categorias: hasCategories ? normalized.categories : ["prato"],
               themes: normalized.themes,
               themeIds: normalized.themeIds,

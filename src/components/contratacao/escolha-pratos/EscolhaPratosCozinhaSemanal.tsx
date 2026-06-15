@@ -201,7 +201,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
               dishId,
               nome: normalized.name,
               descricao: normalized.description,
-              preco: 0,
+              preco: normalized.price,
               foto: photo,
               categoria: normalized.categories[0]?.toLowerCase() || "outros",
               favorito: false,

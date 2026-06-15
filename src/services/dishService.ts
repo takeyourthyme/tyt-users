@@ -26,6 +26,7 @@ export type NormalizedDish = {
   ficha_tecnica?: string;
   receita?: string;
   ingredients: NormalizedIngredient[];
+  price: number;
 };
 
 const sanitizeUrl = (value: string) => value.trim().replace(/^[`"' ]+|[`"' ]+$/g, "");
@@ -182,7 +183,9 @@ export function normalizeDish(dish: Dish): NormalizedDish {
 
   const ingredients = getIngredients(dish.pratos_ingredientes ?? dish.ingredientes ?? dish.ingredients);
 
-  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, themeIds, meal_preap, get_togheter, ficha_tecnica, receita, ingredients };
+  const price = ingredients.reduce((sum, ing) => sum + (ing.price * ing.quantityValue), 0);
+
+  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, themeIds, meal_preap, get_togheter, ficha_tecnica, receita, ingredients, price };
 }
 
 export async function listDishes(params?: { token?: string }) {
