@@ -79,7 +79,13 @@ const AprovacoesChef = () => {
                 const code = getKitchenOrderCode(order);
                 const detail = await getKitchenOrderByCode({ token, code });
                 const detailData = (detail as any).data ?? detail;
-                return detailData as KitchenOrder;
+                return {
+                  ...order,
+                  ...detailData,
+                  service_value: (detailData.service_value !== undefined && detailData.service_value !== null && Number(detailData.service_value) !== 0)
+                    ? detailData.service_value
+                    : (order.service_value ?? (order as any).serviceValue ?? detailData.service_value)
+                } as KitchenOrder;
               } catch (e) {
                 return order;
               }

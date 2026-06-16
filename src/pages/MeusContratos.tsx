@@ -103,9 +103,17 @@ const MeusContratos = () => {
               ? (res as any).data
               : res;
             if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+              const matchedOrder = targetContracts.find(o => getKitchenOrderCode(o) === code);
+              const mergedDetail = {
+                ...matchedOrder,
+                ...detail,
+                service_value: (detail.service_value !== undefined && detail.service_value !== null && Number(detail.service_value) !== 0)
+                  ? detail.service_value
+                  : (matchedOrder?.service_value ?? (matchedOrder as any)?.serviceValue ?? detail.service_value)
+              };
               setContractsDetails((prev) => ({
                 ...prev,
-                [code]: detail as KitchenOrder,
+                [code]: mergedDetail as KitchenOrder,
               }));
             }
           }

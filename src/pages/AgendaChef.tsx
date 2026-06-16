@@ -154,7 +154,13 @@ const AgendaChef = () => {
                 const code = getKitchenOrderCode(order);
                 const detail = await getKitchenOrderByCode({ token: session.token!, code });
                 const detailData = (detail as any).data ?? detail;
-                return detailData as KitchenOrder;
+                return {
+                  ...order,
+                  ...detailData,
+                  service_value: (detailData.service_value !== undefined && detailData.service_value !== null && Number(detailData.service_value) !== 0)
+                    ? detailData.service_value
+                    : (order.service_value ?? (order as any).serviceValue ?? detailData.service_value)
+                } as KitchenOrder;
               } catch (e) {
                 return order;
               }
@@ -187,6 +193,11 @@ const AgendaChef = () => {
         const status = normalizeKitchenOrderStatusLabel(order);
         const location = getKitchenOrderLocation(order) || "—";
 
+        const serviceValueRaw = order.service_value ?? (order as any).serviceValue;
+        const serviceValue = serviceValueRaw
+          ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(serviceValueRaw))
+          : "—";
+
         return {
           id,
           type,
@@ -195,6 +206,7 @@ const AgendaChef = () => {
           location,
           client,
           status,
+          serviceValue,
         };
       })
       .filter((item) => Boolean(item.id));
@@ -420,6 +432,10 @@ const AgendaChef = () => {
                                     <User className="w-3 h-3 flex-shrink-0" />
                                     <span className="truncate">{item.client.name}</span>
                                   </div>
+                                  <div className="flex items-center gap-1 text-green-700 font-medium">
+                                    <DollarSign className="w-3 h-3 flex-shrink-0" />
+                                    <span>{item.serviceValue}</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -460,6 +476,10 @@ const AgendaChef = () => {
                                       <span>{item.time}</span>
                                     </div>
                                   )}
+                                  <div className="flex items-center gap-1 text-green-700 font-medium">
+                                    <DollarSign className="w-3 h-3 flex-shrink-0" />
+                                    <span>{item.serviceValue}</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -629,6 +649,10 @@ const AgendaChef = () => {
                               <MapPin className="w-3 h-3" />
                               {item.location}
                             </div>
+                            <div className="flex items-center gap-1 text-green-700 font-medium">
+                              <DollarSign className="w-3 h-3" />
+                              Valor: {item.serviceValue}
+                            </div>
                           </div>
                         </div>
 
@@ -672,16 +696,20 @@ const AgendaChef = () => {
                             </Badge>
                           </div>
 
-                          <div className="space-y-1 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {new Date(item.date).toLocaleDateString('pt-BR')}{item.time ? ` às ${item.time}` : ''}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              {item.location}
-                            </div>
-                          </div>
+                           <div className="space-y-1 text-sm text-gray-600">
+                             <div className="flex items-center gap-1">
+                               <Calendar className="w-3 h-3" />
+                               {new Date(item.date).toLocaleDateString('pt-BR')}{item.time ? ` às ${item.time}` : ''}
+                             </div>
+                             <div className="flex items-center gap-1">
+                               <MapPin className="w-3 h-3" />
+                               {item.location}
+                             </div>
+                             <div className="flex items-center gap-1 text-green-700 font-medium">
+                               <DollarSign className="w-3 h-3" />
+                               Valor: {item.serviceValue}
+                             </div>
+                           </div>
                         </div>
                       </div>
 

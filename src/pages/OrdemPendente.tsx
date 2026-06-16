@@ -67,7 +67,7 @@ const OrdemPendente = () => {
       setIsLoading(false);
       return;
     }
-    getKitchenOrderByCode({ token: session.token, code: id })
+    getKitchenOrderByCode({ token: session.token, code: id, fetchFallbackServiceValue: true })
       .then((res) => {
         if (res && typeof res === "object") {
           const order = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
@@ -261,7 +261,9 @@ const OrdemPendente = () => {
         ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? (d.dish as Record<string, unknown>)?.name as string : "Prato")
         : ["Menu Personalizado"],
       observations: (kitchenOrder.observations as string) || (kitchenOrder.client_request as string) || "Sem observações adicionais.",
-      budget: "R$ 0,00"
+      budget: (kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue)
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue))
+        : "—"
     };
   }, [kitchenOrder, id]);
 

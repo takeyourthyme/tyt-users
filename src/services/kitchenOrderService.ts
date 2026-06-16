@@ -128,8 +128,37 @@ export async function listKitchenOrders(params: { token: string; code?: string }
   return data as unknown;
 }
 
-export async function getKitchenOrderByCode(params: { token: string; code: string }) {
+export async function getKitchenOrderByCode(params: { token: string; code: string; fetchFallbackServiceValue?: boolean }) {
   const { data } = await apiClient.get(`/api/kitchen-orders/${params.code}`, createAuthConfig(params.token));
+
+  if (params.fetchFallbackServiceValue) {
+    const order = (data as any)?.data ?? data;
+    if (order && typeof order === "object" && !Array.isArray(order)) {
+      const val = order.service_value ?? order.serviceValue;
+      if (val === undefined || val === null || Number(val) === 0) {
+        try {
+          const listRes = await listKitchenOrders({ token: params.token, code: params.code });
+          const listData = (listRes as any)?.data ?? listRes;
+          if (Array.isArray(listData)) {
+            const matched = listData.find(
+              (o) =>
+                String(o.code ?? o.codigo ?? o.order_code ?? o.orderCode ?? o.id) === String(params.code)
+            );
+            if (matched && matched.service_value !== undefined && matched.service_value !== null && Number(matched.service_value) !== 0) {
+              if ((data as any)?.data) {
+                (data as any).data.service_value = matched.service_value;
+              } else {
+                (data as any).service_value = matched.service_value;
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch list fallback for service_value", e);
+        }
+      }
+    }
+  }
+
   return data as unknown;
 }
 

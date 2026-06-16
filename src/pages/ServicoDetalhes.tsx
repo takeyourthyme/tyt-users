@@ -55,7 +55,7 @@ const ServicoDetalhes = () => {
       setIsLoading(false);
       return;
     }
-    getKitchenOrderByCode({ token: session.token, code: id })
+    getKitchenOrderByCode({ token: session.token, code: id, fetchFallbackServiceValue: true })
       .then((res) => {
         if (res && typeof res === "object") {
           const order = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
@@ -103,31 +103,22 @@ const ServicoDetalhes = () => {
       totalSessions: 1,
       completedSessions: status === 'concluido' ? 1 : 0,
       remainingSessions: status === 'concluido' ? 0 : 1,
-      monthlyValue: "R$ 450,00",
-      sessionValue: "R$ 450,00"
+      monthlyValue: (kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue)
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue) * 4)
+        : "—",
+      sessionValue: (kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue)
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue))
+        : "—"
     };
   }, [kitchenOrder, id]);
 
   const ordensServico = useMemo(() => {
     if (!kitchenOrder) return [];
 
-    let totalIngredientsPrice = 0;
-    if (Array.isArray(kitchenOrder.dishes)) {
-      kitchenOrder.dishes.forEach((item: any) => {
-        if (item && typeof item === 'object' && item.dish) {
-          const normalized = normalizeDish(item.dish as Dish);
-          const dishQty = item.quantity ?? 1;
-
-          if (normalized.ingredients && normalized.ingredients.length > 0) {
-            normalized.ingredients.forEach(ing => {
-              totalIngredientsPrice += ing.price * ing.quantityValue * dishQty;
-            });
-          }
-        }
-      });
-    }
-
-    const valorFormatted = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalIngredientsPrice);
+    const serviceValueRaw = kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue;
+    const valorFormatted = serviceValueRaw
+      ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(serviceValueRaw))
+      : "—";
 
     return [{
       id: getKitchenOrderCode(kitchenOrder) || id,

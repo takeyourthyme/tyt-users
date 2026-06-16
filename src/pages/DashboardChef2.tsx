@@ -38,6 +38,39 @@ import { loadSession } from "@/services/authService";
 import { getUserPhotoUrl } from "@/services/userService";
 import { ChefMenu } from "@/components/ChefMenu";
 
+const getTempoTyt = (createdAt: any) => {
+  if (!createdAt) return "—";
+  const createdDate = new Date(createdAt);
+  if (isNaN(createdDate.getTime())) return "—";
+  
+  const now = new Date();
+  const diffTime = now.getTime() - createdDate.getTime();
+  if (diffTime < 0) return "1 dia";
+  
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays < 30) {
+    if (diffDays <= 1) return "1 dia";
+    return `${diffDays} dias`;
+  }
+  
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) {
+    if (diffMonths === 1) return "1 mês";
+    return `${diffMonths} meses`;
+  }
+  
+  const diffYears = Math.floor(diffMonths / 12);
+  const remainingMonths = diffMonths % 12;
+  
+  if (remainingMonths === 0) {
+    return diffYears === 1 ? "1 ano" : `${diffYears} anos`;
+  }
+  
+  const yearText = diffYears === 1 ? "1 ano" : `${diffYears} anos`;
+  const monthText = remainingMonths === 1 ? "1 mês" : `${remainingMonths} meses`;
+  return `${yearText} e ${monthText}`;
+};
+
 const DashboardChef = () => {
   const navigate = useNavigate();
   const session = useMemo(() => loadSession(), []);
@@ -72,7 +105,7 @@ const DashboardChef = () => {
   const chefData = {
     firstName: chefName.split(' ')[0],
     fullName: chefName,
-    timeWithTYT: "2 meses"
+    timeWithTYT: getTempoTyt(session?.user?.createdAt ?? session?.user?.created_at)
   };
 
   // Mock stats

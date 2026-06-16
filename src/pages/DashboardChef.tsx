@@ -52,6 +52,39 @@ const getUserPhotoUrl = (user?: Record<string, unknown>) => {
   return resolveMediaUrl(raw);
 };
 
+const getTempoTyt = (createdAt: any) => {
+  if (!createdAt) return "—";
+  const createdDate = new Date(createdAt);
+  if (isNaN(createdDate.getTime())) return "—";
+  
+  const now = new Date();
+  const diffTime = now.getTime() - createdDate.getTime();
+  if (diffTime < 0) return "1 dia";
+  
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays < 30) {
+    if (diffDays <= 1) return "1 dia";
+    return `${diffDays} dias`;
+  }
+  
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) {
+    if (diffMonths === 1) return "1 mês";
+    return `${diffMonths} meses`;
+  }
+  
+  const diffYears = Math.floor(diffMonths / 12);
+  const remainingMonths = diffMonths % 12;
+  
+  if (remainingMonths === 0) {
+    return diffYears === 1 ? "1 ano" : `${diffYears} anos`;
+  }
+  
+  const yearText = diffYears === 1 ? "1 ano" : `${diffYears} anos`;
+  const monthText = remainingMonths === 1 ? "1 mês" : `${remainingMonths} meses`;
+  return `${yearText} e ${monthText}`;
+};
+
 const DashboardChef = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -259,7 +292,9 @@ const DashboardChef = () => {
                   <TrendingUp className="w-4 h-4 text-pink-600" />
                   <div>
                     <div className="text-xs text-gray-500">Tempo de TYT</div>
-                    <div className="text-sm font-light text-gray-800">—</div>
+                    <div className="text-sm font-light text-gray-800">
+                      {getTempoTyt(chefUser?.createdAt ?? chefUser?.created_at)}
+                    </div>
                   </div>
                 </div>
 

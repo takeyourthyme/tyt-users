@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Calendar, ChefHat, Clock, MapPin, UtensilsCrossed, ChevronLeft, Eye, User } from "lucide-react";
+import { Calendar, ChefHat, Clock, MapPin, UtensilsCrossed, ChevronLeft, Eye, User, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ const ServicosAtivos = () => {
           ? data
           : (data as { data?: unknown })?.data ?? (data as { orders?: unknown })?.orders;
         if (Array.isArray(orders)) {
+
           const chefUserId = session.userId ?? (session.user as any)?.id;
           const chefProfileId = (session.user as any)?.usuario_chef?.id ?? (session.user as any)?.chef?.id;
           const filtered = (orders as KitchenOrder[]).filter((order) => {
@@ -47,7 +48,13 @@ const ServicosAtivos = () => {
                 const code = getKitchenOrderCode(order);
                 const detail = await getKitchenOrderByCode({ token: session.token!, code });
                 const detailData = (detail as any).data ?? detail;
-                return detailData as KitchenOrder;
+                return {
+                  ...order,
+                  ...detailData,
+                  service_value: (detailData.service_value !== undefined && detailData.service_value !== null && Number(detailData.service_value) !== 0)
+                    ? detailData.service_value
+                    : (order.service_value ?? (order as any).serviceValue ?? detailData.service_value)
+                } as KitchenOrder;
               } catch (e) {
                 return order;
               }
@@ -72,6 +79,12 @@ const ServicosAtivos = () => {
         const location = getKitchenOrderLocation(order) || "—";
         const frequency = "Sessão";
 
+        const serviceValueRaw = order.service_value ?? (order as any).serviceValue;
+
+        const serviceValue = serviceValueRaw
+          ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(serviceValueRaw))
+          : "—";
+
         return {
           id,
           type,
@@ -83,6 +96,7 @@ const ServicosAtivos = () => {
           location,
           status,
           nextSession,
+          serviceValue,
         };
       })
       .filter((item) => Boolean(item.id) && (item.status === "confirmado" || item.status === "pendente"));
@@ -183,6 +197,10 @@ const ServicosAtivos = () => {
                         <MapPin className="w-3 h-3" />
                         {servico.location}
                       </div>
+                      <div className="flex items-center gap-1 text-green-700 font-medium">
+                        <DollarSign className="w-3 h-3" />
+                        Valor: {servico.serviceValue}
+                      </div>
                     </div>
                   </div>
 
@@ -235,6 +253,10 @@ const ServicosAtivos = () => {
                       <div className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         {servico.location}
+                      </div>
+                      <div className="flex items-center gap-1 text-green-700 font-medium">
+                        <DollarSign className="w-3 h-3" />
+                        Valor: {servico.serviceValue}
                       </div>
                     </div>
                   </div>

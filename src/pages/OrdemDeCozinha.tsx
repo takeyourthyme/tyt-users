@@ -89,7 +89,7 @@ const OrdemDeCozinha = () => {
       setIsLoading(false);
       return;
     }
-    getKitchenOrderByCode({ token: session.token, code: id })
+    getKitchenOrderByCode({ token: session.token, code: id, fetchFallbackServiceValue: true })
       .then((res) => {
         if (res && typeof res === "object") {
           const order = (res as any).data && typeof (res as any).data === "object" && !Array.isArray((res as any).data)
@@ -368,9 +368,34 @@ const OrdemDeCozinha = () => {
         }).filter(Boolean) as Array<{ dish: any; quantity: number }>
         : [],
       observations: (kitchenOrder.observations as string) || (kitchenOrder.client_request as string) || "Sem observações adicionais.",
-      budget: "R$ 0,00"
+      budget: (kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue)
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue))
+        : "—"
     };
   }, [kitchenOrder, id]);
+
+  const rawProposals = useMemo(() => {
+    if (!kitchenOrder) return [];
+    if (Array.isArray((kitchenOrder as any).proposals)) {
+      return (kitchenOrder as any).proposals as Array<{ id: number; item: string; value: number }>;
+    }
+    const spec = (kitchenOrder as any).special_service_proposal as Record<string, unknown> | null;
+    if (spec && Array.isArray(spec.items)) {
+      return spec.items as Array<{ id: number; description: string; price: number }>;
+    }
+    return [];
+  }, [kitchenOrder]);
+
+  const proposalItems = useMemo(() => {
+    return rawProposals.map((p: any) => ({
+      name: p.item || p.description || "Item da Proposta",
+      price: Number(p.value ?? p.price ?? 0),
+    }));
+  }, [rawProposals]);
+
+  const proposalTotalPrice = useMemo(() => {
+    return proposalItems.reduce((acc, item) => acc + (item.price || 0), 0);
+  }, [proposalItems]);
 
   // Dynamic shopping list and total price based on consolidated dish ingredients
   const { shoppingList, totalEstimatedPrice } = useMemo(() => {
@@ -391,12 +416,12 @@ const OrdemDeCozinha = () => {
             const existing = consolidated.get(key);
             if (existing) {
               existing.quantityValue += ing.quantityValue * dishQty;
-              existing.totalCost += ing.price * ing.quantityValue * dishQty;
+              existing.totalCost += ing.price * dishQty;
             } else {
               consolidated.set(key, {
                 quantityValue: ing.quantityValue * dishQty,
                 unit: ing.unit,
-                totalCost: ing.price * ing.quantityValue * dishQty
+                totalCost: ing.price * dishQty
               });
             }
           });
@@ -769,6 +794,56 @@ const OrdemDeCozinha = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Menu Proposto - Only for Special Service */}
+          {ordem.type === "Special Service" && (
+            <Card className="border-[#F5A623] border-t-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-amber-500" />
+                  Menu Proposto
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {kitchenOrder && kitchenOrder.client_request && (
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold text-gray-700">Solicitação do Cliente:</h4>
+                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 italic">
+                      "{String(kitchenOrder.client_request)}"
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-700">Itens do Menu Proposto:</h4>
+                  {proposalItems.length > 0 ? (
+                    <>
+                      <div className="border border-gray-100 rounded-lg divide-y divide-gray-100 overflow-hidden bg-white">
+                        {proposalItems.map((item, index) => (
+                          <div key={index} className="flex justify-between items-center p-3 text-sm">
+                            <span className="text-gray-600 font-medium">{item.name}</span>
+                            <span className="font-semibold text-gray-800">
+                              {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.price)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex justify-between items-center pt-2 font-semibold text-base border-t border-dashed">
+                        <span className="text-gray-800">Valor Total da Proposta</span>
+                        <span className="text-amber-600">
+                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">Nenhum item proposto cadastrado.</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
 
           {/* Technical Sheet and Shopping List Buttons - Only for CONFIRMADO and not Special Service */}
           {ordem.status === "confirmado" && (

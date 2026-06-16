@@ -426,7 +426,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
               categorias: hasCategories ? normalized.categories : ["prato"],
               themes: normalized.themes,
               themeIds: normalized.themeIds,
-            };
+            } as DishOption & { dishId: number };
           })
           .filter((v): v is DishOption & { dishId: number } => Boolean(v));
 
