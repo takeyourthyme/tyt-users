@@ -853,33 +853,33 @@ const OrdemDeCozinha = () => {
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Ficha Técnica
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        Receitas dos Pratos
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Ficha Técnica dos Pratos</DialogTitle>
+                        <DialogTitle>Receitas dos Pratos</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-3 mt-2">
                         {ordem.dishes && ordem.dishes.length > 0 ? (
                           ordem.dishes.map((item, index) => {
                             const dish = item.dish;
-                            const hasFicha = !!dish.ficha_tecnica;
+                            const hasReceita = !!dish.receita;
                             return (
                               <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                                 <div className="flex items-center gap-2">
-                                  <FileText className="w-5 h-5 text-gray-400" />
+                                  <BookOpen className="w-5 h-5 text-gray-400" />
                                   <span className="font-medium text-sm">{dish.name}</span>
                                 </div>
-                                {hasFicha ? (
+                                {hasReceita ? (
                                   <Button
                                     size="sm"
-                                    onClick={() => window.open(resolveMediaUrl(dish.ficha_tecnica), '_blank')}
+                                    onClick={() => window.open(resolveMediaUrl(dish.receita), '_blank')}
                                     className="bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900 font-medium"
                                   >
                                     <ExternalLink className="w-4 h-4 mr-1" />
-                                    Visualizar
+                                    Baixar Receita
                                   </Button>
                                 ) : (
                                   <span className="text-xs text-gray-500 italic">Não disponível</span>
