@@ -27,6 +27,7 @@ export type NormalizedDish = {
   receita?: string;
   ingredients: NormalizedIngredient[];
   price: number;
+  servings: number;
 };
 
 const sanitizeUrl = (value: string) => value.trim().replace(/^[`"' ]+|[`"' ]+$/g, "");
@@ -183,9 +184,20 @@ export function normalizeDish(dish: Dish): NormalizedDish {
 
   const ingredients = getIngredients(dish.pratos_ingredientes ?? dish.ingredientes ?? dish.ingredients);
 
-  const price = ingredients.reduce((sum, ing) => sum + (ing.price * ing.quantityValue), 0);
+  const priceCandidates: Array<unknown> = [dish.total_cost, dish.totalCost, dish.preco, dish.price, dish.valor, dish.value];
+  const priceValue = priceCandidates.find((value) => typeof value === "number") as number | undefined;
+  
+  const price = priceValue !== undefined && priceValue !== null && Number.isFinite(priceValue)
+    ? priceValue
+    : ingredients.reduce((sum, ing) => sum + (ing.price * ing.quantityValue), 0) || 35;
 
-  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, themeIds, meal_preap, get_togheter, ficha_tecnica, receita, ingredients, price };
+  const servingsCandidates: Array<unknown> = [dish.servings, dish.quantidade, dish.yield];
+  const servingsValue = servingsCandidates.find((value) => typeof value === "number") as number | undefined;
+  const servings = servingsValue !== undefined && servingsValue !== null && Number.isInteger(servingsValue) && servingsValue > 0
+    ? servingsValue
+    : 1;
+
+  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, themeIds, meal_preap, get_togheter, ficha_tecnica, receita, ingredients, price, servings };
 }
 
 export async function listDishes(params?: { token?: string }) {

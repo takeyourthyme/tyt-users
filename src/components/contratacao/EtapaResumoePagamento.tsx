@@ -34,7 +34,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   const getDishCost = (dish: unknown): number => {
     if (!dish || typeof dish !== "object") return 0;
     const record = dish as Record<string, unknown>;
-    const cost = record.total_cost ?? record.totalCost;
+    const cost = record.total_cost ?? record.totalCost ?? record.preco ?? record.price;
     return typeof cost === "number" && Number.isFinite(cost) ? cost : 0;
   };
 
@@ -73,17 +73,33 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   });
 
   const selectedDishes: unknown[] = Array.isArray(dados.pratosSelecionados) ? dados.pratosSelecionados : [];
-  // Custo estimado de ingredientes baseado em Prato.total_cost (calculado pelo backend)
+  
+  /**
+   * Calculates the subtotal cost for a dish based on the required batch quantity.
+   * Batch size is determined by 'servings' (or 'quantidade' yield candidate).
+   */
+  const getDishSubtotal = (prato: unknown): number => {
+    if (!prato || typeof prato !== "object") return 0;
+    const record = prato as Record<string, unknown>;
+    
+    // User requested quantity
+    const qty = typeof record.quantidade === 'number' ? record.quantidade : 1;
+    
+    // Recipe servings yield
+    const servings = typeof record.servings === 'number' && record.servings > 0 ? record.servings : 1;
+    
+    // Number of batches required
+    const batches = Math.ceil(qty / servings);
+    return getDishCost(prato) * batches;
+  };
+
+  // Custo estimado de ingredientes baseado em Prato.total_cost por lote (calculado pelo backend)
   const custoIngredientes = selectedDishes.reduce<number>(
-    (acc, prato) => {
-      const record = prato as Record<string, unknown>;
-      const qty = typeof record.quantidade === 'number' ? record.quantidade : 1;
-      return acc + getDishCost(prato) * qty;
-    },
+    (acc, prato) => acc + getDishSubtotal(prato),
     0
   );
   const hasCostEstimate = custoIngredientes > 0;
-  // Valor total = apenas custo de ingredientes (taxa do chef é definida pelo backend no processamento)
+  // Valor total = apenas custo de ingredientes
   const total = custoIngredientes;
 
   const buscarCEP = async (cep: string) => {
@@ -288,7 +304,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                             {pratosDoDia.map((prato, index: number) => (
                               <div key={index} className="flex justify-between text-sm pl-2">
                                 <span>• {getDishName(prato, `Prato ${index + 1}`)}</span>
-                                <span className="text-muted-foreground">R$ {getDishCost(prato).toFixed(2)}</span>
+                                <span className="text-muted-foreground">R$ {getDishSubtotal(prato).toFixed(2)}</span>
                               </div>
                             ))}
                           </div>
@@ -302,7 +318,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                     {dados.pratosSelecionados.map((prato, index: number) => (
                       <div key={index} className="flex justify-between">
                         <span>{getDishName(prato, `Prato ${index + 1}`)}</span>
-                        <span>R$ {getDishCost(prato).toFixed(2)}</span>
+                        <span>R$ {getDishSubtotal(prato).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
