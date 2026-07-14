@@ -227,6 +227,8 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
           throw new Error("Sessão não encontrada. Por favor, faça login novamente.");
         }
 
+        const userRecord = (session.user || {}) as Record<string, any>;
+
         // 1. Get Asaas customer ID from backend
         const customerRes = await getAsaasCustomerId(session.token);
 
@@ -249,12 +251,12 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
           },
           creditCardHolderInfo: {
             name: cartao.nomeTitular.trim(),
-            email: session.user?.email || "",
-            cpfCnpj: String(session.user?.cpf || "").replace(/\D/g, ""),
+            email: String(userRecord.email || ""),
+            cpfCnpj: String(userRecord.cpf || "").replace(/\D/g, ""),
             postalCode: endereco.cep.replace(/\D/g, ''),
             addressNumber: endereco.numero,
             addressComplement: endereco.complemento || undefined,
-            phone: String(session.user?.whatsapp || "").replace(/\D/g, "")
+            phone: String(userRecord.whatsapp || "").replace(/\D/g, "")
           }
         };
 
@@ -274,9 +276,9 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
             postalCode: endereco.cep.replace(/\D/g, ''),
             addressNumber: endereco.numero,
             addressComplement: endereco.complemento,
-            phone: String(session.user?.whatsapp || "").replace(/\D/g, ""),
-            email: session.user?.email || "",
-            cpfCnpj: String(session.user?.cpf || "").replace(/\D/g, ""),
+            phone: String(userRecord.whatsapp || "").replace(/\D/g, ""),
+            email: String(userRecord.email || ""),
+            cpfCnpj: String(userRecord.cpf || "").replace(/\D/g, ""),
           }
         });
 
