@@ -27,7 +27,7 @@ interface Props {
   onVoltar: () => void;
 }
 
-type DishOption = {
+interface DishOption {
   id: string;
   dishId: number;
   nome: string;
@@ -37,6 +37,7 @@ type DishOption = {
   categoria: string;
   favorito: boolean;
   frequente: boolean;
+  servings?: number;
 };
 
 const mockDishes: DishOption[] = [{
@@ -206,6 +207,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
               categoria: normalized.categories[0]?.toLowerCase() || "outros",
               favorito: false,
               frequente: false,
+              servings: normalized.servings,
             };
           })
           .filter((item): item is DishOption => Boolean(item));
@@ -451,9 +453,15 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
     const precoChef = 550;
     let precoCompras = 0;
 
+    const multiplier = dados.tamanhoPortacao === "grande" ? 6 : dados.tamanhoPortacao === "media" ? 4 : 2;
+
     diasEntrega.forEach((_, diaIndex) => {
       const pratosDoDia = pratosPorDia[diaIndex] || [];
-      precoCompras += pratosDoDia.reduce((total, prato) => total + prato.preco, 0);
+      precoCompras += pratosDoDia.reduce((total, prato: any) => {
+        const servings = prato.servings && prato.servings > 0 ? prato.servings : 1;
+        const batches = Math.ceil(multiplier / servings);
+        return total + (prato.preco * batches);
+      }, 0);
     });
 
     return {

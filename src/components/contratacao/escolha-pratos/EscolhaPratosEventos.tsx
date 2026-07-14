@@ -34,6 +34,7 @@ type DishOption = {
   categorias: string[];
   themes?: string[];
   themeIds?: number[];
+  servings?: number;
 };
 
 // Unified mock data for fallback
@@ -426,6 +427,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
               categorias: hasCategories ? normalized.categories : ["prato"],
               themes: normalized.themes,
               themeIds: normalized.themeIds,
+              servings: normalized.servings,
             } as DishOption & { dishId: number };
           })
           .filter((v): v is DishOption & { dishId: number } => Boolean(v));
@@ -520,7 +522,12 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
 
   const calcularTotal = () => {
     const precoChef = 550;
-    const precoCompras = pratosSelecionados.reduce((acc, p) => acc + p.preco, 0);
+    const multiplier = Number(dados.quantidadePessoas || 1);
+    const precoCompras = pratosSelecionados.reduce((acc, p: any) => {
+      const servings = p.servings && p.servings > 0 ? p.servings : 1;
+      const batches = Math.ceil(multiplier / servings);
+      return acc + (p.preco * batches);
+    }, 0);
     return {
       precoChef,
       precoCompras,

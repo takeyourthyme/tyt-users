@@ -75,6 +75,30 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   const selectedDishes: unknown[] = Array.isArray(dados.pratosSelecionados) ? dados.pratosSelecionados : [];
   
   /**
+   * Calculates the actual number of portions needed for the selected dish.
+   * Multiplies the selection count by the plan/event multiplier.
+   */
+  const getDishRealQuantity = (prato: unknown): number => {
+    if (!prato || typeof prato !== "object") return 1;
+    const record = prato as Record<string, unknown>;
+    
+    // Number of times the dish was selected in the menu (default 1)
+    const selectionQty = typeof record.quantity === 'number' ? record.quantity : 1;
+    
+    if (dados.tipoServico === 'cozinha-semanal') {
+      const multiplier = dados.tamanhoPortacao === "grande" ? 6 : dados.tamanhoPortacao === "media" ? 4 : 2;
+      return selectionQty * multiplier;
+    }
+    
+    if (dados.tipoServico === 'eventos') {
+      const multiplier = Number(dados.quantidadePessoas || 1);
+      return selectionQty * multiplier;
+    }
+    
+    return selectionQty;
+  };
+
+  /**
    * Calculates the subtotal cost for a dish based on the required batch quantity.
    * Batch size is determined by 'servings' (or 'quantidade' yield candidate).
    */
@@ -82,8 +106,8 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
     if (!prato || typeof prato !== "object") return 0;
     const record = prato as Record<string, unknown>;
     
-    // User requested quantity
-    const qty = typeof record.quantidade === 'number' ? record.quantidade : 1;
+    // User requested quantity (multiplied by portion size/people)
+    const qty = getDishRealQuantity(prato);
     
     // Recipe servings yield
     const servings = typeof record.servings === 'number' && record.servings > 0 ? record.servings : 1;
@@ -93,14 +117,15 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
     return getDishCost(prato) * batches;
   };
 
+  const precoChef = 550;
   // Custo estimado de ingredientes baseado em Prato.total_cost por lote (calculado pelo backend)
   const custoIngredientes = selectedDishes.reduce<number>(
     (acc, prato) => acc + getDishSubtotal(prato),
     0
   );
   const hasCostEstimate = custoIngredientes > 0;
-  // Valor total = apenas custo de ingredientes
-  const total = custoIngredientes;
+  // Valor total = custo do chef + custo de ingredientes
+  const total = hasCostEstimate ? (precoChef + custoIngredientes) : 0;
 
   const buscarCEP = async (cep: string) => {
     const digits = toDigits(cep);
@@ -336,6 +361,10 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>Serviço do Chef:</span>
+                  <span className="font-medium">R$ {precoChef.toFixed(2)}</span>
+                </div>
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-1">
                     <span>Custo estimado de ingredientes:</span>

@@ -213,9 +213,17 @@ const Contratacao = () => {
         return NaN;
       })();
       if (!Number.isFinite(id)) return;
-      const qtyCandidate = record.quantity ?? record.quantidade ?? record.qtd ?? 1;
-      const qty = typeof qtyCandidate === "number" ? qtyCandidate : Number(qtyCandidate);
-      const quantity = Number.isFinite(qty) && qty > 0 ? qty : 1;
+      const qtyCandidate = record.quantity ?? record.qtd ?? 1;
+      const selectionQty = typeof qtyCandidate === "number" ? qtyCandidate : Number(qtyCandidate);
+      let quantity = Number.isFinite(selectionQty) && selectionQty > 0 ? selectionQty : 1;
+
+      if (dadosContratacao.tipoServico === "cozinha-semanal") {
+        const multiplier = dadosContratacao.tamanhoPortacao === "grande" ? 6 : dadosContratacao.tamanhoPortacao === "media" ? 4 : 2;
+        quantity = quantity * multiplier;
+      } else if (dadosContratacao.tipoServico === "eventos") {
+        const multiplier = Number(dadosContratacao.quantidadePessoas || 1);
+        quantity = quantity * multiplier;
+      }
 
       const obsCandidate = record.personalizacao ?? record.observations ?? record.observacao ?? "";
       const obs = typeof obsCandidate === "string" ? obsCandidate.trim().substring(0, 140) : "";
