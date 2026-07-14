@@ -26,11 +26,16 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
     return typeof name === "string" && name.trim() ? name.trim() : fallback;
   };
 
-  const getDishPrice = (dish: unknown) => {
-    if (!dish || typeof dish !== "object") return 35;
+  /**
+   * Gets the pre-computed cost for a dish from the API response.
+   * Uses Prato.total_cost as the single source of truth.
+   * Returns 0 if not available (will show a warning to the user).
+   */
+  const getDishCost = (dish: unknown): number => {
+    if (!dish || typeof dish !== "object") return 0;
     const record = dish as Record<string, unknown>;
-    const price = record.preco ?? record.price ?? record.valor ?? record.value;
-    return typeof price === "number" && Number.isFinite(price) ? price : 35;
+    const cost = record.total_cost ?? record.totalCost;
+    return typeof cost === "number" && Number.isFinite(cost) ? cost : 0;
   };
 
   const getDishDayIndex = (dish: unknown) => {
@@ -67,10 +72,19 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
     nomeTitular: '',
   });
 
-  const precoChef = 550;
   const selectedDishes: unknown[] = Array.isArray(dados.pratosSelecionados) ? dados.pratosSelecionados : [];
-  const precoCompras = selectedDishes.reduce<number>((total, prato) => total + getDishPrice(prato), 0) || 210;
-  const total = precoChef + precoCompras;
+  // Custo estimado de ingredientes baseado em Prato.total_cost (calculado pelo backend)
+  const custoIngredientes = selectedDishes.reduce<number>(
+    (acc, prato) => {
+      const record = prato as Record<string, unknown>;
+      const qty = typeof record.quantidade === 'number' ? record.quantidade : 1;
+      return acc + getDishCost(prato) * qty;
+    },
+    0
+  );
+  const hasCostEstimate = custoIngredientes > 0;
+  // Valor total = apenas custo de ingredientes (taxa do chef é definida pelo backend no processamento)
+  const total = custoIngredientes;
 
   const buscarCEP = async (cep: string) => {
     const digits = toDigits(cep);
@@ -274,7 +288,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                             {pratosDoDia.map((prato, index: number) => (
                               <div key={index} className="flex justify-between text-sm pl-2">
                                 <span>• {getDishName(prato, `Prato ${index + 1}`)}</span>
-                                <span className="text-muted-foreground">R$ {getDishPrice(prato).toFixed(2)}</span>
+                                <span className="text-muted-foreground">R$ {getDishCost(prato).toFixed(2)}</span>
                               </div>
                             ))}
                           </div>
@@ -288,7 +302,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                     {dados.pratosSelecionados.map((prato, index: number) => (
                       <div key={index} className="flex justify-between">
                         <span>{getDishName(prato, `Prato ${index + 1}`)}</span>
-                        <span>R$ {getDishPrice(prato).toFixed(2)}</span>
+                        <span>R$ {getDishCost(prato).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -306,35 +320,40 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Serviço do Chef:</span>
-                  <span className="font-medium">R$ {precoChef.toFixed(2)}</span>
-                </div>
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-1">
-                    <span>Compras:</span>
+                    <span>Custo estimado de ingredientes:</span>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Info className="w-4 h-4 cursor-pointer text-blue-500 hover:text-blue-700" />
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Informações sobre Compras</DialogTitle>
+                          <DialogTitle>Sobre o valor estimado</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-3">
                           <p className="text-sm text-gray-600">
-                            As compras de Supermercado são um valor estimado conforme a pesquisa do TYT na sua região. Depois que o chef fizer a compra, ele vai anexar o comprovante do mercado e o valor será atualizado, reembolsado ou cobrado adicional no cartão de crédito em caso de diferença.
+                            Este valor é calculado automaticamente com base no custo de ingredientes dos pratos selecionados. Após o chef realizar as compras, o comprovante será anexado e qualquer diferença será reembolsada ou cobrada adicionalmente no cartão.
                           </p>
                         </div>
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <span className="font-medium">R$ {precoCompras.toFixed(2)}</span>
+                  <span className="font-medium">
+                    {hasCostEstimate
+                      ? `R$ ${custoIngredientes.toFixed(2)}`
+                      : <span className="text-amber-600 text-xs">A calcular</span>}
+                  </span>
                 </div>
+                {!hasCostEstimate && isPayableService && (
+                  <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded p-2">
+                    ⚠️ O valor exato será calculado pelo sistema no momento do processamento, com base nos ingredientes dos pratos selecionados.
+                  </p>
+                )}
                 <hr />
                 <div className="flex justify-between font-light text-lg">
-                  <span>Total:</span>
-                  <span>R$ {total.toFixed(2)}</span>
+                  <span>Total estimado:</span>
+                  <span>{hasCostEstimate ? `R$ ${total.toFixed(2)}` : '–'}</span>
                 </div>
               </CardContent>
             </Card>
