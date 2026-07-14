@@ -56,6 +56,7 @@ export interface DadosContratacao {
   novoCartao?: unknown;
   aceitouTermos?: boolean;
   // Payment fields (from EtapaResumoePagamento)
+  creditCardToken?: string;
   creditCard?: {
     holderName: string;
     number: string;
@@ -302,7 +303,7 @@ const Contratacao = () => {
       const session = loadSession();
       // Enrich creditCardHolderInfo with user profile data
       let enrichedCardHolderInfo: CreditCardHolderInfoInput | undefined = undefined;
-      if (dados.creditCard && dados.creditCardHolderInfo) {
+      if (dados.creditCardHolderInfo) {
         const u = (session?.user || {}) as Record<string, unknown>;
         enrichedCardHolderInfo = {
           name: dados.creditCardHolderInfo.name || String(u.nome ?? ''),
@@ -331,10 +332,13 @@ const Contratacao = () => {
         client_request: dados.tipoServico === "servicos-especiais" ? dados.descricaoDetalhada || "" : undefined,
         temas: dados.temaSelecionado ? [parseInt(dados.temaSelecionado, 10)] : undefined,
         dishes,
-        ...(dados.creditCard && {
+        ...(dados.creditCardToken ? {
+          creditCardToken: dados.creditCardToken,
+          creditCardHolderInfo: enrichedCardHolderInfo,
+        } : (dados.creditCard && {
           creditCard: dados.creditCard,
           creditCardHolderInfo: enrichedCardHolderInfo,
-        }),
+        })),
       });
 
       const extracted = (() => {

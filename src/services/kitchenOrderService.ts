@@ -200,6 +200,7 @@ export type CreateKitchenOrderInput = {
   // Payment fields (required for MEAL_PREP and GET_TOGETHER, omit for SPECIAL_SERVICE)
   creditCard?: CreditCardInput;
   creditCardHolderInfo?: CreditCardHolderInfoInput;
+  creditCardToken?: string;
 };
 
 export async function createKitchenOrder(input: CreateKitchenOrderInput) {

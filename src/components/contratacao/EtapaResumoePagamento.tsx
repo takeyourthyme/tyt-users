@@ -11,6 +11,8 @@ import { loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "@/hooks/use-toast";
+import { getAsaasCustomerId, getAsaasTokenizationConfig, tokenizeCard } from "@/services/asaasService";
 
 interface Props {
   dados: DadosContratacao;
@@ -207,38 +209,93 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
     const erros = validarFormulario();
     setErrosValidacao(erros);
 
-    if (erros.length > 0) return;
+    if (erros.length > 0) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, corrija os erros sinalizados em vermelho no formulário.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsSubmitting(true);
 
-    // Build credit card payload when applicable
-    const cardPayload = (() => {
-      if (!isPayableService) return {};
-      const [expiryMonth, expiryYearShort] = cartao.validade.split('/');
-      const expiryYear = expiryYearShort ? `20${expiryYearShort}` : '';
-      return {
-        creditCard: {
-          holderName: cartao.nomeTitular.trim(),
-          number: cartao.numero.replace(/\D/g, ''),
-          expiryMonth: (expiryMonth || '').trim(),
-          expiryYear,
-          ccv: cartao.cvv.replace(/\D/g, ''),
-        },
-        creditCardHolderInfo: {
-          name: cartao.nomeTitular.trim(),
-          // These fields will be filled server-side from user profile; we pass address data available here
-          postalCode: endereco.cep.replace(/\D/g, ''),
-          addressNumber: endereco.numero,
-          addressComplement: endereco.complemento,
-        },
-      };
-    })();
+    if (isPayableService) {
+      try {
+        const session = loadSession();
+        if (!session?.token) {
+          throw new Error("Sessão não encontrada. Por favor, faça login novamente.");
+        }
 
-    onConcluir({
-      endereco,
-      aceitouTermos,
-      ...cardPayload,
-    });
+        // 1. Get Asaas customer ID from backend
+        const customerRes = await getAsaasCustomerId(session.token);
+
+        if (!customerRes.asaasCustomerId) {
+          throw new Error("Não foi possível obter o identificador do cliente no Asaas.");
+        }
+
+        // 2. Build tokenize payload
+        const [expiryMonth, expiryYearShort] = cartao.validade.split('/');
+        const expiryYear = expiryYearShort ? `20${expiryYearShort}` : '';
+
+        const tokenizePayload = {
+          customer: customerRes.asaasCustomerId,
+          creditCard: {
+            holderName: cartao.nomeTitular.trim(),
+            number: cartao.numero.replace(/\D/g, ''),
+            expiryMonth: (expiryMonth || '').trim(),
+            expiryYear,
+            ccv: cartao.cvv.replace(/\D/g, '')
+          },
+          creditCardHolderInfo: {
+            name: cartao.nomeTitular.trim(),
+            email: session.user?.email || "",
+            cpfCnpj: String(session.user?.cpf || "").replace(/\D/g, ""),
+            postalCode: endereco.cep.replace(/\D/g, ''),
+            addressNumber: endereco.numero,
+            addressComplement: endereco.complemento || undefined,
+            phone: String(session.user?.whatsapp || "").replace(/\D/g, "")
+          }
+        };
+
+        // 3. Call our backend tokenize proxy
+        const asaasData = await tokenizeCard(session.token, tokenizePayload);
+        if (!asaasData.creditCardToken) {
+          throw new Error("Token do cartão não foi retornado pelo Asaas.");
+        }
+
+        // 5. Complete with tokenized card payload
+        onConcluir({
+          endereco,
+          aceitouTermos,
+          creditCardToken: asaasData.creditCardToken,
+          creditCardHolderInfo: {
+            name: cartao.nomeTitular.trim(),
+            postalCode: endereco.cep.replace(/\D/g, ''),
+            addressNumber: endereco.numero,
+            addressComplement: endereco.complemento,
+            phone: String(session.user?.whatsapp || "").replace(/\D/g, ""),
+            email: session.user?.email || "",
+            cpfCnpj: String(session.user?.cpf || "").replace(/\D/g, ""),
+          }
+        });
+
+      } catch (err: any) {
+        console.error("Erro no fluxo de tokenização:", err);
+        toast({
+          title: "Erro no pagamento",
+          description: err.message || "Erro ao processar o cartão. Verifique os dados e tente novamente.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+      }
+    } else {
+      // Non-payable service (Special Service)
+      onConcluir({
+        endereco,
+        aceitouTermos,
+      });
+    }
   };
 
   return (
