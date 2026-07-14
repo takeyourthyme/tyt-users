@@ -162,6 +162,25 @@ export async function getKitchenOrderByCode(params: { token: string; code: strin
   return data as unknown;
 }
 
+export type CreditCardInput = {
+  holderName: string;
+  number: string;       // digits only, no spaces
+  expiryMonth: string;  // "MM" (2 digits)
+  expiryYear: string;   // "YYYY" (4 digits)
+  ccv: string;
+};
+
+export type CreditCardHolderInfoInput = {
+  name: string;
+  email: string;
+  cpfCnpj: string;      // digits only
+  postalCode: string;   // digits only
+  addressNumber: string;
+  phone: string;        // digits only
+  addressComplement?: string;
+  mobilePhone?: string;
+};
+
 export type CreateKitchenOrderInput = {
   token: string;
   type: string;
@@ -178,6 +197,9 @@ export type CreateKitchenOrderInput = {
   client_request?: string;
   temas?: number[];
   dishes: Array<{ dish_id: number; quantity: number; observations?: string }>;
+  // Payment fields (required for MEAL_PREP and GET_TOGETHER, omit for SPECIAL_SERVICE)
+  creditCard?: CreditCardInput;
+  creditCardHolderInfo?: CreditCardHolderInfoInput;
 };
 
 export async function createKitchenOrder(input: CreateKitchenOrderInput) {

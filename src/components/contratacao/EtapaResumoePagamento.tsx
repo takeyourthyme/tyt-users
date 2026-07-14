@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, Receipt, User, Info, Home, DollarSign } from "lucide-react";
+import { MapPin, Receipt, User, Info, Home, CreditCard, DollarSign } from "lucide-react";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
@@ -57,6 +57,15 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfileAddress, setIsLoadingProfileAddress] = useState(false);
   const [errosValidacao, setErrosValidacao] = useState<string[]>([]);
+
+  // Credit card state
+  const isPayableService = dados.tipoServico !== 'servicos-especiais';
+  const [cartao, setCartao] = useState({
+    numero: '',
+    validade: '',
+    cvv: '',
+    nomeTitular: '',
+  });
 
   const precoChef = 550;
   const selectedDishes: unknown[] = Array.isArray(dados.pratosSelecionados) ? dados.pratosSelecionados : [];
@@ -128,6 +137,14 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
     if (!endereco.cidade) erros.push('cidade');
     if (!aceitouTermos) erros.push('termos');
 
+    // Validate card fields for payable services
+    if (isPayableService) {
+      if (cartao.numero.replace(/\D/g, '').length < 13) erros.push('cartao_numero');
+      if (cartao.validade.length < 5) erros.push('cartao_validade');
+      if (cartao.cvv.replace(/\D/g, '').length < 3) erros.push('cartao_cvv');
+      if (!cartao.nomeTitular.trim()) erros.push('cartao_nome');
+    }
+
     return erros;
   };
 
@@ -138,9 +155,34 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
     if (erros.length > 0) return;
 
     setIsSubmitting(true);
+
+    // Build credit card payload when applicable
+    const cardPayload = (() => {
+      if (!isPayableService) return {};
+      const [expiryMonth, expiryYearShort] = cartao.validade.split('/');
+      const expiryYear = expiryYearShort ? `20${expiryYearShort}` : '';
+      return {
+        creditCard: {
+          holderName: cartao.nomeTitular.trim(),
+          number: cartao.numero.replace(/\D/g, ''),
+          expiryMonth: (expiryMonth || '').trim(),
+          expiryYear,
+          ccv: cartao.cvv.replace(/\D/g, ''),
+        },
+        creditCardHolderInfo: {
+          name: cartao.nomeTitular.trim(),
+          // These fields will be filled server-side from user profile; we pass address data available here
+          postalCode: endereco.cep.replace(/\D/g, ''),
+          addressNumber: endereco.numero,
+          addressComplement: endereco.complemento,
+        },
+      };
+    })();
+
     onConcluir({
       endereco,
       aceitouTermos,
+      ...cardPayload,
     });
   };
 
@@ -398,19 +440,105 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
           </Card>
 
           {/* Pagamento */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Home className="w-5 h-5" />
-                Pagamento
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Pagamento ainda não está disponível. Você pode concluir a contratação e o pagamento será habilitado em breve.
-              </p>
-            </CardContent>
-          </Card>
+          {isPayableService ? (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className={`flex items-center gap-2 text-lg ${
+                  errosValidacao.some(e => e.startsWith('cartao_')) ? 'text-red-600' : ''
+                }`}>
+                  <CreditCard className="w-5 h-5" />
+                  Pagamento com Cartão de Crédito
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {/* Card number */}
+                <div>
+                  <Label htmlFor="cartao-numero" className="text-sm">Número do Cartão</Label>
+                  <Input
+                    id="cartao-numero"
+                    value={cartao.numero}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+                      const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+                      setCartao(prev => ({ ...prev, numero: formatted }));
+                    }}
+                    placeholder="0000 0000 0000 0000"
+                    inputMode="numeric"
+                    maxLength={19}
+                    className={`text-sm font-mono ${errosValidacao.includes('cartao_numero') ? 'border-red-500' : ''}`}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Expiry */}
+                  <div>
+                    <Label htmlFor="cartao-validade" className="text-sm">Validade (MM/AA)</Label>
+                    <Input
+                      id="cartao-validade"
+                      value={cartao.validade}
+                      onChange={(e) => {
+                        let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        if (raw.length > 2) raw = raw.slice(0, 2) + '/' + raw.slice(2);
+                        setCartao(prev => ({ ...prev, validade: raw }));
+                      }}
+                      placeholder="MM/AA"
+                      inputMode="numeric"
+                      maxLength={5}
+                      className={`text-sm font-mono ${errosValidacao.includes('cartao_validade') ? 'border-red-500' : ''}`}
+                    />
+                  </div>
+
+                  {/* CVV */}
+                  <div>
+                    <Label htmlFor="cartao-cvv" className="text-sm">CVV</Label>
+                    <Input
+                      id="cartao-cvv"
+                      value={cartao.cvv}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        setCartao(prev => ({ ...prev, cvv: raw }));
+                      }}
+                      placeholder="123"
+                      inputMode="numeric"
+                      maxLength={4}
+                      type="password"
+                      className={`text-sm font-mono ${errosValidacao.includes('cartao_cvv') ? 'border-red-500' : ''}`}
+                    />
+                  </div>
+                </div>
+
+                {/* Holder name */}
+                <div>
+                  <Label htmlFor="cartao-nome" className="text-sm">Nome do Titular (como no cartão)</Label>
+                  <Input
+                    id="cartao-nome"
+                    value={cartao.nomeTitular}
+                    onChange={(e) => setCartao(prev => ({ ...prev, nomeTitular: e.target.value.toUpperCase() }))}
+                    placeholder="JOÃO DA SILVA"
+                    className={`text-sm ${errosValidacao.includes('cartao_nome') ? 'border-red-500' : ''}`}
+                  />
+                </div>
+
+                <p className="text-xs text-muted-foreground pt-1">
+                  🔒 Seus dados são processados com segurança via Asaas. Não armazenamos dados do cartão.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Home className="w-5 h-5" />
+                  Pagamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Para Serviços Especiais, o pagamento será solicitado após a aprovação do orçamento pela equipe TYT.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Termos */}
           <div className="flex items-center space-x-2">

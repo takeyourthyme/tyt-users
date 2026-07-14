@@ -11,7 +11,7 @@ import { EtapaResumoePagamento } from "@/components/contratacao/EtapaResumoePaga
 import { TelaSuccesso } from "@/components/contratacao/TelaSuccesso";
 import { useToast } from "@/hooks/use-toast";
 import { loadSession } from "@/services/authService";
-import { createKitchenOrder } from "@/services/kitchenOrderService";
+import { createKitchenOrder, CreditCardHolderInfoInput } from "@/services/kitchenOrderService";
 import IllustrationOrder from "@/assets/illustration-order";
 
 export interface DadosContratacao {
@@ -55,6 +55,24 @@ export interface DadosContratacao {
   cartaoSelecionado?: string;
   novoCartao?: unknown;
   aceitouTermos?: boolean;
+  // Payment fields (from EtapaResumoePagamento)
+  creditCard?: {
+    holderName: string;
+    number: string;
+    expiryMonth: string;
+    expiryYear: string;
+    ccv: string;
+  };
+  creditCardHolderInfo?: {
+    name: string;
+    email?: string;
+    cpfCnpj?: string;
+    postalCode: string;
+    addressNumber: string;
+    phone?: string;
+    addressComplement?: string;
+    mobilePhone?: string;
+  };
 }
 
 const Contratacao = () => {
@@ -273,10 +291,26 @@ const Contratacao = () => {
     })();
 
     try {
+      const session = loadSession();
+      // Enrich creditCardHolderInfo with user profile data
+      let enrichedCardHolderInfo: CreditCardHolderInfoInput | undefined = undefined;
+      if (dados.creditCard && dados.creditCardHolderInfo) {
+        const u = (session?.user || {}) as Record<string, unknown>;
+        enrichedCardHolderInfo = {
+          name: dados.creditCardHolderInfo.name || String(u.nome ?? ''),
+          email: dados.creditCardHolderInfo.email || String(u.email ?? ''),
+          cpfCnpj: dados.creditCardHolderInfo.cpfCnpj || String(u.cpf ?? '').replace(/\D/g, ''),
+          postalCode: dados.creditCardHolderInfo.postalCode,
+          addressNumber: dados.creditCardHolderInfo.addressNumber,
+          phone: dados.creditCardHolderInfo.phone || String(u.whatsapp ?? '').replace(/\D/g, ''),
+          addressComplement: dados.creditCardHolderInfo.addressComplement,
+          mobilePhone: dados.creditCardHolderInfo.mobilePhone,
+        };
+      }
+
       const response = await createKitchenOrder({
         token,
         type: mapServiceType(dados.tipoServico),
-        id_pagamento: "",
         event_date: eventDate.toISOString(),
         event_time: eventTime,
         people_quantity: getPeopleQuantity(dados),
@@ -289,6 +323,10 @@ const Contratacao = () => {
         client_request: dados.tipoServico === "servicos-especiais" ? dados.descricaoDetalhada || "" : undefined,
         temas: dados.temaSelecionado ? [parseInt(dados.temaSelecionado, 10)] : undefined,
         dishes,
+        ...(dados.creditCard && {
+          creditCard: dados.creditCard,
+          creditCardHolderInfo: enrichedCardHolderInfo,
+        }),
       });
 
       const extracted = (() => {
@@ -323,7 +361,21 @@ const Contratacao = () => {
 
       setCodigoReferencia(code);
       setMostrarSucesso(true);
-    } catch {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
+      const status = axiosErr?.response?.status;
+      const serverMsg = axiosErr?.response?.data?.error;
+
+      if (status === 422 && serverMsg) {
+        // Payment-specific error from Asaas
+        toast({
+          title: "Pagamento não autorizado",
+          description: serverMsg,
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Erro ao contratar serviço",
         description: "Tente novamente em alguns instantes.",
