@@ -229,14 +229,33 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
 
         const userRecord = (session.user || {}) as Record<string, any>;
 
-        // 1. Get Asaas customer ID from backend
-        const customerRes = await getAsaasCustomerId(session.token);
+        // 1. Get Asaas customer ID and config from backend
+        const [customerRes, configRes] = await Promise.all([
+          getAsaasCustomerId(session.token),
+          getAsaasTokenizationConfig(session.token)
+        ]);
 
         if (!customerRes.asaasCustomerId) {
           throw new Error("Não foi possível obter o identificador do cliente no Asaas.");
         }
 
-        // 2. Build tokenize payload
+        if (!configRes.asaasUrl || !configRes.accessToken) {
+          throw new Error("Não foi possível obter as configurações de pagamento do Asaas.");
+        }
+
+        // 2. Get user's public IP
+        let remoteIp = "127.0.0.1";
+        try {
+          const ipRes = await fetch("https://api.ipify.org?format=json");
+          const ipData = await ipRes.json();
+          if (ipData?.ip) {
+            remoteIp = ipData.ip;
+          }
+        } catch (e) {
+          console.warn("Erro ao obter IP público, usando fallback:", e);
+        }
+
+        // 3. Build tokenize payload
         const [expiryMonth, expiryYearShort] = cartao.validade.split('/');
         const expiryYear = expiryYearShort ? `20${expiryYearShort}` : '';
 
@@ -257,11 +276,12 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
             addressNumber: endereco.numero,
             addressComplement: endereco.complemento || undefined,
             phone: String(userRecord.whatsapp || "").replace(/\D/g, "")
-          }
+          },
+          remoteIp
         };
 
-        // 3. Call our backend tokenize proxy
-        const asaasData = await tokenizeCard(session.token, tokenizePayload);
+        // 4. Call Asaas API directly using credentials
+        const asaasData = await tokenizeCard(configRes.asaasUrl, configRes.accessToken, tokenizePayload);
         if (!asaasData.creditCardToken) {
           throw new Error("Token do cartão não foi retornado pelo Asaas.");
         }

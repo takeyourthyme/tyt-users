@@ -1,3 +1,4 @@
+import axios from "axios";
 import { apiClient, createAuthConfig } from "./apiClient";
 
 export interface AsaasCustomerIdResponse {
@@ -33,7 +34,6 @@ export interface TokenizeCardRequest {
 }
 
 export interface TokenizeCardResponse {
-  success: boolean;
   creditCardNumber: string;
   creditCardBrand: string;
   creditCardToken: string;
@@ -55,11 +55,20 @@ export async function getAsaasTokenizationConfig(token: string) {
   return data;
 }
 
-export async function tokenizeCard(token: string, payload: TokenizeCardRequest) {
-  const { data } = await apiClient.post<TokenizeCardResponse>(
-    "/api/asaas/tokenize-card",
+export async function tokenizeCard(
+  asaasUrl: string,
+  accessToken: string,
+  payload: TokenizeCardRequest
+) {
+  const { data } = await axios.post<TokenizeCardResponse>(
+    `${asaasUrl}/creditCard/tokenizeCreditCard`,
     payload,
-    createAuthConfig(token)
+    {
+      headers: {
+        "Content-Type": "application/json",
+        "access_token": accessToken,
+      },
+    }
   );
   return data;
 }
