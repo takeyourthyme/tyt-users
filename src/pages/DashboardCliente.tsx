@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, CheckCircle, AlertCircle, ChefHat, Calendar, UtensilsCrossed, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,7 @@ const DashboardCliente = () => {
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeOrdersDetails, setActiveOrdersDetails] = useState<Record<string, KitchenOrder>>({});
+  const fetchedCodesRef = useRef<Set<string>>(new Set());
 
   // Function to get greeting based on time
   const getTimeBasedGreeting = () => {
@@ -148,7 +149,9 @@ const DashboardCliente = () => {
 
     activeOrders.forEach((order) => {
       const code = getKitchenOrderCode(order);
-      if (!code || activeOrdersDetails[code]) return;
+      if (!code || fetchedCodesRef.current.has(code)) return;
+
+      fetchedCodesRef.current.add(code);
 
       getKitchenOrderByCode({ token: session.token, code })
         .then((res) => {
@@ -172,9 +175,11 @@ const DashboardCliente = () => {
             }
           }
         })
-        .catch(() => { });
+        .catch(() => {
+          fetchedCodesRef.current.delete(code);
+        });
     });
-  }, [activeOrders, activeOrdersDetails]);
+  }, [activeOrders]);
 
   const activeOrdersByType = useMemo(() => {
     const byType: Partial<Record<ReturnType<typeof normalizeKitchenOrderTypeLabel>, KitchenOrder>> = {};

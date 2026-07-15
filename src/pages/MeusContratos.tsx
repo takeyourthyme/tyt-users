@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,7 @@ const MeusContratos = () => {
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [contractsDetails, setContractsDetails] = useState<Record<string, KitchenOrder>>({});
+  const fetchedCodesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const session = loadSession();
@@ -94,7 +95,9 @@ const MeusContratos = () => {
 
     targetContracts.forEach((order) => {
       const code = getKitchenOrderCode(order);
-      if (!code || contractsDetails[code]) return;
+      if (!code || fetchedCodesRef.current.has(code)) return;
+
+      fetchedCodesRef.current.add(code);
 
       getKitchenOrderByCode({ token: session.token, code })
         .then((res) => {
@@ -118,9 +121,11 @@ const MeusContratos = () => {
             }
           }
         })
-        .catch(() => { });
+        .catch(() => {
+          fetchedCodesRef.current.delete(code);
+        });
     });
-  }, [activeContracts, pendingContracts, contractsDetails]);
+  }, [activeContracts, pendingContracts]);
 
   const contratosFiltrados = useMemo(() => {
     if (filtroAtivo === "antigos") return pastContracts;
