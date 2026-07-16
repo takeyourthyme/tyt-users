@@ -418,7 +418,9 @@ const DetalheContrato = () => {
     if (rawProposals.length === 0) return null;
 
     const orderStatus = String(apiOrder.status).toUpperCase();
-    if (orderStatus === "CONFIRMED") return "ACCEPTED";
+    // Consider ACCEPTED if order is confirmed OR if a payment has already been registered
+    const hasPaid = !!(apiOrder.id_pagamento || (apiOrder as any).id_payment);
+    if (orderStatus === "CONFIRMED" || orderStatus === "COMPLETED" || hasPaid) return "ACCEPTED";
     if (orderStatus === "DECLINED" || orderStatus === "CANCELLED") return "DECLINED";
     return "AWAITING_CLIENT";
   }, [apiOrder, rawProposals]);
@@ -697,7 +699,7 @@ const DetalheContrato = () => {
                       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
                         <DialogTrigger asChild>
                           <Button
-                            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-light h-11 animate-pulse"
+                            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-light h-11"
                             disabled={isAcceptingProposal || isDecliningProposal}
                           >
                             <CreditCard className="h-4 w-4 mr-2" />
