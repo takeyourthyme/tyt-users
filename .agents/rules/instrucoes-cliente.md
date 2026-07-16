@@ -122,6 +122,7 @@ Obtenção de termos normalizados para filtros e cadastros:
 * **RN-C06 (Limite de Cartões)**: Cada cliente pode ter no máximo 5 cartões salvos para evitar riscos operacionais de processamento.
 * **RN-C07 (Campos Imutáveis)**: O CPF do cliente, uma vez gravado no cadastro, não pode ser alterado através da interface de edição de dados pessoais.
 * **RN-C08 (Avaliação Pós-Conclusão)**: A interface de avaliações (dar notas de 1 a 5 e tecer comentários) no detalhe do contrato só fica ativa quando a ordem estiver marcada como `concluido` e liberada pelo fluxo do Chef.
+* **RN-C09 (Cancelamento Dinâmico de Pedidos)**: Se o cliente tentar cancelar um pedido que já teve o pagamento processado (status `CONFIRMED`, `COMPLETED` ou com chave `id_pagamento` preenchida), o botão "Cancelar Pedido" redirecionará o cliente para o WhatsApp oficial de suporte (`5511999999999`) com uma mensagem automática contendo o código do serviço e o nome do cliente. Se o pedido não estiver pago, o cancelamento é realizado diretamente pela interface após confirmação.
 
 ---
 

@@ -494,6 +494,12 @@ const DetalheContrato = () => {
     String(apiOrder.status).toUpperCase() === "PENDING" ||
     String(apiOrder.status).toUpperCase() === "IN_REVIEW";
 
+  const hasPaid = !!(
+    apiOrder.id_pagamento ||
+    (apiOrder as any).id_payment ||
+    ["CONFIRMED", "COMPLETED", "FINALIZED"].includes(String(apiOrder.status).toUpperCase())
+  );
+
   const dishes = Array.isArray(apiOrder.dishes) ? (apiOrder.dishes as any[]) : [];
   const observations = (apiOrder.observations as string | null) ?? "";
   const clientRequest = (apiOrder.client_request as string | null) ?? "";
@@ -957,57 +963,72 @@ const DetalheContrato = () => {
           </Button>
 
           {canCancel && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                >
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Cancelar Pedido
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="flex items-center gap-2 text-red-700">
-                    <AlertTriangle className="h-5 w-5" />
-                    Confirmar Cancelamento do Serviço
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Tem certeza de que deseja prosseguir com o cancelamento? Essa ação cancelará o agendamento atual com o Chef. Em caso de dúvidas, fale com o suporte.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Voltar</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={async () => {
-                      if (!token || !code) return;
-                      try {
-                        setApiLoading(true);
-                        await cancelKitchenOrder({ token, code });
-                        toast({
-                          title: "Serviço cancelado",
-                          description: "Seu agendamento foi cancelado com sucesso.",
-                        });
-                        navigate("/meus-contratos");
-                      } catch (err) {
-                        console.error("Erro ao cancelar:", err);
-                        toast({
-                          title: "Erro ao cancelar",
-                          description: "Tente novamente em alguns instantes.",
-                          variant: "destructive",
-                        });
-                      } finally {
-                        setApiLoading(false);
-                      }
-                    }}
-                    className="bg-red-600 hover:bg-red-700 text-white"
+            hasPaid ? (
+              <Button
+                variant="outline"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={() => {
+                  const clientName = client?.name || "";
+                  const whatsappMsg = encodeURIComponent(`Olá! Gostaria de cancelar o pedido ${code}${clientName ? ` de ${clientName}` : ""}.`);
+                  window.open(`https://wa.me/5511999999999?text=${whatsappMsg}`, "_blank");
+                }}
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Cancelar Pedido
+              </Button>
+            ) : (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                   >
-                    Sim, Cancelar
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Cancelar Pedido
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2 text-red-700">
+                      <AlertTriangle className="h-5 w-5" />
+                      Confirmar Cancelamento do Serviço
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza de que deseja prosseguir com o cancelamento? Essa ação cancelará o agendamento atual com o Chef. Em caso de dúvidas, fale com o suporte.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Voltar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        if (!token || !code) return;
+                        try {
+                          setApiLoading(true);
+                          await cancelKitchenOrder({ token, code });
+                          toast({
+                            title: "Serviço cancelado",
+                            description: "Seu agendamento foi cancelado com sucesso.",
+                          });
+                          navigate("/meus-contratos");
+                        } catch (err) {
+                          console.error("Erro ao cancelar:", err);
+                          toast({
+                            title: "Erro ao cancelar",
+                            description: "Tente novamente em alguns instantes.",
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setApiLoading(false);
+                        }
+                      }}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Sim, Cancelar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )
           )}
         </div>
       </main>
