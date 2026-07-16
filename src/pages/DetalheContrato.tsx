@@ -142,8 +142,7 @@ const DetalheContrato = () => {
   const [apiLoading, setApiLoading] = useState(true);
   const [isAcceptingProposal, setIsAcceptingProposal] = useState(false);
   const [isDecliningProposal, setIsDecliningProposal] = useState(false);
-  const [pauseDuration, setPauseDuration] = useState<string>("");
-  const [pauseModalOpen, setPauseModalOpen] = useState(false);
+
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
@@ -370,21 +369,6 @@ const DetalheContrato = () => {
     }
   };
 
-  const handlePausarServico = () => {
-    setPauseModalOpen(false);
-    setPauseDuration("");
-    toast({
-      title: "Serviço pausado",
-      description: "Seu serviço foi pausado. Entraremos em contato para reagendamento.",
-    });
-  };
-
-  const handleDescartarSemana = () => {
-    toast({
-      title: "Semana descartada",
-      description: "Seu horário foi descartado e disponibilizado para esta semana.",
-    });
-  };
 
   const rawProposals = useMemo(() => {
     if (!apiOrder) return [];
@@ -887,67 +871,6 @@ const DetalheContrato = () => {
               </Button>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button className="w-full" variant="outline">
-                    Pular Semana
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Descartar esta semana?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Ao pular esta semana, seu horário será disponibilizado para outro cliente e nenhuma cobrança será efetuada para este período.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDescartarSemana}>Confirmar</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-
-              <Dialog open={pauseModalOpen} onOpenChange={setPauseModalOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full" variant="outline">
-                    Pausar Serviço
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Pausar Serviço</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 pt-2">
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      Ao pausar o serviço, o dia e período reservados serão disponibilizados. Ao retornar, você poderá escolher entre os horários disponíveis.
-                    </p>
-                    <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700">Por quanto tempo deseja pausar?</label>
-                      <Select value={pauseDuration} onValueChange={setPauseDuration}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o período" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="2semanas">2 Semanas</SelectItem>
-                          <SelectItem value="3semanas">3 Semanas</SelectItem>
-                          <SelectItem value="1mes">1 Mês</SelectItem>
-                          <SelectItem value="2meses">2 Meses</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <Button variant="outline" className="flex-1" onClick={() => setPauseModalOpen(false)}>
-                        Cancelar
-                      </Button>
-                      <Button className="flex-1" onClick={handlePausarServico} disabled={!pauseDuration}>
-                        Confirmar
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
           </div>
         )}
 
