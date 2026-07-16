@@ -240,6 +240,31 @@ export async function cancelKitchenOrder(params: { token: string; code: string }
   return data as unknown;
 }
 
+export async function paySpecialServiceOrder(params: {
+  token: string;
+  code: string;
+  creditCardToken: string;
+  creditCardHolderInfo?: {
+    name: string;
+    postalCode: string;
+    addressNumber: string;
+    addressComplement?: string;
+    phone?: string;
+    email?: string;
+    cpfCnpj?: string;
+  };
+}) {
+  const { data } = await apiClient.put(
+    `/api/kitchen-orders/${params.code}/pay`,
+    {
+      creditCardToken: params.creditCardToken,
+      creditCardHolderInfo: params.creditCardHolderInfo
+    },
+    createAuthConfig(params.token),
+  );
+  return data as unknown;
+}
+
 export function getKitchenOrderCode(order?: KitchenOrder | null): string {
   if (!order) return "";
   const candidates = [

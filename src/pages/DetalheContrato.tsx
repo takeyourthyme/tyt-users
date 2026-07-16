@@ -38,6 +38,9 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { tokenizeCard, getAsaasCustomerId } from "@/services/asaasService";
 import { AppHeader } from "@/components/AppHeader";
 import { loadSession } from "@/services/authService";
 import {
@@ -50,6 +53,7 @@ import {
   normalizeKitchenOrderStatusLabel,
   normalizeKitchenOrderTypeLabel,
   updateKitchenOrderStatus,
+  paySpecialServiceOrder,
   type KitchenOrder,
 } from "@/services/kitchenOrderService";
 
@@ -141,6 +145,23 @@ const DetalheContrato = () => {
   const [pauseDuration, setPauseDuration] = useState<string>("");
   const [pauseModalOpen, setPauseModalOpen] = useState(false);
 
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [errosValidacao, setErrosValidacao] = useState<string[]>([]);
+  
+  const [cartao, setCartao] = useState({
+    numero: "",
+    nomeTitular: "",
+    validade: "",
+    cvv: "",
+  });
+
+  const [endereco, setEndereco] = useState({
+    cep: "",
+    numero: "",
+    complemento: "",
+  });
+
   const loadOrderDetails = () => {
     if (!token || !contratoId) return;
     setApiLoading(true);
@@ -153,6 +174,12 @@ const DetalheContrato = () => {
 
           if (order && typeof order === "object" && !Array.isArray(order)) {
             setApiOrder(order as KitchenOrder);
+            const cli = (order as any).cliente || {};
+            setEndereco({
+              cep: cli.cep || "",
+              numero: cli.numero || "",
+              complemento: cli.complemento || "",
+            });
             return;
           }
         }
@@ -204,6 +231,115 @@ const DetalheContrato = () => {
       });
     } finally {
       setIsAcceptingProposal(false);
+    }
+  };
+
+  const validarPagamentoForm = () => {
+    const erros: string[] = [];
+    if (!endereco.cep.replace(/\D/g, '')) erros.push('cep');
+    if (!endereco.numero.trim()) erros.push('numero');
+
+    const numLimpo = cartao.numero.replace(/\D/g, '');
+    if (numLimpo.length < 15 || numLimpo.length > 16) erros.push('cartao_numero');
+
+    if (!cartao.nomeTitular.trim()) erros.push('cartao_nome');
+
+    const valRegex = /^(0[1-9]|1[0-2])\/?([0-9]{2})$/;
+    if (!valRegex.test(cartao.validade)) erros.push('cartao_validade');
+
+    const cvvLimpo = cartao.cvv.replace(/\D/g, '');
+    if (cvvLimpo.length < 3 || cvvLimpo.length > 4) erros.push('cartao_cvv');
+
+    return erros;
+  };
+
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !apiOrder) return;
+
+    const erros = validarPagamentoForm();
+    setErrosValidacao(erros);
+
+    if (erros.length > 0) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos do cartão e endereço corretamente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsPaying(true);
+
+    try {
+      // 1. Get Customer ID from backend
+      const customerRes = await getAsaasCustomerId(token);
+      if (!customerRes.asaasCustomerId) {
+        throw new Error("Não foi possível obter o identificador do cliente no Asaas.");
+      }
+
+      // 2. Tokenize Credit Card via our backend proxy
+      const [expiryMonth, expiryYearShort] = cartao.validade.split('/');
+      const expiryYear = expiryYearShort ? `20${expiryYearShort}` : '';
+      const userRecord = (session?.user || {}) as Record<string, any>;
+
+      const tokenizePayload = {
+        customer: customerRes.asaasCustomerId,
+        creditCard: {
+          holderName: cartao.nomeTitular.trim(),
+          number: cartao.numero.replace(/\D/g, ''),
+          expiryMonth: (expiryMonth || '').trim(),
+          expiryYear,
+          ccv: cartao.cvv.replace(/\D/g, '')
+        },
+        creditCardHolderInfo: {
+          name: cartao.nomeTitular.trim(),
+          email: String(userRecord.email || ""),
+          cpfCnpj: String(userRecord.cpf || "").replace(/\D/g, ""),
+          postalCode: endereco.cep.replace(/\D/g, ''),
+          addressNumber: endereco.numero,
+          addressComplement: endereco.complemento || undefined,
+          phone: String(userRecord.whatsapp || "").replace(/\D/g, "")
+        }
+      };
+
+      const tokenizeResult = await tokenizeCard(token, tokenizePayload);
+      if (!tokenizeResult.creditCardToken) {
+        throw new Error("Não foi possível tokenizar o cartão.");
+      }
+
+      // 3. Submit payment request to our backend
+      await paySpecialServiceOrder({
+        token,
+        code: getKitchenOrderCode(apiOrder),
+        creditCardToken: tokenizeResult.creditCardToken,
+        creditCardHolderInfo: {
+          name: cartao.nomeTitular.trim(),
+          postalCode: endereco.cep.replace(/\D/g, ''),
+          addressNumber: endereco.numero,
+          addressComplement: endereco.complemento,
+          email: String(userRecord.email || ""),
+          phone: String(userRecord.whatsapp || "").replace(/\D/g, ""),
+          cpfCnpj: String(userRecord.cpf || "").replace(/\D/g, "")
+        }
+      });
+
+      toast({
+        title: "Pagamento Aprovado!",
+        description: "Seu serviço especial foi pago e confirmado com sucesso.",
+      });
+
+      setIsPaymentModalOpen(false);
+      loadOrderDetails();
+    } catch (err: any) {
+      console.error("Erro no processamento do pagamento:", err);
+      toast({
+        variant: "destructive",
+        title: "Falha no pagamento",
+        description: err.response?.data?.error || err.message || "Erro ao processar o pagamento. Verifique seus dados.",
+      });
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -558,14 +694,113 @@ const DetalheContrato = () => {
 
                   {proposalStatus === "AWAITING_CLIENT" && (
                     <div className="flex flex-col gap-3">
-                      <Button
-                        onClick={handleAcceptProposal}
-                        disabled={isAcceptingProposal || isDecliningProposal}
-                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-light h-11"
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        {isAcceptingProposal ? "Processando Pagamento..." : `Aceitar e Pagar - ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}`}
-                      </Button>
+                      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-light h-11 animate-pulse"
+                            disabled={isAcceptingProposal || isDecliningProposal}
+                          >
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Aceitar e Pagar - {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md bg-white border border-gray-150 rounded-xl shadow-2xl p-6">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl font-light text-gray-800">Pagamento com Cartão</DialogTitle>
+                          </DialogHeader>
+                          <form onSubmit={handlePaymentSubmit} className="space-y-4 pt-2">
+                            {/* Card number */}
+                            <div className="space-y-1">
+                              <Label htmlFor="cardNumber" className="text-xs text-gray-500 font-light">Número do Cartão</Label>
+                              <Input
+                                id="cardNumber"
+                                placeholder="0000 0000 0000 0000"
+                                value={cartao.numero}
+                                onChange={(e) => setCartao({ ...cartao, numero: e.target.value })}
+                                className={`text-sm font-mono ${errosValidacao.includes('cartao_numero') ? 'border-red-500 ring-red-500' : ''}`}
+                              />
+                            </div>
+                            {/* Card Holder Name */}
+                            <div className="space-y-1">
+                              <Label htmlFor="cardName" className="text-xs text-gray-500 font-light">Nome Impresso no Cartão</Label>
+                              <Input
+                                id="cardName"
+                                placeholder="NOME DO TITULAR"
+                                value={cartao.nomeTitular}
+                                onChange={(e) => setCartao({ ...cartao, nomeTitular: e.target.value.toUpperCase() })}
+                                className={`text-sm ${errosValidacao.includes('cartao_nome') ? 'border-red-500 ring-red-500' : ''}`}
+                              />
+                            </div>
+                            {/* Expiry and CVV */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <Label htmlFor="cardExpiry" className="text-xs text-gray-500 font-light">Validade (MM/AA)</Label>
+                                <Input
+                                  id="cardExpiry"
+                                  placeholder="MM/AA"
+                                  value={cartao.validade}
+                                  onChange={(e) => setCartao({ ...cartao, validade: e.target.value })}
+                                  className={`text-sm font-mono ${errosValidacao.includes('cartao_validade') ? 'border-red-500 ring-red-500' : ''}`}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label htmlFor="cardCvv" className="text-xs text-gray-500 font-light">CVV</Label>
+                                <Input
+                                  id="cardCvv"
+                                  placeholder="123"
+                                  value={cartao.cvv}
+                                  onChange={(e) => setCartao({ ...cartao, cvv: e.target.value })}
+                                  className={`text-sm font-mono ${errosValidacao.includes('cartao_cvv') ? 'border-red-500 ring-red-500' : ''}`}
+                                />
+                              </div>
+                            </div>
+
+                            <Separator className="my-2" />
+
+                            {/* Billing Address (CEP & Number) */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <Label htmlFor="billingCep" className="text-xs text-gray-500 font-light">CEP de Cobrança</Label>
+                                <Input
+                                  id="billingCep"
+                                  placeholder="00000-000"
+                                  value={endereco.cep}
+                                  onChange={(e) => setEndereco({ ...endereco, cep: e.target.value })}
+                                  className={`text-sm font-mono ${errosValidacao.includes('cep') ? 'border-red-500 ring-red-500' : ''}`}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label htmlFor="billingNumber" className="text-xs text-gray-500 font-light">Número</Label>
+                                <Input
+                                  id="billingNumber"
+                                  placeholder="123"
+                                  value={endereco.numero}
+                                  onChange={(e) => setEndereco({ ...endereco, numero: e.target.value })}
+                                  className={`text-sm ${errosValidacao.includes('numero') ? 'border-red-500 ring-red-500' : ''}`}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="billingComplement" className="text-xs text-gray-500 font-light">Complemento (Opcional)</Label>
+                              <Input
+                                id="billingComplement"
+                                placeholder="Apto, Bloco, etc."
+                                value={endereco.complemento}
+                                onChange={(e) => setEndereco({ ...endereco, complemento: e.target.value })}
+                                className="text-sm"
+                              />
+                            </div>
+
+                            <Button
+                              type="submit"
+                              disabled={isPaying}
+                              className="w-full bg-[#0A4275] hover:bg-[#08355e] text-white font-light h-11 mt-4"
+                            >
+                              {isPaying ? "Processando Pagamento..." : `Confirmar e Pagar ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}`}
+                            </Button>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
                       <Button
                         variant="outline"
                         onClick={handleDeclineProposal}
