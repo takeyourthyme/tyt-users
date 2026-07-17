@@ -362,7 +362,7 @@ const CadastroChef = () => {
         title: "Cadastro realizado com sucesso!",
         description: "Bem-vindo ao time TYT"
       });
-      navigate("/cadastro-chef-sucesso");
+      navigate("/cadastro-chef-sucesso", { state: { status: "analise" } });
     } catch (error) {
       const apiMessage = (() => {
         if (isAxiosError(error)) {

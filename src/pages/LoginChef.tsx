@@ -62,6 +62,21 @@ const LoginChef = () => {
       // Navigate to chef dashboard
       navigate("/dashboard-chef");
     } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 403) {
+        const payload = error.response.data;
+        if (payload && typeof payload === "object") {
+          const record = payload as Record<string, unknown>;
+          if (record.code === "CHEF_REGISTRATION_PENDING") {
+            toast({
+              title: "Cadastro em análise",
+              description: "Redirecionando para o acompanhamento do seu cadastro...",
+            });
+            navigate("/cadastro-chef-sucesso", { state: { status: record.status } });
+            return;
+          }
+        }
+      }
+
       const message = (() => {
         if (isAxiosError(error)) {
           const payload = error.response?.data;

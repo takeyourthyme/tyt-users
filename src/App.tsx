@@ -51,7 +51,7 @@ const AppContent = () => {
       <Route path="/login/chef" element={<GuestRoute><LoginChef /></GuestRoute>} />
       <Route path="/cadastro" element={<GuestRoute><Cadastro /></GuestRoute>} />
       <Route path="/cadastro-chef" element={<GuestRoute><CadastroChef /></GuestRoute>} />
-      <Route path="/cadastro-chef-sucesso" element={<GuestRoute><CadastroChefSucesso /></GuestRoute>} />
+      <Route path="/cadastro-chef-sucesso" element={<CadastroChefSucesso />} />
       <Route path="/esqueci-senha" element={<GuestRoute><EsqueciSenha /></GuestRoute>} />
 
       {/* Public Client Routes (Blocked for Chefs) */}

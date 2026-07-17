@@ -1,32 +1,47 @@
-import { useNavigate } from "react-router-dom";
-import { Check, ArrowLeft } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LogoText from "@/components/LogoText";
 
 const CadastroChefSucesso = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentStatus = location.state?.status || "cadastro";
+
+  const getStepCompleted = (stepIndex: number, status: string) => {
+    // status: cadastro -> analise -> entrevista -> documentacao -> ativo
+    const statusOrder: Record<string, number> = {
+      cadastro: 0,
+      analise: 1,
+      entrevista: 2,
+      documentacao: 3,
+      ativo: 4,
+    };
+    const currentOrder = statusOrder[status] ?? 0;
+    return stepIndex <= currentOrder;
+  };
 
   const steps = [
     {
       title: "Enviar cadastro",
-      completed: true
+      completed: getStepCompleted(0, currentStatus)
     },
     {
       title: "Análise de perfil",
-      completed: false
+      completed: getStepCompleted(1, currentStatus)
     },
     {
       title: "Entrevista",
-      completed: false
+      completed: getStepCompleted(2, currentStatus)
     },
     {
       title: "Documentação",
-      completed: false
+      completed: getStepCompleted(3, currentStatus)
     },
     {
       title: "Conclusão",
-      completed: false
+      completed: getStepCompleted(4, currentStatus)
     }
   ];
 
@@ -96,13 +111,23 @@ const CadastroChefSucesso = () => {
               </div>
 
               {/* Botão */}
-              <Button
-                onClick={() => window.open("https://takeyourthyme.com.br/", "_blank")}
-                className="w-full bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900"
-                size="lg"
-              >
-                IR PARA O SITE
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={() => window.open("https://takeyourthyme.com.br/", "_blank")}
+                  className="w-full bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900"
+                  size="lg"
+                >
+                  IR PARA O SITE
+                </Button>
+                <Button
+                  onClick={() => navigate("/login/chef")}
+                  variant="ghost"
+                  className="w-full text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                  size="lg"
+                >
+                  Voltar para o Login
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

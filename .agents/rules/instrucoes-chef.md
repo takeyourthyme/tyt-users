@@ -64,7 +64,7 @@ O frontend interage com a API RESTful através dos seguintes serviços:
 
 ## 3. Regras de Negócio Importantes (Chefs)
 
-* **RN-CH01 (Auditoria e Análise)**: O chef recém-cadastrado entra em estado `"Pendente"`. Seus dados de acesso e certificações passam pelo backoffice administrativo. O login só é permitido após aprovação no backoffice (mudança para status `"Ativo"`).
+* **RN-CH01 (Auditoria e Análise)**: O chef recém-cadastrado entra em estado `"Pendente"`. Seus dados de acesso e certificações passam pelo backoffice administrativo. O login só é permitido após aprovação no backoffice (mudança para status `"Ativo"` / `"Concluído"` e `cadastro_aprovado = true`). Tentativas de login antes disso retornam erro `403` com o código `CHEF_REGISTRATION_PENDING` e a etapa atual do processo, redirecionando o usuário para a página `/cadastro-chef-sucesso` que exibe de forma dinâmica as etapas concluídas e pendentes.
 * **RN-CH02 (Grade de Disponibilidade)**: A grade semanal configurada na tela de edição (`/editar-cadastro-chef`) determina as opções exibidas para os clientes no momento da contratação semanal de refeições. Se o chef desmarcar um dia/período, novos contratos de clientes para aquele horário não serão designados a ele.
 * **RN-CH03 (Aceite de Ordem)**: Ao receber uma notificação de serviço, o chef tem a opção de Aceitar ou Recusar a ordem de cozinha. Caso recuse, deve preencher uma justificativa que retorna para revisão do administrador do backoffice para redistribuição.
 * **RN-CH04 (Restrição de Informações)**: Em respeito à LGPD e segurança de dados, o número completo de WhatsApp/Telefone e o endereço detalhado do cliente ficam ocultos na listagem até que o chef clique em "Aceitar Ordem".
