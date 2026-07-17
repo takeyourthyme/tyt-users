@@ -123,8 +123,10 @@ const getStatusDetails = (statusRaw: string) => {
       return { label: "Recusado", color: "border-red-300 text-red-700 bg-red-50/50" };
     case "CANCELLED":
       return { label: "Cancelado", color: "border-red-300 text-red-700 bg-red-50/50" };
-    case "CANCELLATION_REQUESTED":
+    case "CANCELATION_REQUESTED":
       return { label: "Cancelamento Solicitado", color: "border-yellow-300 text-yellow-700 bg-yellow-50/50" };
+    case "FINALIZED":
+      return { label: "Concluído", color: "border-gray-300 text-gray-700 bg-gray-50/50" };
     default:
       return { label: status, color: "border-gray-300 text-gray-700" };
   }
