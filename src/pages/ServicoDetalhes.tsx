@@ -40,6 +40,7 @@ import {
   type KitchenOrder,
 } from "@/services/kitchenOrderService";
 import { ChefMenu } from "@/components/ChefMenu";
+import Footer from "@/components/Footer";
 import { normalizeDish, type Dish } from "@/services/dishService";
 
 const ServicoDetalhes = () => {
@@ -168,12 +169,12 @@ const ServicoDetalhes = () => {
   const IconComponent = getServiceIcon(servico.type);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
       {/* Chef AppBar */}
       <ChefMenu activeItem="servicos-ativos" />
 
       {/* Main Content */}
-      <main className="p-4 space-y-6 max-w-4xl mx-auto">
+      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <Button
@@ -382,6 +383,7 @@ const ServicoDetalhes = () => {
           </Card>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

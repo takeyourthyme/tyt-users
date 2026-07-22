@@ -31,6 +31,7 @@ import { useMemo } from "react";
 import { loadSession } from "@/services/authService";
 import { getUserPhotoUrl } from "@/services/userService";
 import { ChefMenu } from "@/components/ChefMenu";
+import Footer from "@/components/Footer";
 
 const MeusPagamentos = () => {
   const navigate = useNavigate();
@@ -98,12 +99,12 @@ const MeusPagamentos = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
       {/* Chef AppBar */}
       <ChefMenu activeItem="pagamentos" />
 
       {/* Main Content */}
-      <main className="p-4 space-y-6 max-w-4xl mx-auto">
+      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <Button
@@ -314,6 +315,7 @@ const MeusPagamentos = () => {
           </CardContent>
         </Card>
       </main>
+      <Footer />
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { AppHeader } from "@/components/AppHeader";
+import Footer from "@/components/Footer";
 import { loadSession } from "@/services/authService";
 import { getDishById, listHighlightedDishes, normalizeDish, type Dish } from "@/services/dishService";
 
@@ -174,9 +175,9 @@ export default function PratoDetalhes() {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
       <AppHeader />
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="flex-1 container mx-auto px-4 py-6 max-w-4xl w-full">
         {/* Título da página */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -416,6 +417,7 @@ export default function PratoDetalhes() {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

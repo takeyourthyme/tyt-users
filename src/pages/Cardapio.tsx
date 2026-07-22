@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
+import Footer from "@/components/Footer";
 import { loadSession } from "@/services/authService";
 import { listDishes, listHighlightedDishes, normalizeDish, type Dish } from "@/services/dishService";
 
@@ -220,9 +221,9 @@ export default function Cardapio() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
       <AppHeader />
-      <div className="container mx-auto px-4 py-6">
+      <div className="flex-1 container mx-auto px-4 py-6">
         {/* Título da página */}
         <div className="flex items-center gap-4 mb-6">
           <Button
@@ -494,6 +495,7 @@ export default function Cardapio() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

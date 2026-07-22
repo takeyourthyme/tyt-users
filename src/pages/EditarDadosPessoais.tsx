@@ -9,6 +9,7 @@ import { ArrowLeft, Camera, User, MapPin, FileImage, Edit2, Lock } from "lucide-
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/AppHeader";
+import Footer from "@/components/Footer";
 import { loadSession, saveSession, changePassword } from "@/services/authService";
 import { updateClientUser } from "@/services/clientService";
 import { getUserById } from "@/services/userService";
@@ -270,10 +271,11 @@ const EditarDadosPessoais = () => {
   };
 
   const photoUrl = getUserPhotoUrl(user ?? undefined) ?? formData.foto;
-  return <div className="min-h-screen bg-white pt-20">
-    <AppHeader />
+  return (
+    <div className="min-h-screen flex flex-col bg-white pt-20">
+      <AppHeader />
 
-    <div className="container mx-auto px-4 py-6">
+      <div className="flex-1 container mx-auto px-4 py-6">
       {/* Título da página */}
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard-cliente")}>
@@ -483,6 +485,8 @@ const EditarDadosPessoais = () => {
         </div>
       </div>
     </div>
-  </div>;
+    <Footer />
+  </div>
+);
 };
 export default EditarDadosPessoais;

@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ArrowLeft, Filter, Eye, ChefHat, PartyPopper, Users, Plus, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppMenu } from "@/components/AppMenu";
+import Footer from "@/components/Footer";
 import visaIcon from "@/assets/visa-icon.png";
 import mastercardIcon from "@/assets/mastercard-icon.png";
 
@@ -147,10 +148,10 @@ const HistoricoPagamento = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
       <AppMenu />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="flex-1 container mx-auto px-4 py-6">
         {/* Título da página */}
         <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard-cliente")}>
@@ -322,6 +323,7 @@ const HistoricoPagamento = () => {
           </Button>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

@@ -79,10 +79,10 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
   }];
 
   return (
-    <header className="bg-tyt-blue-700 border-b border-tyt-blue-800 fixed top-0 left-0 right-0 z-50 shadow-lg">
-      <div className="flex items-center justify-between px-4 py-3">
+    <header className="bg-[#004B2A] border-b border-[#00381F] fixed top-0 left-0 right-0 z-50 shadow-lg">
+      <div className="max-w-4xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
         {/* Logo */}
-        <div className="text-tyt-yellow-400 flex-shrink-0">
+        <div className="flex-shrink-0">
           <LogoText linkTo="/dashboard-cliente" />
         </div>
 
@@ -93,7 +93,7 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-80 flex flex-col max-h-screen">
+          <SheetContent side="right" className="w-80 flex flex-col max-h-screen bg-white">
             <SheetHeader className="flex-shrink-0">
               <SheetTitle>Menu</SheetTitle>
               <SheetDescription>
@@ -133,7 +133,7 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
                   key={index}
                   variant={item.highlighted ? "default" : "ghost"}
                   className={`w-full justify-start h-10 ${item.highlighted
-                    ? "bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
+                    ? "bg-[#004B2A] hover:bg-[#00381F] text-white"
                     : "hover:bg-gray-100"
                     }`}
                   disabled={Boolean(item.disabled)}

@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, FileText, Eye, Calendar, ChefHat, CheckCircle, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
+import Footer from "@/components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadSession } from "@/services/authService";
 import {
@@ -153,10 +154,11 @@ const MeusContratos = () => {
     }
     return null;
   };
-  return <div className="min-h-screen bg-gray-50 pt-20">
-    <AppHeader />
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
+      <AppHeader />
 
-    <main className="p-4 space-y-6 max-w-4xl mx-auto">
+      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
       {/* Cabeçalho */}
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard-cliente")}>
@@ -298,6 +300,8 @@ const MeusContratos = () => {
         </CardContent>
       </Card>}
     </main>
-  </div>;
+    <Footer />
+  </div>
+  );
 };
 export default MeusContratos;

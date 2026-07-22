@@ -40,12 +40,17 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 
 				// TYT Brand Colors
+				'tyt-green': {
+					700: 'hsl(var(--tyt-green-700))',
+					DEFAULT: '#004B2A',
+				},
 				'tyt-yellow': {
 					500: 'hsl(var(--tyt-yellow-500))',
 					600: 'hsl(var(--tyt-yellow-600))',
 				},
 				'tyt-blue': {
 					200: 'hsl(var(--tyt-blue-200))',
+					400: 'hsl(var(--tyt-blue-400))',
 					700: 'hsl(var(--tyt-blue-700))',
 				},
 

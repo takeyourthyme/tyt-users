@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Users, Utensils } from "lucide-react";
+import { Utensils, PartyPopper, Martini } from "lucide-react";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
 import { listKitchenOrders } from "@/services/kitchenOrderService";
-import IllustrationOrder from "@/assets/illustration-order";
 
 interface Props {
   dados: DadosContratacao;
@@ -29,41 +28,44 @@ const servicos = [
     nome: 'Meal Prep',
     descricao: 'Chef em casa toda semana para preparar suas refeições',
     icone: Utensils,
-    unselectedBg: 'bg-[#F4FBF7]',
-    unselectedBorder: 'border-[#E1F5EC]',
-    unselectedIconBg: 'bg-[#E1F5EC]',
-    unselectedIconColor: 'text-[#208253]',
-    selectedBg: 'bg-[#E1F5EC]',
-    selectedBorder: 'border-[#208253]',
-    selectedIconBg: 'bg-[#208253]',
+    unselectedBg: 'bg-white',
+    unselectedBorder: 'border-[#E6E6E6]',
+    unselectedIconBg: 'bg-[#EF3F0D99]',
+    unselectedIconColor: 'text-white',
+    hoverBorder: 'hover:border-[#E6E6E6]',
+    selectedBg: 'bg-white',
+    selectedBorder: 'border-[#CDCDCD]',
+    selectedIconBg: 'bg-[#EF3F0D]',
     selectedIconColor: 'text-white'
   },
   {
     id: 'eventos',
     nome: 'Get Together',
     descricao: 'Chef especializado para seus eventos especiais',
-    icone: Calendar,
-    unselectedBg: 'bg-[#FAF2F7]',
-    unselectedBorder: 'border-[#F5E5F0]',
-    unselectedIconBg: 'bg-[#F5E5F0]',
-    unselectedIconColor: 'text-[#B04B99]',
-    selectedBg: 'bg-[#F5E5F0]',
-    selectedBorder: 'border-[#B04B99]',
-    selectedIconBg: 'bg-[#B04B99]',
+    icone: Martini,
+    unselectedBg: 'bg-white',
+    unselectedBorder: 'border-[#E6E6E6]',
+    unselectedIconBg: 'bg-[#BC008F99]',
+    unselectedIconColor: 'text-white',
+    hoverBorder: 'hover:border-[#E6E6E6]',
+    selectedBg: 'bg-white',
+    selectedBorder: 'border-[#CDCDCD]',
+    selectedIconBg: 'bg-[#BC008F]',
     selectedIconColor: 'text-white'
   },
   {
     id: 'servicos-especiais',
     nome: 'Special Service',
     descricao: 'Soluções customizadas para suas necessidades específicas',
-    icone: Users,
-    unselectedBg: 'bg-[#F0F8FA]',
-    unselectedBorder: 'border-[#E0F2F5]',
-    unselectedIconBg: 'bg-[#E0F2F5]',
-    unselectedIconColor: 'text-[#0E7490]',
-    selectedBg: 'bg-[#E0F2F5]',
-    selectedBorder: 'border-[#0E7490]',
-    selectedIconBg: 'bg-[#0E7490]',
+    icone: PartyPopper,
+    unselectedBg: 'bg-white',
+    unselectedBorder: 'border-[#E6E6E6]',
+    unselectedIconBg: 'bg-[#89CDD299]',
+    unselectedIconColor: 'text-white',
+    hoverBorder: 'hover:border-[#E6E6E6]',
+    selectedBg: 'bg-white',
+    selectedBorder: 'border-[#CDCDCD]',
+    selectedIconBg: 'bg-[#89CDD2]',
     selectedIconColor: 'text-white'
   }
 ];
@@ -139,16 +141,16 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
       </div>
 
       {/* Seleção de Cidade */}
-      <div className="space-y-3">
-        <Label className="text-lg font-light">Cidade</Label>
+      <div className="space-y-1.5">
+        <Label className="text-base font-semibold text-gray-900">Cidade</Label>
         <p className="text-sm text-gray-500 mb-3">
           Selecione a cidade onde você precisa que o serviço seja executado
         </p>
         {isLoadingCities ? (
-          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-11 w-full rounded-lg" />
         ) : (
           <Select value={cidadeSelecionada} onValueChange={setCidadeSelecionada}>
-            <SelectTrigger className={`w-full ${tentouAvancar && !cidadeSelecionada ? 'border-red-500' : ''}`}>
+            <SelectTrigger className={`w-full h-11 rounded-lg border-gray-300 ${tentouAvancar && !cidadeSelecionada ? 'border-red-500' : ''}`}>
               <SelectValue placeholder="Selecione sua cidade" />
             </SelectTrigger>
             <SelectContent>
@@ -163,8 +165,8 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
       </div>
 
       {/* Seleção de Serviço */}
-      <div className="space-y-3">
-        <Label className="text-lg font-light">Serviço Desejado</Label>
+      <div className="space-y-1.5">
+        <Label className="text-base font-semibold text-gray-900">Serviço Desejado</Label>
         <p className="text-sm text-gray-500 mb-3">
           Escolha o tipo de serviço que melhor atende sua necessidade
         </p>
@@ -174,8 +176,8 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
             const selecionado = servicoSelecionado === servico.id;
 
             const cardBgBorder = selecionado
-              ? `${servico.selectedBg} ${servico.selectedBorder}`
-              : `${servico.unselectedBg} ${servico.unselectedBorder} hover:border-gray-300`;
+              ? `${servico.selectedBg} ${servico.selectedBorder} border-2 shadow-sm`
+              : `${servico.unselectedBg} ${servico.unselectedBorder} border ${servico.hoverBorder} hover:shadow-md hover:scale-[1.01]`;
 
             const iconBg = selecionado
               ? servico.selectedIconBg
@@ -188,36 +190,34 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
             return (
               <Card
                 key={servico.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-md border ${cardBgBorder}`}
+                className={`cursor-pointer transition-all duration-200 border ${cardBgBorder}`}
                 onClick={() => setServicoSelecionado(servico.id as DadosContratacao["tipoServico"])}
               >
-                <CardContent className="p-4 md:p-6">
+                <CardContent className="p-4 md:p-6 min-h-[180px] flex flex-col justify-center">
                   {/* Layout mobile: horizontal */}
                   <div className="flex items-center space-x-3 md:hidden">
-                    <div className={`p-2 rounded-full flex-shrink-0 ${iconBg}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${iconBg}`}>
                       <IconeServico
                         size={20}
                         className={iconColor}
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-light text-base text-gray-900 leading-tight">{servico.nome}</h3>
-                      <p className="text-xs text-gray-600 mt-1 leading-tight">{servico.descricao}</p>
+                      <h3 className="font-semibold text-base text-gray-900 leading-tight mb-1">{servico.nome}</h3>
+                      <p className="text-xs text-gray-600 leading-tight">{servico.descricao}</p>
                     </div>
                   </div>
 
                   {/* Layout desktop: vertical */}
-                  <div className="hidden md:block text-center space-y-3">
-                    <div className="flex justify-center">
-                      <div className={`p-3 rounded-full ${iconBg}`}>
-                        <IconeServico
-                          size={24}
-                          className={iconColor}
-                        />
-                      </div>
+                  <div className="hidden md:flex flex-col items-center text-center space-y-3">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${iconBg}`}>
+                      <IconeServico
+                        size={24}
+                        className={iconColor}
+                      />
                     </div>
-                    <h3 className="font-light text-lg text-gray-900">{servico.nome}</h3>
-                    <p className="text-sm text-gray-600">{servico.descricao}</p>
+                    <h3 className="font-semibold text-base text-gray-900">{servico.nome}</h3>
+                    <p className="text-xs text-gray-600 leading-relaxed px-1">{servico.descricao}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -227,10 +227,10 @@ export const EtapaEscolhaServico: React.FC<Props> = ({ dados, onAvancar }) => {
       </div>
 
       {/* Botão Avançar */}
-      <div className="flex justify-end pt-6">
+      <div className="flex justify-end pt-4">
         <Button
           onClick={handleAvancar}
-          size="lg"
+          className="bg-[#004B2A] hover:bg-[#00381F] text-white px-8 py-2.5 h-11 text-base font-medium rounded-lg shadow-sm transition-colors"
         >
           Avançar
         </Button>

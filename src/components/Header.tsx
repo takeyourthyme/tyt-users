@@ -1,20 +1,11 @@
-import { useState } from "react";
-import { User, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import LogoText from "./LogoText";
 
 const Header = () => {
   return (
-    <header className="w-full bg-background border-b border-border fixed top-0 left-0 right-0 z-50">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <header className="w-full bg-[#004B2A] fixed top-0 left-0 right-0 z-50 shadow-sm">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-start">
         {/* Logo */}
-        <LogoText variant="dark" />
+        <LogoText variant="white" linkTo="/" />
       </div>
     </header>
   );

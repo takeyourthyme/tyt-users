@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import LogoText from "@/components/LogoText";
+import Footer from "@/components/Footer";
 import { login, parseLoginResponse, saveSession, clearSession } from "@/services/authService";
 
 const loginSchema = z.object({
@@ -208,6 +209,7 @@ const LoginChef = () => {
           </Card>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

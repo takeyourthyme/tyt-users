@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import LogoText from "@/components/LogoText";
+import Footer from "@/components/Footer";
 import { createChefUser } from "@/services/chefService";
 
 // Validation schemas
@@ -1007,6 +1008,7 @@ const CadastroChef = () => {
         </Card>}
       </div>
     </main>
+    <Footer />
   </div>;
 };
 export default CadastroChef;

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import Header from "@/components/Header";
 import { AppHeader } from "@/components/AppHeader";
+import Footer from "@/components/Footer";
 import { EtapaEscolhaServico } from "@/components/contratacao/EtapaEscolhaServico";
 import { EtapaConfiguracao } from "@/components/contratacao/EtapaConfiguracao";
 import { EtapaEscolhaPratos } from "@/components/contratacao/EtapaEscolhaPratos";
@@ -423,29 +424,31 @@ const Contratacao = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-16">
       {isLoggedIn ? <AppHeader /> : <Header />}
 
       {/* Progress Bar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
+      <div className="bg-[#F4F5F4] border-b border-gray-200/80 px-4 py-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600">
+            <span className="text-sm font-medium text-gray-700">
               Etapa {getEtapaAtualAjustada()} de {getTotalEtapas()}
             </span>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm font-medium text-gray-700">
               {getStepHeaderLabel()}
             </span>
           </div>
-          <Progress
-            value={(getEtapaAtualAjustada() / getTotalEtapas()) * 100}
-            className="h-2"
-          />
+          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+            <div
+              className="bg-[#004B2A] h-full transition-all duration-300 rounded-full"
+              style={{ width: `${(getEtapaAtualAjustada() / getTotalEtapas()) * 100}%` }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Conteúdo das Etapas */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex-1 max-w-4xl mx-auto px-4 py-8 w-full">
         <IllustrationOrder className="mx-auto mb-6" />
         {etapaAtual === 1 && (
           <EtapaEscolhaServico
@@ -491,6 +494,7 @@ const Contratacao = () => {
           />
         )}
       </div>
+      <Footer />
     </div>
   );
 };

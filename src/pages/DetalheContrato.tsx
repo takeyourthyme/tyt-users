@@ -42,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { tokenizeCard, getAsaasCustomerId } from "@/services/asaasService";
 import { AppHeader } from "@/components/AppHeader";
+import Footer from "@/components/Footer";
 import { loadSession } from "@/services/authService";
 import {
   cancelKitchenOrder,
@@ -414,9 +415,9 @@ const DetalheContrato = () => {
   // Skeleton view
   if (apiLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
+      <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
         <AppHeader />
-        <main className="p-4 space-y-6 max-w-4xl mx-auto">
+        <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
           <div className="flex items-center gap-4 mb-2">
             <Skeleton className="h-10 w-10 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -458,6 +459,7 @@ const DetalheContrato = () => {
             </CardContent>
           </Card>
         </main>
+        <Footer />
       </div>
     );
   }
@@ -491,9 +493,9 @@ const DetalheContrato = () => {
   const clientRequest = (apiOrder.client_request as string | null) ?? "";
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
       <AppHeader />
-      <main className="p-4 space-y-6 max-w-4xl mx-auto">
+      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
         {/* Navigation and Title */}
         <div className="flex items-center gap-4 mb-2">
           <Button variant="ghost" size="icon" onClick={() => navigate("/meus-contratos")}>
@@ -957,6 +959,7 @@ const DetalheContrato = () => {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

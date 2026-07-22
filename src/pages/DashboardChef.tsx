@@ -26,6 +26,7 @@ import { clearSession, loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
 import { listKitchenOrders, normalizeKitchenOrderStatusLabel, type KitchenOrder } from "@/services/kitchenOrderService";
 import { ChefMenu } from "@/components/ChefMenu";
+import Footer from "@/components/Footer";
 
 const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "https://tyt-api.vercel.app/").replace(/\/+$/, "");
 
@@ -253,12 +254,12 @@ const DashboardChef = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
       {/* Chef AppBar with yellow theme */}
       <ChefMenu activeItem="dashboard" />
 
       {/* Main Content */}
-      <main className="p-4 space-y-6 max-w-4xl mx-auto">
+      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
         {/* Welcome Message */}
         <div
           className="bg-white rounded-lg p-6 border border-gray-200 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
@@ -336,6 +337,7 @@ const DashboardChef = () => {
           ))}
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

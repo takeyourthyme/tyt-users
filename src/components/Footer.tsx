@@ -1,19 +1,24 @@
-import { Link } from "react-router-dom";
-
 const Footer = () => {
   return (
-    <footer className="w-full bg-gray-200 border-t border-border mt-8 md:mt-16">
-      <div className="container mx-auto px-4 py-2">
-        <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-4 text-xs text-gray-500">
-          <Link 
-            to="/contato" 
-            className="hover:text-primary transition-colors"
-          >
-            Contato
-          </Link>
-          <span className="hidden md:inline">•</span>
-          <span className="text-center">
-            © 2025 Take Your Thyme
+    <footer className="w-full bg-[#A6D8B526] border-t border-gray-200/50 py-3 mt-auto min-h-[47px] flex items-center">
+      <div className="mx-auto px-4 sm:px-6 w-full">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-[11px] text-[#666666] leading-tight text-center">
+          <span>
+            <strong className="font-semibold text-[#444444]">Contato</strong>{" "}
+            <a href="mailto:contato@takeyourthyme.com" className="hover:text-[#004B2A] transition-colors">
+              contato@takeyourthyme.com
+            </a>
+          </span>
+
+          <span>
+            <strong className="font-semibold text-[#444444]">Instagram</strong>{" "}
+            <a href="https://instagram.com/takeyourthymebr" target="_blank" rel="noopener noreferrer" className="hover:text-[#004B2A] transition-colors">
+              takeyourthymebr
+            </a>
+          </span>
+
+          <span>
+            © 2026 Take Your Thyme - Todos os direitos reservados. Nome Fantasia TYT - CNPJ 00.000.000/0001-00 - Av. Exemplo, 100 — São Paulo, SP. Você recebeu este e-mail porque realizou uma transação na plataforma Take Your Thyme. Este é um e-mail transacional obrigatório.
           </span>
         </div>
       </div>

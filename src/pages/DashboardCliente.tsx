@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, CheckCircle, AlertCircle, ChefHat, Calendar, UtensilsCrossed, User } from "lucide-react";
+import { Eye, CheckCircle, AlertCircle, ChefHat, Calendar, User, NotebookTabs } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AppMenu } from "@/components/AppMenu";
+import Footer from "@/components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
@@ -189,199 +190,204 @@ const DashboardCliente = () => {
     });
     return byType;
   }, [activeOrders]);
-  return <div className="min-h-screen bg-gray-50 pt-20">
-    {/* AppBar */}
-    <AppMenu title="Dashboard" user={clientUser} />
+  return (
+    <div className="min-h-screen flex flex-col pt-20">
+      {/* AppBar */}
+      <AppMenu title="Dashboard" user={clientUser} />
 
-    {/* Main Content */}
-    <main className="p-4 space-y-6 max-w-4xl mx-auto">
-      {/* Welcome Message */}
-      <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-lg">
-        <div className="flex items-center gap-4">
-          {/* Profile Photo */}
-          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center shadow-md flex-shrink-0">
-            {clientPhotoUrl ? (
-              <img
-                src={clientPhotoUrl}
-                alt={`Foto de perfil do(a) ${clientFirstName}`}
-                className="w-16 h-16 rounded-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            ) : (
-              <User className="w-8 h-8 text-gray-400" />
-            )}
-          </div>
+      {/* Main Content */}
+      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
+        {/* Welcome Message */}
+        <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-lg">
+          <div className="flex items-center gap-4">
+            {/* Profile Photo */}
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center shadow-md flex-shrink-0">
+              {clientPhotoUrl ? (
+                <img
+                  src={clientPhotoUrl}
+                  alt={`Foto de perfil do(a) ${clientFirstName}`}
+                  className="w-16 h-16 rounded-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <User className="w-8 h-8 text-gray-400" />
+              )}
+            </div>
 
-          {/* Welcome Text */}
-          <div>
-            <h2 className="text-h3 font-light text-gray-800 mb-1">
-              {getTimeBasedGreeting()}, {clientFirstName}! 👋
-            </h2>
-            <p className="text-body text-gray-600">
-              Aqui você pode acompanhar seus serviços ativos e gerenciar suas preferências.
-            </p>
+            {/* Welcome Text */}
+            <div>
+              <h2 className="text-h3 font-light text-gray-800 mb-1">
+                {getTimeBasedGreeting()}, {clientFirstName}! 👋
+              </h2>
+              <p className="text-body text-gray-600">
+                Aqui você pode acompanhar seus serviços ativos e gerenciar suas preferências.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Active Services */}
-      <div className="space-y-4">
-        <h3 className="text-h4 font-light text-gray-800">
-          Serviços Ativos {isLoading ? "" : `(${activeOrders.length})`}
-        </h3>
+        {/* Active Services */}
+        <div className="space-y-4">
+          <h3 className="text-h4 font-light text-gray-800">
+            Serviços Ativos {isLoading ? "" : `(${activeOrders.length})`}
+          </h3>
 
-        {isLoading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 2 }).map((_, index) => (
-              <Card key={index} className="bg-white shadow-md border-gray-100">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Skeleton className="w-10 h-10 rounded-full" />
-                      <Skeleton className="h-5 w-36" />
-                    </div>
-                    <Skeleton className="h-6 w-24 rounded-full" />
-                  </div>
-                  <Skeleton className="h-4 w-28 mt-2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <Skeleton className="h-4 w-12" />
-                      <Skeleton className="h-5 w-24" />
-                    </div>
-                    <div className="space-y-1">
-                      <Skeleton className="h-4 w-12" />
-                      <Skeleton className="h-5 w-16" />
-                    </div>
-                    <div className="space-y-1">
-                      <Skeleton className="h-4 w-12" />
-                      <Skeleton className="h-5 w-48" />
-                    </div>
-                  </div>
-                  <Separator />
-                  <Skeleton className="h-10 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          Object.entries(activeOrdersByType).map(([typeKey, order]) => {
-            if (!order) return null;
-            const type = typeKey as ReturnType<typeof normalizeKitchenOrderTypeLabel>;
-            const config = typeConfig[type];
-            const status = normalizeKitchenOrderStatusLabel(order);
-            const code = getKitchenOrderCode(order);
-            const detail = activeOrdersDetails[code] || order;
-            const date = getKitchenOrderDate(detail);
-            const time = getKitchenOrderTime(detail);
-            const location = getKitchenOrderLocation(detail);
-            const isPending = status === "pendente";
-
-            return (
-              <Card key={code || type} className={`bg-white shadow-md ${config.borderClass}`}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <div className={`w-10 h-10 ${config.iconBgClass} rounded-full flex items-center justify-center flex-shrink-0`}>
-                        <config.icon className="w-5 h-5 text-white" />
+          {isLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <Card key={index} className="bg-white shadow-md border-gray-100">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="w-10 h-10 rounded-full" />
+                        <Skeleton className="h-5 w-36" />
                       </div>
-                      <span className="text-gray-800">{config.title}</span>
-                    </CardTitle>
-                    <Badge
-                      variant="outline"
-                      className={
-                        isPending ? "border-orange-300 text-orange-700" : "border-green-300 text-green-700"
-                      }
-                    >
-                      {isPending ? <AlertCircle className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
-                      {isPending ? "Pendente" : "Confirmado"}
-                    </Badge>
-                  </div>
-                  {code ? (
-                    <div className="text-sm text-gray-500 mt-2">Referência: #{code}</div>
-                  ) : null}
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500">Data</p>
-                      <p className="font-medium">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
+                      <Skeleton className="h-6 w-24 rounded-full" />
                     </div>
-                    <div>
-                      <p className="text-gray-500">Horário</p>
-                      <p className="font-medium">{time || "—"}</p>
+                    <Skeleton className="h-4 w-28 mt-2" />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-5 w-24" />
+                      </div>
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-5 w-48" />
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-gray-500">Local</p>
-                      <p className="font-medium">{location || "—"}</p>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      disabled={!code}
-                      onClick={() => navigate(`/detalhes-contrato/${code}`)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver detalhes
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
-
-      {/* CTAs */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card className="bg-white border-[#E0F2F5] shadow-lg">
-          <CardContent className="p-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-tyt-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
-                  <ChefHat className="w-6 h-6 text-white" />
-                </div>
-                <h4 className="text-xl font-bodoni font-normal text-gray-800">Contratar novo serviço</h4>
-              </div>
-              <p className="text-sm text-gray-600">
-                Meal Prep, Get Together ou Special Service
-              </p>
-              <Button
-                className="w-full bg-tyt-blue-700 hover:bg-tyt-blue-800 text-white"
-                onClick={() => navigate("/contratacao-logado")}
-              >
-                Começar agora
-              </Button>
+                    <Separator />
+                    <Skeleton className="h-10 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            Object.entries(activeOrdersByType).map(([typeKey, order]) => {
+              if (!order) return null;
+              const type = typeKey as ReturnType<typeof normalizeKitchenOrderTypeLabel>;
+              const config = typeConfig[type];
+              const status = normalizeKitchenOrderStatusLabel(order);
+              const code = getKitchenOrderCode(order);
+              const detail = activeOrdersDetails[code] || order;
+              const date = getKitchenOrderDate(detail);
+              const time = getKitchenOrderTime(detail);
+              const location = getKitchenOrderLocation(detail);
+              const isPending = status === "pendente";
 
-        <Card className="bg-white border-gray-200 shadow-lg">
-          <CardContent className="p-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-tyt-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Eye className="w-6 h-6 text-gray-800" />
+              return (
+                <Card key={code || type} className={`bg-white shadow-md ${config.borderClass}`}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <div className={`w-10 h-10 ${config.iconBgClass} rounded-full flex items-center justify-center flex-shrink-0`}>
+                          <config.icon className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-gray-800">{config.title}</span>
+                      </CardTitle>
+                      <Badge
+                        variant="outline"
+                        className={
+                          isPending ? "border-orange-300 text-orange-700" : "border-green-300 text-green-700"
+                        }
+                      >
+                        {isPending ? <AlertCircle className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
+                        {isPending ? "Pendente" : "Confirmado"}
+                      </Badge>
+                    </div>
+                    {code ? (
+                      <div className="text-sm text-gray-500 mt-2">Referência: #{code}</div>
+                    ) : null}
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-500">Data</p>
+                        <p className="font-medium">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Horário</p>
+                        <p className="font-medium">{time || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Local</p>
+                        <p className="font-medium">{location || "—"}</p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        disabled={!code}
+                        onClick={() => navigate(`/detalhes-contrato/${code}`)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Ver detalhes
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
+
+        {/* CTAs */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <Card className="bg-white border-[#E0F2F5] shadow-lg">
+            <CardContent className="p-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-tyt-green-700 rounded-full flex items-center justify-center flex-shrink-0">
+                    <ChefHat className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="text-xl font-bodoni font-normal text-gray-800">Contratar novo serviço</h4>
                 </div>
-                <h4 className="text-xl font-bodoni font-normal text-gray-800">Conhecer nossos pratos</h4>
+                <p className="text-sm text-gray-600">
+                  Meal Prep, eventos ou serviços especiais
+                  personalizados
+                </p>
+                <p></p>
+                <Button
+                  className="w-full bg-tyt-green-700 hover:bg-tyt-green-700 text-white"
+                  onClick={() => navigate("/contratacao-logado")}
+                >
+                  Começar agora
+                </Button>
               </div>
-              <p className="text-sm text-gray-600">Não se preocupe mais com seu jantar, conheça nossos pratos</p>
-              <Button variant="outline" className="w-full border-tyt-yellow-500 text-gray-800 hover:text-tyt-blue-700 hover:bg-tyt-yellow-50" onClick={() => navigate("/pratos")}>
-                Ver pratos
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </main>
-  </div>;
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-gray-200 shadow-lg">
+            <CardContent className="p-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-tyt-blue-400 rounded-full flex items-center justify-center flex-shrink-0">
+                    <NotebookTabs className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="text-xl font-bodoni font-normal text-gray-800">Conhecer nossos pratos</h4>
+                </div>
+                <p className="text-sm text-gray-600">Deixe o jantar da semana mais prático. Escolha seus pratos e deixe o preparo com um chef da TYT.</p>
+                <Button variant="outline" className="w-full border-tyt-blue-400 text-gray-800 hover:text-white hover:bg-tyt-blue-400" onClick={() => navigate("/pratos")}>
+                  Ver opções
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
 };
 export default DashboardCliente;

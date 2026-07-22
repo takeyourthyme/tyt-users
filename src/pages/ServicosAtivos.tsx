@@ -20,6 +20,7 @@ import {
 } from "@/services/kitchenOrderService";
 import { getUserPhotoUrl } from "@/services/userService";
 import { ChefMenu } from "@/components/ChefMenu";
+import Footer from "@/components/Footer";
 const ServicosAtivos = () => {
   const navigate = useNavigate();
 
@@ -145,12 +146,13 @@ const ServicosAtivos = () => {
         return status;
     }
   };
-  return <div className="min-h-screen bg-gray-50 pt-20">
-    {/* Chef AppBar */}
-    <ChefMenu activeItem="servicos-ativos" />
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
+      {/* Chef AppBar */}
+      <ChefMenu activeItem="servicos-ativos" />
 
-    {/* Main Content */}
-    <main className="p-4 space-y-6 max-w-4xl mx-auto">
+      {/* Main Content */}
+      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard-chef')} className="text-gray-600 hover:text-gray-900 p-2">
@@ -289,6 +291,8 @@ const ServicosAtivos = () => {
         })}
       </div>
     </main>
-  </div>;
+    <Footer />
+  </div>
+  );
 };
 export default ServicosAtivos;

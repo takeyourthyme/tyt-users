@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { ChefMenu } from "@/components/ChefMenu";
+import Footer from "@/components/Footer";
 import { loadSession } from "@/services/authService";
 import {
   getKitchenOrderClient,
@@ -208,10 +209,10 @@ const AprovacoesChef = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
       <ChefMenu activeItem="aprovacoes" />
 
-      <main className="p-4 space-y-6 max-w-4xl mx-auto">
+      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <Button
@@ -375,6 +376,7 @@ const AprovacoesChef = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 };

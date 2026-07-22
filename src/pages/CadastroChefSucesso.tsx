@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LogoText from "@/components/LogoText";
+import Footer from "@/components/Footer";
 
 const CadastroChefSucesso = () => {
   const navigate = useNavigate();
@@ -132,6 +133,7 @@ const CadastroChefSucesso = () => {
           </Card>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

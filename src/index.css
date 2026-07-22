@@ -14,12 +14,16 @@
 @layer base {
   :root {
     /* TYT Brand Colors */
+    --tyt-green-700: 154 100% 15%;
+    /* #004B2A */
     --tyt-yellow-500: 45 96% 45%;
     /* Darker yellow */
     --tyt-yellow-600: 45 96% 38%;
     /* Even darker for borders */
     --tyt-blue-700: 217 60% 32%;
     /* #204581 */
+    --tyt-blue-400: 215 51% 40%;
+    /* #214683 */
     --tyt-blue-200: 185 39% 71%;
     /* #99CCD2 */
 
@@ -46,7 +50,7 @@
     /* #1565C0 */
 
     /* Semantic Design System Tokens */
-    --background: var(--white);
+    --background: #FAF9F5;
     --foreground: var(--gray-900);
 
     --card: var(--white);
@@ -55,11 +59,11 @@
     --popover: var(--white);
     --popover-foreground: var(--gray-900);
 
-    --primary: var(--tyt-blue-700);
+    --primary: var(--tyt-green-700);
     --primary-foreground: var(--white);
 
     --secondary: var(--gray-200);
-    --secondary-foreground: var(--tyt-blue-700);
+    --secondary-foreground: var(--tyt-green-700);
 
     --muted: var(--gray-200);
     --muted-foreground: var(--gray-500);
@@ -72,7 +76,7 @@
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: var(--tyt-blue-700);
+    --ring: var(--tyt-green-700);
 
     --radius: 0.5rem;
 
