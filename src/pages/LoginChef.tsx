@@ -108,7 +108,7 @@ const LoginChef = () => {
       {/* Header with blue background for chef and logo on the left */}
       <header className="bg-[#0E4684] border-b border-[#0a3769] px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <LogoText variant="white" linkTo="/" />
+          <LogoText variant="white" linkTo="/login/chef" />
         </div>
       </header>
 
