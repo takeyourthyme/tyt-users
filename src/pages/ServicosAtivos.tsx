@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Calendar, ChefHat, Clock, MapPin, UtensilsCrossed, ChevronLeft, Eye, User, DollarSign } from "lucide-react";
+import { Calendar, ChefHat, Clock, MapPin, UtensilsCrossed, ChevronLeft, Eye, User, DollarSign, Utensils, Martini, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -105,25 +105,25 @@ const ServicosAtivos = () => {
   const getServiceIcon = (type: string) => {
     switch (type) {
       case "Meal Prep":
-        return ChefHat;
+        return Utensils;
       case "Get Together":
-        return Calendar;
+        return Martini;
       case "Special Service":
-        return Clock;
+        return PartyPopper;
       default:
-        return ChefHat;
+        return Utensils;
     }
   };
   const getServiceColor = (type: string) => {
     switch (type) {
       case "Meal Prep":
-        return "bg-green-500";
+        return "bg-[#EF3F0D]";
       case "Get Together":
-        return "bg-purple-500";
+        return "bg-[#BC008F]";
       case "Special Service":
-        return "bg-orange-500";
+        return "bg-[#89CDD2]";
       default:
-        return "bg-gray-500";
+        return "bg-[#EF3F0D]";
     }
   };
   const getStatusColor = (status: string) => {

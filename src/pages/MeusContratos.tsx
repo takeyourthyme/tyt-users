@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, FileText, Eye, Calendar, ChefHat, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, FileText, Eye, Calendar, ChefHat, CheckCircle, AlertCircle, Utensils, Martini, PartyPopper } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
 import Footer from "@/components/Footer";
@@ -224,15 +224,15 @@ const MeusContratos = () => {
             const time = getKitchenOrderTime(detail);
             const location = getKitchenOrderLocation(detail);
             const borderClass =
-              type === "Meal Prep" ? "border-[#E1F5EC]" : type === "Get Together" ? "border-[#F5E5F0]" : "border-[#E0F2F5]";
+              type === "Meal Prep" ? "border-[#EF3F0D]/20" : type === "Get Together" ? "border-[#BC008F]/20" : "border-[#89CDD2]/20";
 
             return (
               <Card key={code || `${type}-${index}`} className={`bg-white shadow-md ${borderClass}`}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${type === "Meal Prep" ? "bg-[#A6D8B5]" : type === "Get Together" ? "bg-[#BC008F]" : "bg-[#89CDD2]"}`}>
-                        {type === "Meal Prep" ? <ChefHat className="w-4 h-4 text-white" /> : <Calendar className="w-4 h-4 text-white" />}
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${type === "Meal Prep" ? "bg-[#EF3F0D]" : type === "Get Together" ? "bg-[#BC008F]" : "bg-[#89CDD2]"}`}>
+                        {type === "Meal Prep" ? <Utensils className="w-4 h-4 text-white" /> : type === "Get Together" ? <Martini className="w-4 h-4 text-white" /> : <PartyPopper className="w-4 h-4 text-white" />}
                       </div>
                       <span className="text-lg text-gray-800">{type}</span>
                     </CardTitle>

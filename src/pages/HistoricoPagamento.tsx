@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, Filter, Eye, ChefHat, PartyPopper, Users, Plus, ChevronDown } from "lucide-react";
+import { ArrowLeft, Filter, Eye, ChefHat, PartyPopper, Users, Plus, ChevronDown, Utensils, Martini } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppMenu } from "@/components/AppMenu";
 import Footer from "@/components/Footer";
@@ -99,15 +99,16 @@ const HistoricoPagamento = () => {
 
   const getServicoIcon = (servico: string) => {
     switch (servico) {
+      case "Meal Prep":
       case "jantar":
       case "almoco":
-        return <ChefHat className="h-4 w-4 text-green-600" />;
+        return <Utensils className="h-4 w-4 text-[#EF3F0D]" />;
       case "Get Together":
-        return <PartyPopper className="h-4 w-4 text-purple-600" />;
+        return <Martini className="h-4 w-4 text-[#BC008F]" />;
       case "Special Service":
-        return <Users className="h-4 w-4 text-orange-600" />;
+        return <PartyPopper className="h-4 w-4 text-[#89CDD2]" />;
       default:
-        return <ChefHat className="h-4 w-4 text-green-600" />;
+        return <Utensils className="h-4 w-4 text-[#EF3F0D]" />;
     }
   };
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, CheckCircle, AlertCircle, ChefHat, Calendar, User, NotebookTabs } from "lucide-react";
+import { Eye, CheckCircle, AlertCircle, ChefHat, Calendar, User, NotebookTabs, Utensils, Martini, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,25 +45,25 @@ const getKitchenOrderCode = (order: KitchenOrder): string => {
 
 const typeConfig: Record<
   ReturnType<typeof normalizeKitchenOrderTypeLabel>,
-  { title: string; borderClass: string; iconBgClass: string; icon: typeof ChefHat }
+  { title: string; borderClass: string; iconBgClass: string; icon: typeof Utensils }
 > = {
   "Meal Prep": {
     title: "Meal Prep",
-    borderClass: "border-[#E1F5EC] border-2 shadow-sm",
-    iconBgClass: "bg-[#A6D8B5]",
-    icon: ChefHat,
+    borderClass: "border-[#EF3F0D]/20 border-2 shadow-sm",
+    iconBgClass: "bg-[#EF3F0D]",
+    icon: Utensils,
   },
   "Get Together": {
     title: "Get Together",
-    borderClass: "border-[#F5E5F0] border-2 shadow-sm",
+    borderClass: "border-[#BC008F]/20 border-2 shadow-sm",
     iconBgClass: "bg-[#BC008F]",
-    icon: Calendar,
+    icon: Martini,
   },
   "Special Service": {
     title: "Special Service",
-    borderClass: "border-[#E0F2F5] border-2 shadow-sm",
+    borderClass: "border-[#89CDD2]/20 border-2 shadow-sm",
     iconBgClass: "bg-[#89CDD2]",
-    icon: Calendar,
+    icon: PartyPopper,
   },
 };
 

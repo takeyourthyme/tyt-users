@@ -29,6 +29,8 @@ import {
   Receipt,
   ChefHat,
   Utensils,
+  Martini,
+  PartyPopper,
   AlertTriangle,
   AlertCircle,
   MessageCircle,
@@ -541,8 +543,14 @@ const DetalheContrato = () => {
           <CardContent className="p-6">
             {/* Card header: icon + service type + reference */}
             <div className="flex items-center gap-2 mb-1">
-              <Star className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-semibold text-primary">{type}</h2>
+              {type === "Meal Prep" ? (
+                <Utensils className="w-5 h-5 text-[#EF3F0D]" />
+              ) : type === "Get Together" ? (
+                <Martini className="w-5 h-5 text-[#BC008F]" />
+              ) : (
+                <PartyPopper className="w-5 h-5 text-[#89CDD2]" />
+              )}
+              <h2 className={`text-lg font-semibold ${type === "Meal Prep" ? "text-[#EF3F0D]" : type === "Get Together" ? "text-[#BC008F]" : "text-[#89CDD2]"}`}>{type}</h2>
             </div>
             <p className="text-sm text-gray-500 mb-5">Referência: #{code}</p>
 
