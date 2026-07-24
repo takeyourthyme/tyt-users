@@ -633,7 +633,7 @@ const EditarCadastroChef = () => {
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-8 bg-gray-50">
+      <main className="flex-1 px-4 py-8 bg-background">
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardHeader className="text-center">

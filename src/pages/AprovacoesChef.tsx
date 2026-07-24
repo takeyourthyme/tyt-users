@@ -209,7 +209,7 @@ const AprovacoesChef = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
       <ChefMenu activeItem="aprovacoes" />
 
       <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">

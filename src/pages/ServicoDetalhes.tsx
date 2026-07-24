@@ -133,11 +133,11 @@ const ServicoDetalhes = () => {
   }, [kitchenOrder, id]);
 
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Carregando...</div>;
+    return <div className="min-h-screen bg-background pt-20 flex items-center justify-center">Carregando...</div>;
   }
 
   if (!servico) {
-    return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Serviço não encontrado</div>;
+    return <div className="min-h-screen bg-background pt-20 flex items-center justify-center">Serviço não encontrado</div>;
   }
 
   const getServiceIcon = (type: string) => {
@@ -169,7 +169,7 @@ const ServicoDetalhes = () => {
   const IconComponent = getServiceIcon(servico.type);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
       {/* Chef AppBar */}
       <ChefMenu activeItem="servicos-ativos" />
 

@@ -35,6 +35,9 @@ import {
   CheckCircle,
   Users,
   Info,
+  Phone,
+  ClipboardList,
+  Star,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -412,50 +415,76 @@ const DetalheContrato = () => {
     return "AWAITING_CLIENT";
   }, [apiOrder, rawProposals]);
 
+  // Chef specialties helper
+  const chefSpecialties = useMemo(() => {
+    if (!apiOrder) return "";
+    const chefObj = (apiOrder.chef as any) ?? (apiOrder.usuario_chef as any);
+    if (!chefObj) return "";
+    const especialidades = chefObj.usuario_chef_especialidades as Array<{ especialidade: string; active: boolean }> | undefined;
+    if (Array.isArray(especialidades)) {
+      return especialidades
+        .filter((e) => e.active)
+        .map((e) => e.especialidade)
+        .slice(0, 2)
+        .join(" e ");
+    }
+    return "";
+  }, [apiOrder]);
+
+  // Menu / theme name
+  const menuName = useMemo(() => {
+    if (!apiOrder) return "—";
+    const theme = (apiOrder as any).tema ?? (apiOrder as any).theme ?? (apiOrder as any).menu;
+    if (theme && typeof theme === "object") return (theme as any).nome ?? (theme as any).name ?? "—";
+    if (typeof theme === "string" && theme) return theme;
+    return "—";
+  }, [apiOrder]);
+
+  // Service level (Clássico / Banquete)
+  const serviceLevel = useMemo(() => {
+    if (!apiOrder) return "—";
+    return (apiOrder as any).nivel_servico ?? (apiOrder as any).service_level ?? (apiOrder as any).tipo_servico ?? "—";
+  }, [apiOrder]);
+
   // Skeleton view
   if (apiLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
+      <div className="min-h-screen flex flex-col bg-background pt-20">
         <AppHeader />
-        <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
-          <div className="flex items-center gap-4 mb-2">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-32" />
-            </div>
+        <main className="flex-1 p-4 space-y-4 max-w-3xl mx-auto w-full">
+          <div className="flex items-center gap-3 mb-2">
+            <Skeleton className="h-8 w-8 rounded" />
+            <Skeleton className="h-7 w-48" />
           </div>
-          <Card className="bg-white">
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
+          <Card className="bg-white border border-gray-200/70">
+            <CardContent className="p-6 space-y-4">
+              <Skeleton className="h-6 w-36" />
+              <Skeleton className="h-4 w-24" />
+              <div className="grid grid-cols-4 gap-4 pt-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <Skeleton className="h-5 w-32" />
             </CardContent>
           </Card>
-          <Card className="bg-white">
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <Card className="bg-white border border-gray-200/70">
+            <CardContent className="p-6 space-y-2">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-4 w-64" />
+            </CardContent>
+          </Card>
+          <Card className="bg-white border border-gray-200/70">
+            <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <Skeleton className="h-16 w-16 rounded-full" />
                 <div className="flex-1 space-y-2">
-                  <Skeleton className="h-5 w-48" />
-                  <Skeleton className="h-4 w-64" />
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-4 w-56" />
+                  <Skeleton className="h-4 w-32" />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white">
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
             </CardContent>
           </Card>
         </main>
@@ -493,98 +522,125 @@ const DetalheContrato = () => {
   const clientRequest = (apiOrder.client_request as string | null) ?? "";
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
       <AppHeader />
-      <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
+      <main className="flex-1 px-4 py-6 space-y-4 max-w-3xl mx-auto w-full">
         {/* Navigation and Title */}
-        <div className="flex items-center gap-4 mb-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/meus-contratos")}>
+        <div className="flex items-center gap-3 mb-1">
+          <button
+            onClick={() => navigate("/meus-contratos")}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+          >
             <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex-1">
-            <div className="flex items-center justify-between gap-3">
-              <h1 className="text-2xl font-light">{type}</h1>
-              <Badge variant="outline" className={`px-2.5 py-1 ${statusInfo.color}`}>
-                <AlertCircle className="w-3.5 h-3.5 mr-1" />
-                {statusInfo.label}
-              </Badge>
-            </div>
-            <p className="text-sm text-gray-500 mt-0.5">{code ? `Referência: #${code}` : ""}</p>
-          </div>
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">Detalhes do contrato</h1>
         </div>
 
-        {/* Order details */}
-        <Card className="bg-white shadow-sm border border-gray-100">
-          <CardHeader>
-            <CardTitle className="text-lg font-light text-gray-800">Detalhes do Serviço</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-            <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+        {/* Order details card - Figma style */}
+        <Card className="bg-white border border-gray-200/70 shadow-none rounded-xl">
+          <CardContent className="p-6">
+            {/* Card header: icon + service type + reference */}
+            <div className="flex items-center gap-2 mb-1">
+              <Star className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold text-primary">{type}</h2>
+            </div>
+            <p className="text-sm text-gray-500 mb-5">Referência: #{code}</p>
+
+            {/* Info columns: Data | Menu | Tipo | Pessoas */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-y-5 gap-x-4 text-sm">
               <div>
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Data</p>
-                <p className="font-light text-gray-800 mt-0.5">{date ? date.toLocaleDateString("pt-BR") : "—"}</p>
+                <p className="text-xs text-gray-400 mb-0.5">Data</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {date ? date.toLocaleDateString("pt-BR") : "—"}
+                </p>
+                {time && <p className="text-xs text-gray-500">{time}</p>}
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Menu</p>
+                <p className="text-sm font-medium text-gray-800">{menuName}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Tipo</p>
+                <p className="text-sm font-medium text-gray-800">{serviceLevel !== "—" ? serviceLevel : type}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Pessoas</p>
+                <p className="text-sm font-medium text-gray-800">{(apiOrder as any)?.people_quantity ?? "—"}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Horário</p>
-                <p className="font-light text-gray-800 mt-0.5">{time || "—"}</p>
+
+            {/* Estimated value */}
+            {proposalTotalPrice > 0 && (
+              <div className="mt-5 pt-4 border-t border-gray-100">
+                <p className="text-xs text-gray-400 mb-0.5">Valor estimado</p>
+                <p className="text-base font-semibold text-gray-800">
+                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}
+                </p>
               </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Local de Atendimento</p>
-                <p className="font-light text-gray-800 mt-0.5">{location || "—"}</p>
+            )}
+
+            {/* Observations */}
+            {observations && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs text-gray-400 mb-1">Observações / Restrições Alimentares</p>
+                <p className="text-sm text-gray-700 italic">{observations}</p>
               </div>
-            </div>
+            )}
           </CardContent>
-          {observations && (
-            <CardContent className="pt-0 border-t border-gray-50 mt-4 pt-4 text-sm">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Observações / Restrições Alimentares</p>
-              <p className="text-gray-700 mt-1 italic">{observations}</p>
-            </CardContent>
-          )}
         </Card>
 
-        {/* Chef details */}
-        <Card className="bg-white shadow-sm border border-gray-100">
-          <CardHeader>
-            <CardTitle className="text-lg font-light text-gray-800">Chef Atribuído</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Endereço card */}
+        {location && (
+          <Card className="bg-white border border-gray-200/70 shadow-none rounded-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="w-5 h-5 text-gray-600" />
+                <h2 className="text-base font-semibold text-gray-800">Endereço</h2>
+              </div>
+              <p className="text-sm text-gray-600">{location}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Seu Chef card */}
+        <Card className="bg-white border border-gray-200/70 shadow-none rounded-xl">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <ChefHat className="w-5 h-5 text-primary" />
+              <h2 className="text-base font-semibold text-primary">Seu Chef</h2>
+            </div>
             {chefInfo ? (
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-16 w-16 border border-gray-200 flex-shrink-0">
                   {chefInfo.photo ? <AvatarImage src={resolveMediaUrl(chefInfo.photo)} className="object-cover" /> : null}
-                  <AvatarFallback className="bg-gray-100 text-gray-600 font-light">
+                  <AvatarFallback className="bg-gray-100 text-gray-600 text-lg font-medium">
                     {chefInfo.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h3 className="font-light text-gray-800 text-base">{chefInfo.name}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Parceiro TYT Verificado</p>
+                  <h3 className="text-base font-semibold text-gray-800">{chefInfo.name}</h3>
+                  {chefSpecialties && (
+                    <p className="text-sm text-gray-500 mt-0.5">{chefSpecialties}</p>
+                  )}
                   {chefInfo.phone && (
-                    <div className="flex gap-4 mt-2">
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <Phone className="h-3.5 w-3.5 text-green-600" />
                       <a
                         href={`https://wa.me/${chefInfo.phone.replace(/\D/g, "")}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-xs text-green-600 hover:text-green-700 font-medium bg-green-50 px-2.5 py-1 rounded-full w-fit hover:bg-green-100/70 transition-colors"
+                        className="text-sm text-green-600 hover:text-green-700 transition-colors"
                       >
-                        <MessageCircle className="h-4 w-4" />
-                        Falar no WhatsApp
+                        {chefInfo.phone}
                       </a>
                     </div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-4 py-2">
-                <div className="w-12 h-12 bg-gray-50 border border-gray-200/50 rounded-full flex items-center justify-center text-gray-400">
-                  <ChefHat className="w-6 h-6" />
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-gray-50 border border-gray-200/70 rounded-full flex items-center justify-center text-gray-400 flex-shrink-0">
+                  <ChefHat className="w-7 h-7" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-700 text-sm">Buscando o Chef Ideal</p>
@@ -597,17 +653,27 @@ const DetalheContrato = () => {
           </CardContent>
         </Card>
 
-        {/* Selected dishes (Meal Prep & Events) */}
-        {dishes.length > 0 && (
-          <Card className="bg-white shadow-sm border border-gray-100">
-            <CardHeader>
-              <CardTitle className="text-lg font-light text-gray-800 flex items-center gap-2">
-                <Utensils className="h-5 w-5 text-gray-500" />
-                Menu Selecionado
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="border border-gray-100 rounded-lg overflow-hidden divide-y divide-gray-100">
+        {/* Solicitar Ajuda button - centered as per Figma */}
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            className="border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-900 gap-2 px-8"
+            onClick={() => window.open("https://wa.me/5511999999999", "_blank")}
+          >
+            <MessageCircle className="h-4 w-4 text-green-500" />
+            Solicitar Ajuda
+          </Button>
+        </div>
+
+        {/* Ordens de Cozinha card */}
+        <Card className="bg-white border border-gray-200/70 shadow-none rounded-xl">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <ClipboardList className="w-5 h-5 text-gray-600" />
+              <h2 className="text-base font-semibold text-gray-800">Ordens de Cozinha</h2>
+            </div>
+            {dishes.length > 0 ? (
+              <div className="border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
                 {dishes.map((item, index) => {
                   const dishName = item.dish?.nome_prato ?? item.dish?.nome ?? "Prato";
                   const dishPhoto = item.dish?.foto1 ?? item.dish?.foto;
@@ -623,31 +689,49 @@ const DetalheContrato = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-sm font-light text-gray-800">{dishName}</p>
+                          <p className="text-sm font-medium text-gray-800">{dishName}</p>
                           <p className="text-xs text-gray-500 mt-0.5">{item.dish?.descricao ?? ""}</p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="bg-gray-100 text-gray-800 px-2 py-0.5 text-xs font-light">
-                        Quantidade: {qty}
+                      <Badge variant="secondary" className="bg-gray-100 text-gray-700 px-2 py-0.5 text-xs">
+                        × {qty}
                       </Badge>
                     </div>
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div className="border border-gray-200 rounded-lg">
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5 text-sm text-gray-700">
+                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="font-medium">{date ? date.toLocaleDateString("pt-BR") : "—"}</span>
+                      </div>
+                      {proposalTotalPrice > 0 && (
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                          <DollarSign className="w-3 h-3" />
+                          <span>{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <ChefHat className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Special Service Needs Description */}
         {type === "Special Service" && clientRequest && (
-          <Card className="bg-white shadow-sm border border-gray-100">
-            <CardHeader>
-              <CardTitle className="text-lg font-light text-gray-800 flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-gray-500" />
-                Suas Necessidades
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <Card className="bg-white border border-gray-200/70 shadow-none rounded-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <MessageCircle className="h-5 w-5 text-gray-600" />
+                <h2 className="text-base font-semibold text-gray-800">Suas Necessidades</h2>
+              </div>
               <p className="text-sm text-gray-700 leading-relaxed italic bg-gray-50 p-4 rounded-lg border border-gray-100/50">
                 "{clientRequest}"
               </p>
@@ -657,17 +741,15 @@ const DetalheContrato = () => {
 
         {/* Special Service Proposal Details */}
         {type === "Special Service" && (
-          <Card className="bg-white shadow-sm border border-gray-100">
-            <CardHeader>
-              <CardTitle className="text-lg font-light text-gray-800 flex items-center gap-2">
-                <Receipt className="h-5 w-5 text-gray-500" />
-                Orçamento e Itens da Proposta
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <Card className="bg-white border border-gray-200/70 shadow-none rounded-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Receipt className="h-5 w-5 text-gray-600" />
+                <h2 className="text-base font-semibold text-gray-800">Orçamento e Itens da Proposta</h2>
+              </div>
               {proposalStatus ? (
                 <div className="space-y-4">
-                  <div className="border border-gray-100 rounded-lg overflow-hidden divide-y divide-gray-100">
+                  <div className="border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
                     {proposalItems.map((item, index) => (
                       <div
                         key={index}
@@ -675,14 +757,14 @@ const DetalheContrato = () => {
                           }`}
                       >
                         <span className="text-gray-700 font-medium">{item.description}</span>
-                        <span className="text-gray-950 font-light">
+                        <span className="text-gray-900 font-medium">
                           {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.price)}
                         </span>
                       </div>
                     ))}
-                    <div className="p-3 bg-primary/5 flex justify-between items-center text-sm font-light border-t-2 border-primary/20">
-                      <span className="text-gray-800">Total da Proposta</span>
-                      <span className="text-primary text-base">
+                    <div className="p-3 bg-primary/5 flex justify-between items-center text-sm border-t-2 border-primary/20">
+                      <span className="text-gray-800 font-medium">Total da Proposta</span>
+                      <span className="text-primary text-base font-semibold">
                         {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}
                       </span>
                     </div>
@@ -693,7 +775,7 @@ const DetalheContrato = () => {
                       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
                         <DialogTrigger asChild>
                           <Button
-                            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-light h-11"
+                            className="w-full bg-primary hover:bg-primary/90 text-white h-11"
                             disabled={isAcceptingProposal || isDecliningProposal}
                           >
                             <CreditCard className="h-4 w-4 mr-2" />
@@ -833,85 +915,71 @@ const DetalheContrato = () => {
         )}
 
         {/* Action Buttons for Meal Prep */}
-        {type === "Meal Prep" && (
-          <div className="space-y-3">
-            {status === "pendente" && (
-              <Button
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-light"
-                size="lg"
-                onClick={() =>
-                  navigate("/contratacao-logado", {
-                    state: {
-                      fromDashboard: true,
-                      goToStep3: true,
-                      prefilledData: {
-                        cidade: apiOrder.city || "",
-                        tipoServico: "cozinha-semanal",
-                        tamanhoPortacao:
-                          Number(apiOrder.people_quantity) <= 2
-                            ? "pequena"
-                            : Number(apiOrder.people_quantity) <= 4
-                              ? "media"
-                              : "grande",
-                        categorias: [],
-                        preferencias: [],
-                        ingredientes: [],
-                        tiposCozinha: [],
-                        pratosSelecionados: dishes.map((item) => ({
-                          id: item.dish?.id,
-                          dishId: item.dish?.id,
-                          nome: item.dish?.nome_prato ?? item.dish?.nome,
-                          descricao: item.dish?.descricao ?? "",
-                          foto: resolveMediaUrl(item.dish?.foto1 ?? item.dish?.foto) ?? "",
-                          quantity: item.quantity ?? 1,
-                        })),
-                      },
-                    },
-                  })
-                }
-              >
-                <Utensils className="h-4 w-4 mr-2" />
-                Alterar Pratos da Semana / Editar
-              </Button>
-            )}
-
-          </div>
+        {type === "Meal Prep" && status === "pendente" && (
+          <Button
+            className="w-full bg-primary hover:bg-primary/90 text-white"
+            size="lg"
+            onClick={() =>
+              navigate("/contratacao-logado", {
+                state: {
+                  fromDashboard: true,
+                  goToStep3: true,
+                  prefilledData: {
+                    cidade: apiOrder.city || "",
+                    tipoServico: "cozinha-semanal",
+                    tamanhoPortacao:
+                      Number(apiOrder.people_quantity) <= 2
+                        ? "pequena"
+                        : Number(apiOrder.people_quantity) <= 4
+                          ? "media"
+                          : "grande",
+                    categorias: [],
+                    preferencias: [],
+                    ingredientes: [],
+                    tiposCozinha: [],
+                    pratosSelecionados: dishes.map((item) => ({
+                      id: item.dish?.id,
+                      dishId: item.dish?.id,
+                      nome: item.dish?.nome_prato ?? item.dish?.nome,
+                      descricao: item.dish?.descricao ?? "",
+                      foto: resolveMediaUrl(item.dish?.foto1 ?? item.dish?.foto) ?? "",
+                      quantity: item.quantity ?? 1,
+                    })),
+                  },
+                },
+              })
+            }
+          >
+            <Utensils className="h-4 w-4 mr-2" />
+            Alterar Pratos da Semana / Editar
+          </Button>
         )}
 
-        {/* Global actions: Help & Cancel */}
-        <div className="flex flex-col gap-3">
-          <Button
-            variant="outline"
-            className="w-full border-gray-200 hover:bg-gray-100 hover:text-gray-900"
-            onClick={() => window.open("https://wa.me/5511999999999", "_blank")}
-          >
-            <MessageCircle className="h-4 w-4 mr-2 text-green-500" />
-            Preciso de Ajuda / Suporte
-          </Button>
-
-          {canCancel && (
-            hasPaid ? (
+        {/* Cancel button - centered as per Figma */}
+        {canCancel && (
+          <div className="flex justify-center">
+            {hasPaid ? (
               <Button
                 variant="outline"
-                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 gap-2 px-8"
                 onClick={() => {
                   const clientName = client?.name || "";
                   const whatsappMsg = encodeURIComponent(`Olá! Gostaria de cancelar o pedido ${code}${clientName ? ` de ${clientName}` : ""}.`);
                   window.open(`https://wa.me/5511999999999?text=${whatsappMsg}`, "_blank");
                 }}
               >
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Cancelar Pedido
+                <AlertTriangle className="h-4 w-4" />
+                Cancelar Serviço
               </Button>
             ) : (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 gap-2 px-8"
                   >
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Cancelar Pedido
+                    <AlertTriangle className="h-4 w-4" />
+                    Cancelar Serviço
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -955,9 +1023,9 @@ const DetalheContrato = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            )
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </main>
       <Footer />
     </div>

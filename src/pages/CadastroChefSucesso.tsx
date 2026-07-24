@@ -55,7 +55,7 @@ const CadastroChefSucesso = () => {
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-8 bg-gray-50 flex items-center justify-center">
+      <main className="flex-1 px-4 py-8 bg-background flex items-center justify-center">
         <div className="max-w-2xl w-full">
           <Card>
             <CardHeader className="text-center pb-4">

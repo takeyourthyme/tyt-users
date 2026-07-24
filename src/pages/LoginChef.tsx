@@ -124,7 +124,7 @@ const LoginChef = () => {
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-12 bg-gray-50">
+      <main className="flex-1 px-4 py-12 bg-background">
         <div className="max-w-md mx-auto">
           <Card className="shadow-xl border-0">
             <CardHeader className="text-center space-y-4">

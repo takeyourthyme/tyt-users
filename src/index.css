@@ -50,7 +50,7 @@
     /* #1565C0 */
 
     /* Semantic Design System Tokens */
-    --background: #FAF9F5;
+    --background: 45 43% 97%; /* #FAF9F5 cream/beige */
     --foreground: var(--gray-900);
 
     --card: var(--white);

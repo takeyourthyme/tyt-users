@@ -457,11 +457,11 @@ const OrdemDeCozinha = () => {
   }, [kitchenOrder]);
 
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Carregando...</div>;
+    return <div className="min-h-screen bg-background pt-20 flex items-center justify-center">Carregando...</div>;
   }
 
   if (!ordem) {
-    return <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">Ordem não encontrada</div>;
+    return <div className="min-h-screen bg-background pt-20 flex items-center justify-center">Ordem não encontrada</div>;
   }
 
   const getServiceIcon = (type: string) => {
@@ -504,7 +504,7 @@ const OrdemDeCozinha = () => {
   const IconComponent = getServiceIcon(ordem.type);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
       {/* Chef AppBar */}
       <ChefMenu activeItem="agenda" />
 

@@ -147,7 +147,7 @@ const ServicosAtivos = () => {
     }
   };
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
       {/* Chef AppBar */}
       <ChefMenu activeItem="servicos-ativos" />
 

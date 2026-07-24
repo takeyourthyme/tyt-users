@@ -155,7 +155,7 @@ const MeusContratos = () => {
     return null;
   };
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 pt-20">
+    <div className="min-h-screen flex flex-col bg-background pt-20">
       <AppHeader />
 
       <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
