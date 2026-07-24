@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import LogoText from "@/components/LogoText";
 import Footer from "@/components/Footer";
+import IllustrationOrder from "@/assets/illustration-order";
 import { Lock } from "lucide-react";
 
 import { loadSession, saveSession, changePassword } from "@/services/authService";
@@ -634,9 +635,7 @@ const EditarCadastroChef = () => {
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-tyt-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ChefHat className="w-8 h-8 text-gray-900" />
-              </div>
+              <IllustrationOrder className="mx-auto mb-4" />
               <CardTitle className="text-h2">Alterar Cadastro</CardTitle>
               <CardDescription>
                 Atualize suas informações de chef
@@ -710,7 +709,7 @@ const EditarCadastroChef = () => {
                   {/* Localização */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b pb-2">
-                      <MapPin className="w-5 h-5 text-tyt-yellow-600" />
+                      <MapPin className="w-5 h-5 text-[#0E4684]" />
                       <h3 className="text-h3 font-light text-gray-800">Localização</h3>
                     </div>
 
@@ -1133,7 +1132,7 @@ const EditarCadastroChef = () => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900"
+                    className="w-full bg-[#0E4684] hover:bg-[#0a3769] text-white"
                     size="lg"
                     disabled={isSubmitting}
                   >

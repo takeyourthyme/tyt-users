@@ -379,7 +379,7 @@ const AgendaChef = () => {
                   hasEvent: (date) => dateHasEvents(date)
                 }}
                 modifiersClassNames={{
-                  hasEvent: "bg-tyt-yellow-500/20 text-tyt-yellow-700 font-light rounded-md relative after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:bg-tyt-yellow-600 after:rounded-full"
+                  hasEvent: "bg-[#0E4684]/20 text-[#0E4684] font-light rounded-md relative after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-1 after:h-1 after:bg-[#0E4684] after:rounded-full"
                 }}
               />
             </CardContent>

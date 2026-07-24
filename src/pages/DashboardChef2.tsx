@@ -349,7 +349,7 @@ const DashboardChef = () => {
           </Card>
 
           <Card
-            className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
+            className="bg-gradient-to-br from-[#0E4684] to-[#0a3769] text-white cursor-pointer hover:shadow-lg transition-shadow"
           >
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-light">5</div>
@@ -780,7 +780,7 @@ const DashboardChef = () => {
         {/* Ver Pagamentos Button */}
         <div className="text-center">
           <Button
-            className="bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900 px-8 py-2 w-full"
+            className="bg-[#0E4684] hover:bg-[#0a3769] text-white px-8 py-2 w-full"
             disabled
             onClick={() => navigate('/meus-pagamentos')}
           >

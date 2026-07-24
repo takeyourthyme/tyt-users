@@ -880,7 +880,7 @@ const OrdemDeCozinha = () => {
                                   <Button
                                     size="sm"
                                     onClick={() => window.open(resolveMediaUrl(dish.receita), '_blank')}
-                                    className="bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900 font-medium"
+                                    className="bg-[#0E4684] hover:bg-[#0a3769] text-white font-medium"
                                   >
                                     <ExternalLink className="w-4 h-4 mr-1" />
                                     Baixar Receita
