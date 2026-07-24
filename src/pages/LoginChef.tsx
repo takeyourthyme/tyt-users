@@ -1,13 +1,13 @@
-import { useState, type ComponentPropsWithoutRef } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { isAxiosError } from "axios";
-import { ArrowLeft, MessageCircle, ChefHat, HelpCircle } from "lucide-react";
+import { ChefHat, HelpCircle, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import LogoText from "@/components/LogoText";
@@ -104,108 +104,84 @@ const LoginChef = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header with yellow background for chef */}
-      <header className="bg-tyt-yellow-500 border-b border-tyt-yellow-600 px-4 py-4 relative">
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Header with blue background for chef and logo on the left */}
+      <header className="bg-[#0E4684] border-b border-[#0a3769] px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/")}
-            className="text-gray-900 hover:bg-tyt-yellow-600/20"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
-
-          <LogoText variant="dark" className="absolute left-1/2 transform -translate-x-1/2" />
-
-          <div className="w-20" />
+          <LogoText variant="white" linkTo="/" />
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-12 bg-background">
-        <div className="max-w-md mx-auto">
-          <Card className="shadow-xl border-0">
-            <CardHeader className="text-center space-y-4">
-              <div className="w-16 h-16 bg-tyt-yellow-500 rounded-full flex items-center justify-center mx-auto">
-                <ChefHat className="w-8 h-8 text-gray-900" />
+      <main className="flex-1 px-4 py-12 bg-background flex items-center justify-center">
+        <div className="w-full max-w-md mx-auto">
+          <Card className="shadow-lg border border-gray-200/70 rounded-xl bg-white p-6 sm:p-8">
+            <div className="text-center space-y-3 mb-6">
+              <div className="w-14 h-14 bg-[#0E4684] rounded-full flex items-center justify-center mx-auto">
+                <ChefHat className="w-7 h-7 text-white" />
               </div>
-              <CardTitle className="text-h2">Área do Chef</CardTitle>
-              <CardDescription className="text-body">
+              <h1 className="text-2xl font-bodoni text-gray-900 font-light">Área do Chef</h1>
+              <p className="text-sm text-gray-500">
                 Digite seu e-mail e senha para entrar
-              </CardDescription>
-            </CardHeader>
+              </p>
+            </div>
 
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmitLogin)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>E-mail</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="seu@email.com" {...field} className="text-lg py-3" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitLogin)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">E-mail</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="seu@email.com" {...field} className="h-10 text-sm" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Senha</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="Sua senha" {...field} className="text-lg py-3" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">Senha</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Sua senha" {...field} className="h-10 text-sm" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <Button
-                    type="submit"
-                    className="w-full bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900"
-                    size="lg"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Entrando..." : "Entrar"}
-                  </Button>
-                </form>
-              </Form>
-
-              <div className="mt-8 pt-6 border-t text-center space-y-4">
-                <Link
-                  to="/esqueci-senha"
-                  className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                <Button
+                  type="submit"
+                  className="w-full bg-[#0E4684] hover:bg-[#0a3769] text-white font-medium h-11 mt-2"
+                  disabled={isSubmitting}
                 >
-                  <HelpCircle className="w-4 h-4" />
-                  Esqueci minha senha
-                </Link>
-
-                <p className="text-sm text-gray-600">
-                  Precisa de ajuda?
-                </p>
-                <Button variant="outline" size="sm" className="w-full" asChild>
-                  <Link to="https://wa.me/5511999999999" target="_blank">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Falar no WhatsApp
-                  </Link>
+                  {isSubmitting ? "Entrando..." : "Entrar"}
                 </Button>
+              </form>
+            </Form>
 
-                <div className="text-sm text-gray-500">
-                  Não tem conta?{" "}
-                  <Link to="/cadastro-chef" className="text-tyt-yellow-700 hover:text-tyt-yellow-800 underline">
-                    Cadastre-se como chef
-                  </Link>
-                </div>
+            <div className="mt-6 pt-4 text-center space-y-3">
+              <Link
+                to="/esqueci-senha"
+                className="inline-flex items-center justify-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <HelpCircle className="w-4 h-4 text-gray-400" />
+                Esqueci minha senha
+              </Link>
+
+              <div className="text-sm text-gray-500 flex items-center justify-center gap-1.5 pt-1">
+                <span>Não tem conta?</span>
+                <Link to="/cadastro-chef" className="text-[#0E4684] hover:underline font-medium inline-flex items-center gap-1">
+                  <UserPlus className="w-4 h-4 text-[#0E4684]" />
+                  Criar Conta
+                </Link>
               </div>
-            </CardContent>
+            </div>
           </Card>
         </div>
       </main>

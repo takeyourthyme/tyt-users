@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import LogoText from "@/components/LogoText";
 import Footer from "@/components/Footer";
+import IllustrationOrder from "@/assets/illustration-order";
 import { createChefUser } from "@/services/chefService";
 
 // Validation schemas
@@ -394,17 +395,10 @@ const CadastroChef = () => {
   };
   const progressValue = currentStep === "A" ? 33 : currentStep === "B" ? 67 : 100;
   return <div className="min-h-screen flex flex-col">
-    {/* Header with yellow background for chef */}
-    <header className="bg-tyt-yellow-500 border-b border-tyt-yellow-600 px-4 py-4 relative">
+    {/* Header with blue background for chef */}
+    <header className="bg-[#0E4684] border-b border-[#0a3769] px-4 py-4">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="text-gray-900 hover:bg-tyt-yellow-600/20">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar
-        </Button>
-
-        <LogoText variant="dark" className="absolute left-1/2 transform -translate-x-1/2" />
-
-        <div className="w-20" />
+        <LogoText variant="white" linkTo="/" />
       </div>
     </header>
 
@@ -412,26 +406,29 @@ const CadastroChef = () => {
       <div className="max-w-2xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span className={currentStep === "A" ? "text-tyt-yellow-700 font-medium" : ""}>
+          <div className="flex justify-between text-sm mb-2">
+            <span className={currentStep === "A" ? "text-[#0E4684] font-semibold" : "text-gray-500 font-medium"}>
               1. Dados pessoais
             </span>
-            <span className={currentStep === "B" ? "text-tyt-yellow-700 font-medium" : ""}>
+            <span className={currentStep === "B" ? "text-[#0E4684] font-semibold" : "text-gray-500 font-medium"}>
               2. Localização
             </span>
-            <span className={currentStep === "C" ? "text-tyt-yellow-700 font-medium" : ""}>
+            <span className={currentStep === "C" ? "text-[#0E4684] font-semibold" : "text-gray-500 font-medium"}>
               3. Sobre você
             </span>
           </div>
-          <Progress value={progressValue} className="h-2" />
+          <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+            <div
+              className="bg-[#0E4684] h-full transition-all duration-300 rounded-full"
+              style={{ width: `${progressValue}%` }}
+            />
+          </div>
         </div>
 
         {/* Step A - Dados Pessoais */}
-        {currentStep === "A" && <Card>
+        {currentStep === "A" && <Card className="border-gray-200/80 shadow-sm">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-tyt-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ChefHat className="w-8 h-8 text-gray-900" />
-            </div>
+            <IllustrationOrder className="mx-auto mb-4" />
             <CardTitle className="text-h2">Seus dados pessoais</CardTitle>
             <CardDescription>
               Preencha seus dados para se cadastrar como chef
@@ -507,7 +504,7 @@ const CadastroChef = () => {
                     <FormMessage />
                   </FormItem>} />
 
-                <Button type="submit" className="w-full bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900" size="lg">
+                <Button type="submit" className="w-full bg-[#0E4684] hover:bg-[#0a3769] text-white" size="lg">
                   Continuar
                 </Button>
               </form>
@@ -516,8 +513,9 @@ const CadastroChef = () => {
         </Card>}
 
         {/* Step B - Localização */}
-        {currentStep === "B" && <Card>
+        {currentStep === "B" && <Card className="border-gray-200/80 shadow-sm">
           <CardHeader className="text-center">
+            <IllustrationOrder className="mx-auto mb-4" />
             <CardTitle className="text-h2">Sua localização</CardTitle>
             <CardDescription>
               Informe onde você atende
@@ -528,7 +526,7 @@ const CadastroChef = () => {
             <Form {...formB}>
               <form onSubmit={formB.handleSubmit(onSubmitStepB)} className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <MapPin className="w-5 h-5 text-tyt-yellow-600" />
+                  <MapPin className="w-5 h-5 text-[#0E4684]" />
                   <h3 className="text-h3">Endereço</h3>
                 </div>
 
@@ -656,7 +654,7 @@ const CadastroChef = () => {
                     </FormItem>} />
                 </div>
 
-                <Button type="submit" className="w-full bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900" size="lg">
+                <Button type="submit" className="w-full bg-[#0E4684] hover:bg-[#0a3769] text-white" size="lg">
                   Continuar
                 </Button>
               </form>
@@ -665,8 +663,9 @@ const CadastroChef = () => {
         </Card>}
 
         {/* Step C - Sobre você */}
-        {currentStep === "C" && <Card>
+        {currentStep === "C" && <Card className="border-gray-200/80 shadow-sm">
           <CardHeader className="text-center">
+            <IllustrationOrder className="mx-auto mb-4" />
             <CardTitle className="text-h2">Sobre você</CardTitle>
             <CardDescription>
               Nos conte mais sobre sua experiência
@@ -715,7 +714,7 @@ const CadastroChef = () => {
                               <div className="flex gap-4">
                                 <Button
                                   onClick={takePhoto}
-                                  className="flex-1 bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900"
+                                  className="flex-1 bg-[#0E4684] hover:bg-[#0a3769] text-white"
                                 >
                                   Capturar
                                 </Button>
@@ -999,7 +998,7 @@ const CadastroChef = () => {
                   </FormItem>
                 )} />
 
-                <Button type="submit" className="w-full bg-tyt-yellow-500 hover:bg-tyt-yellow-600 text-gray-900" size="lg" disabled={isSubmitting}>
+                <Button type="submit" className="w-full bg-[#0E4684] hover:bg-[#0a3769] text-white" size="lg" disabled={isSubmitting}>
                   {isSubmitting ? "Enviando..." : "Finalizar cadastro"}
                 </Button>
               </form>

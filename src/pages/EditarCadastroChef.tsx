@@ -615,21 +615,18 @@ const EditarCadastroChef = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-tyt-yellow-500 border-b border-tyt-yellow-600 px-4 py-4 relative">
+      <header className="bg-[#0E4684] border-b border-[#0a3769] px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <LogoText variant="white" linkTo="/dashboard-chef" />
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/dashboard-chef")}
-            className="text-gray-900 hover:bg-tyt-yellow-600/20"
+            className="text-white hover:bg-white/20"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
-
-          <LogoText variant="dark" className="absolute left-1/2 transform -translate-x-1/2" />
-
-          <div className="w-20" />
         </div>
       </header>
 
