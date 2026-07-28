@@ -209,10 +209,22 @@ export async function createKitchenOrder(input: CreateKitchenOrderInput) {
   return data as unknown;
 }
 
-export async function updateKitchenOrderStatus(params: { token: string; id: string | number; status: string }) {
+export async function updateKitchenOrderStatus(params: {
+  token: string;
+  id: string | number;
+  status: string;
+  chef_service_notes?: string;
+  chef_client_next_notes?: string;
+  serviceNotes?: string;
+  clientNotes?: string;
+}) {
   const { data } = await apiClient.put(
     `/api/kitchen-orders/${params.id}/status`,
-    { status: params.status },
+    {
+      status: params.status,
+      chef_service_notes: params.chef_service_notes ?? params.serviceNotes,
+      chef_client_next_notes: params.chef_client_next_notes ?? params.clientNotes,
+    },
     createAuthConfig(params.token),
   );
   return data as unknown;

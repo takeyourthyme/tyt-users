@@ -85,6 +85,7 @@ const OrdemDeCozinha = () => {
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [isReceiptSent, setIsReceiptSent] = useState(false);
   const [isSendingReceipt, setIsSendingReceipt] = useState(false);
+  const [isCompletingService, setIsCompletingService] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [kitchenOrder, setKitchenOrder] = useState<KitchenOrder | null>(null);
@@ -271,11 +272,14 @@ const OrdemDeCozinha = () => {
       return;
     }
 
+    setIsCompletingService(true);
     try {
       await updateKitchenOrderStatus({
         token: session.token,
         id: kitchenOrder.id as number,
         status: "FINALIZED",
+        chef_service_notes: serviceNotes || undefined,
+        chef_client_next_notes: clientNotes || undefined,
       });
 
       toast({
@@ -301,6 +305,8 @@ const OrdemDeCozinha = () => {
         title: "Erro ao concluir serviço",
         description: errorMsg,
       });
+    } finally {
+      setIsCompletingService(false);
     }
   };
 
@@ -1177,10 +1183,11 @@ const OrdemDeCozinha = () => {
                       />
                     </div>
                     <Button
-                      className="w-full bg-green-600 hover:bg-green-700"
+                      className="w-full bg-green-600 hover:bg-green-700 font-medium"
                       onClick={handleCompleteService}
+                      disabled={isCompletingService}
                     >
-                      Finalizar Serviço
+                      {isCompletingService ? "Finalizando Serviço..." : "Finalizar Serviço"}
                     </Button>
                   </div>
                 </DialogContent>
