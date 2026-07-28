@@ -22,7 +22,7 @@ export type NormalizedDish = {
   themes: string[];
   themeIds?: number[];
   meal_preap: boolean;
-  get_togheter: boolean;
+  get_together: boolean;
   ficha_tecnica?: string;
   receita?: string;
   ingredients: NormalizedIngredient[];
@@ -163,7 +163,7 @@ export function normalizeDish(dish: Dish): NormalizedDish {
   const themeIds = getThemeIds(dish.pratos_temas ?? dish.temas ?? dish.themes);
 
   const meal_preap = dish.meal_preap === true || dish.meal_preap === "true";
-  const get_togheter = dish.get_togheter === true || dish.get_togheter === "true";
+  const get_together = dish.get_together === true || dish.get_together === "true";
 
   const fichaTecnicaCandidates: Array<unknown> = [
     dish.ficha_tecnica,
@@ -197,7 +197,7 @@ export function normalizeDish(dish: Dish): NormalizedDish {
     ? servingsValue
     : 1;
 
-  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, themeIds, meal_preap, get_togheter, ficha_tecnica, receita, ingredients, price, servings };
+  return { id, name, description, photoUrl, photoUrls, categories, cuisineTypes, mainIngredients, culinaryPreferences, themes, themeIds, meal_preap, get_together, ficha_tecnica, receita, ingredients, price, servings };
 }
 
 export async function listDishes(params?: { token?: string }) {

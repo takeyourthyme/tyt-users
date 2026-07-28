@@ -25,7 +25,7 @@ interface Prato {
   tiposCozinha: string[];
   temas: string[];
   favorito: boolean;
-  get_togheter: boolean;
+  get_together: boolean;
 }
 
 const CATEGORIAS_ICONES = {
@@ -117,7 +117,7 @@ export default function PratoDetalhes() {
           tiposCozinha: normalized.cuisineTypes,
           temas: normalized.themes,
           favorito: storedFavorites.includes(normalized.id),
-          get_togheter: normalized.get_togheter,
+          get_together: normalized.get_together,
         });
       } catch {
         setPrato(null);
@@ -396,7 +396,7 @@ export default function PratoDetalhes() {
           )}
 
           {/* Temas */}
-          {prato.get_togheter && prato.temas.length > 0 && (
+          {prato.get_together && prato.temas.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
