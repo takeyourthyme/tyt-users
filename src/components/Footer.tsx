@@ -45,7 +45,7 @@ const Footer = ({ variant }: FooterProps) => {
           </span>
 
           <span>
-            © 2026 Take Your Thyme - Todos os direitos reservados. Nome Fantasia TYT - CNPJ 57.310.363/0001-40 - Rua Mario Prandini, 775 - Centro, Itapeva - SP, 18.400-170. Você recebeu este e-mail porque realizou uma transação na plataforma Take Your Thyme. Este é um e-mail transacional obrigatório.
+            © 2026 Take Your Thyme - Todos os direitos reservados. Nome Fantasia TYT - CNPJ 57.310.363/0001-40 - Rua Mario Prandini, 775 - Centro, Itapeva - SP, 18.400-170.
           </span>
         </div>
       </div>
