@@ -265,6 +265,30 @@ export async function paySpecialServiceOrder(params: {
   return data as unknown;
 }
 
+export async function uploadGroceryReceipt(params: {
+  token: string;
+  code: string;
+  receipt: File | Blob;
+  amount: number | string;
+}) {
+  const formData = new FormData();
+  formData.append("receipt", params.receipt);
+  formData.append("amount", String(params.amount));
+
+  const config = createAuthConfig(params.token);
+  config.headers = {
+    ...config.headers,
+    "Content-Type": "multipart/form-data",
+  };
+
+  const { data } = await apiClient.put(
+    `/api/kitchen-orders/${encodeURIComponent(params.code)}/grocery-receipt`,
+    formData,
+    config
+  );
+  return data as unknown;
+}
+
 export function getKitchenOrderCode(order?: KitchenOrder | null): string {
   if (!order) return "";
   const candidates = [
@@ -279,4 +303,5 @@ export function getKitchenOrderCode(order?: KitchenOrder | null): string {
   const value = candidates.find((item) => typeof item === "string" || typeof item === "number");
   return value ? String(value) : "";
 }
+
 

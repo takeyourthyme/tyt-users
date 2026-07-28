@@ -55,6 +55,7 @@ import {
   type KitchenOrder,
   getKitchenOrderCode,
   updateKitchenOrderStatus,
+  uploadGroceryReceipt,
 } from "@/services/kitchenOrderService";
 import { ChefMenu } from "@/components/ChefMenu";
 import Footer from "@/components/Footer";
@@ -83,9 +84,16 @@ const OrdemDeCozinha = () => {
   const [isServiceCompleted, setIsServiceCompleted] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [isReceiptSent, setIsReceiptSent] = useState(false);
+  const [isSendingReceipt, setIsSendingReceipt] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [kitchenOrder, setKitchenOrder] = useState<KitchenOrder | null>(null);
+
+  const hasReceipt = useMemo(() => {
+    if (isReceiptSent) return true;
+    const url = (kitchenOrder as any)?.grocery_receipt_url ?? (kitchenOrder as any)?.groceryReceiptUrl;
+    return Boolean(url);
+  }, [isReceiptSent, kitchenOrder]);
 
   useEffect(() => {
     const session = loadSession();
@@ -102,6 +110,24 @@ const OrdemDeCozinha = () => {
 
           if (order && typeof order === "object" && !Array.isArray(order)) {
             setKitchenOrder(order as KitchenOrder);
+
+            const receiptUrl = (order as any)?.grocery_receipt_url ?? (order as any)?.groceryReceiptUrl;
+            const receiptAmt = (order as any)?.grocery_receipt_amount ?? (order as any)?.groceryReceiptAmount;
+            if (receiptUrl) {
+              setIsReceiptSent(true);
+            }
+            if (receiptAmt !== undefined && receiptAmt !== null) {
+              const num = Number(receiptAmt);
+              if (!isNaN(num) && num > 0) {
+                const formatted = (num * 100).toString();
+                setReceiptValue(formatCurrency(formatted));
+              }
+            }
+
+            const statusLabel = normalizeKitchenOrderStatusLabel(order as KitchenOrder);
+            if (statusLabel === "concluido") {
+              setIsServiceCompleted(true);
+            }
           }
         }
       })
@@ -138,11 +164,11 @@ const OrdemDeCozinha = () => {
   };
 
   // Handler para enviar recibo
-  const handleSendReceipt = () => {
-    if (uploadedFiles.length === 0) {
+  const handleSendReceipt = async () => {
+    if (uploadedFiles.length === 0 && !hasReceipt) {
       toast({
         title: "Atenção",
-        description: "Por favor, anexe pelo menos um arquivo.",
+        description: "Por favor, anexe o arquivo do recibo de compras (imagem ou PDF).",
         variant: "destructive",
       });
       return;
@@ -157,19 +183,84 @@ const OrdemDeCozinha = () => {
       return;
     }
 
-    // Aqui você adicionaria a lógica para enviar os dados
-    toast({
-      title: "Recibo enviado com sucesso!",
-      description: `Valor total: R$ ${receiptValue}`,
-    });
+    const rawNumbers = receiptValue.replace(/\D/g, '');
+    if (!rawNumbers || parseFloat(rawNumbers) <= 0) {
+      toast({
+        title: "Atenção",
+        description: "Informe um valor total de compras válido maior que zero.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Marca como enviado e fecha o dialog
-    setIsReceiptSent(true);
-    setIsReceiptDialogOpen(false);
+    const numericAmount = parseFloat(rawNumbers) / 100;
+    const session = loadSession();
+    const orderCode = getKitchenOrderCode(kitchenOrder) || id;
+
+    if (!session?.token || !orderCode) {
+      toast({
+        variant: "destructive",
+        title: "Erro de sessão",
+        description: "Sessão expirada. Por favor, faça login novamente.",
+      });
+      return;
+    }
+
+    setIsSendingReceipt(true);
+    try {
+      const fileToUpload = uploadedFiles[0];
+      await uploadGroceryReceipt({
+        token: session.token,
+        code: orderCode,
+        receipt: fileToUpload,
+        amount: numericAmount,
+      });
+
+      toast({
+        title: "Recibo enviado com sucesso!",
+        description: `Valor total registrado: R$ ${receiptValue}`,
+      });
+
+      setIsReceiptSent(true);
+      setIsReceiptDialogOpen(false);
+      setKitchenOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              grocery_receipt_url: "uploaded",
+              grocery_receipt_amount: numericAmount,
+            }
+          : null
+      );
+    } catch (error: any) {
+      console.error("Erro ao enviar recibo:", error);
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Não foi possível enviar o comprovante de compra.";
+      toast({
+        variant: "destructive",
+        title: "Erro no envio",
+        description: msg,
+      });
+    } finally {
+      setIsSendingReceipt(false);
+    }
   };
 
   // Handler para concluir serviço
   const handleCompleteService = async () => {
+    if (!hasReceipt) {
+      toast({
+        variant: "destructive",
+        title: "Comprovante de compra pendente",
+        description: "É necessário enviar o recibo de compra de ingredientes antes de concluir o serviço.",
+      });
+      setIsCompleteDialogOpen(false);
+      setIsReceiptDialogOpen(true);
+      return;
+    }
+
     const session = loadSession();
     if (!session?.token || !kitchenOrder?.id) {
       toast({
@@ -199,12 +290,16 @@ const OrdemDeCozinha = () => {
         setKitchenOrder(prev => prev ? { ...prev, status: "FINALIZED" } : null);
       }
       navigate('/dashboard-chef');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao concluir ordem:", error);
+      const errorMsg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Ocorreu um problema ao finalizar a ordem.";
       toast({
         variant: "destructive",
         title: "Erro ao concluir serviço",
-        description: "Ocorreu um problema ao finalizar a ordem.",
+        description: errorMsg,
       });
     }
   };
@@ -959,35 +1054,34 @@ const OrdemDeCozinha = () => {
                     variant="outline"
                     className={cn(
                       "w-full",
-                      isReceiptSent && "bg-green-600 hover:bg-green-700 text-white border-green-600"
+                      hasReceipt && "bg-green-600 hover:bg-green-700 text-white border-green-600"
                     )}
                   >
                     <Upload className="w-4 h-4 mr-2" />
-                    {isReceiptSent ? "Recibo de Compra Enviado" : "Enviar Recibo de Compra"}
+                    {hasReceipt ? "Recibo de Compra Enviado (Clique para alterar)" : "Enviar Recibo de Compra"}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Enviar Recibo</DialogTitle>
+                    <DialogTitle>Enviar Recibo de Compra</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="receipt-file">Anexar recibo</Label>
+                      <Label htmlFor="receipt-file">Anexar recibo (Imagem ou PDF)</Label>
                       <Input
                         id="receipt-file"
                         type="file"
                         accept="image/*,.pdf"
-                        multiple
                         onChange={(e) => {
                           const files = Array.from(e.target.files || []);
-                          setUploadedFiles(prev => [...prev, ...files]);
+                          setUploadedFiles(files);
                         }}
                       />
 
                       {/* Lista de arquivos anexados */}
                       {uploadedFiles.length > 0 && (
                         <div className="mt-3 space-y-2">
-                          <p className="text-sm font-medium text-gray-700">Arquivos anexados:</p>
+                          <p className="text-sm font-medium text-gray-700">Arquivo selecionado:</p>
                           <div className="space-y-1">
                             {uploadedFiles.map((file, index) => (
                               <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
@@ -1010,7 +1104,7 @@ const OrdemDeCozinha = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="receipt-value">Valor total das compras</Label>
+                      <Label htmlFor="receipt-value">Valor total das compras (R$)</Label>
                       <Input
                         id="receipt-value"
                         type="text"
@@ -1020,7 +1114,13 @@ const OrdemDeCozinha = () => {
                       />
                     </div>
 
-                    <Button className="w-full" onClick={handleSendReceipt}>Enviar</Button>
+                    <Button
+                      className="w-full bg-[#0E4684] hover:bg-[#0a3769] text-white font-medium"
+                      onClick={handleSendReceipt}
+                      disabled={isSendingReceipt}
+                    >
+                      {isSendingReceipt ? "Enviando recibo..." : "Enviar Recibo"}
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -1034,6 +1134,18 @@ const OrdemDeCozinha = () => {
                         ? "bg-green-600 hover:bg-green-700"
                         : "bg-blue-600 hover:bg-blue-700"
                     )}
+                    onClick={(e) => {
+                      if (isServiceCompleted) return;
+                      if (!hasReceipt) {
+                        e.preventDefault();
+                        toast({
+                          variant: "destructive",
+                          title: "Comprovante pendente",
+                          description: "É necessário enviar o recibo de compra de ingredientes antes de concluir o serviço.",
+                        });
+                        setIsReceiptDialogOpen(true);
+                      }
+                    }}
                   >
                     <Check className="w-4 h-4 mr-2" />
                     {isServiceCompleted ? "Serviço Concluído" : "Concluir Serviço"}
