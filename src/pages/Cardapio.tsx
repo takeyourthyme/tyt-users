@@ -126,7 +126,7 @@ export default function Cardapio() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const response = token ? await listDishes({ token }) : await listHighlightedDishes();
+        const response = await listDishes(token ? { token } : undefined);
         const list = extractList(response);
         if (list.length === 0) throw new Error("empty");
 

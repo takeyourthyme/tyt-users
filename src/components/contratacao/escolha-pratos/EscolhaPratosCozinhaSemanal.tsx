@@ -40,67 +40,7 @@ interface DishOption {
   servings?: number;
 };
 
-const mockDishes: DishOption[] = [{
-  id: '1',
-  dishId: 1,
-  nome: 'Lagosta Thermidor',
-  descricao: 'Lagosta gratinada com molho especial',
-  preco: 45,
-  foto: lagostaThermidor,
-  categoria: 'mariscos',
-  favorito: true,
-  frequente: false
-}, {
-  id: '2',
-  dishId: 2,
-  nome: 'Schnitzel Vienense',
-  descricao: 'Escalope empanado tradicional austríaco',
-  preco: 38,
-  foto: schnitzelVienense,
-  categoria: 'carnes brancas',
-  favorito: false,
-  frequente: true
-}, {
-  id: '3',
-  dishId: 3,
-  nome: 'Moussaka Grega',
-  descricao: 'Lasanha grega com berinjela e carne',
-  preco: 35,
-  foto: moussakaGrega,
-  categoria: 'carnes vermelhas',
-  favorito: false,
-  frequente: false
-}, {
-  id: '4',
-  dishId: 4,
-  nome: 'Yakisoba de Frango',
-  descricao: 'Macarrão oriental com legumes e frango',
-  preco: 32,
-  foto: yakisobaFrango,
-  categoria: 'carnes brancas',
-  favorito: true,
-  frequente: false
-}, {
-  id: '5',
-  dishId: 5,
-  nome: 'Hummus com Vegetais',
-  descricao: 'Pasta de grão-de-bico com vegetais frescos',
-  preco: 28,
-  foto: hummusVegetais,
-  categoria: 'proteína vegetal',
-  favorito: false,
-  frequente: false
-}, {
-  id: '6',
-  dishId: 6,
-  nome: 'Tacos de Carnitas',
-  descricao: 'Tacos mexicanos com carne de porco',
-  preco: 35,
-  foto: tacosCarnitas,
-  categoria: 'comidas rápidas',
-  favorito: false,
-  frequente: true
-}];
+const mockDishes: DishOption[] = [];
 
 const CATEGORIAS_ICONES = {
   "massas": { icon: Utensils, color: "bg-orange-100 text-orange-700 border-orange-200" },
@@ -184,7 +124,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
     };
 
     setIsLoadingDishes(true);
-    const request = token ? listDishes({ token }) : listHighlightedDishes();
+    const request = listDishes(token ? { token } : undefined);
 
     request
       .then((data) => {
@@ -210,10 +150,10 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
               servings: normalized.servings,
             };
           })
-          .filter((item): item is DishOption => Boolean(item));
+          .filter(Boolean) as DishOption[];
         if (mapped.length > 0) setAvailableDishes(mapped);
       })
-      .catch(() => setAvailableDishes(mockDishes))
+      .catch(() => setAvailableDishes([]))
       .finally(() => setIsLoadingDishes(false));
   }, []);
 

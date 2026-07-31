@@ -37,253 +37,7 @@ type DishOption = {
   servings?: number;
 };
 
-// Unified mock data for fallback
-const mockDishes: DishOption[] = [
-  // Entradas
-  {
-    id: 'e1',
-    nome: 'Bruschetta Italiana',
-    descricao: 'Torrada com tomate, manjericão e queijo',
-    foto: 'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=400&h=300&fit=crop',
-    preco: 18,
-    favorito: true,
-    categorias: ['entradas'],
-    dishId: 1,
-    themes: ['Noite Italiana', 'Festa Italiana', 'Noite de Massas']
-  },
-  {
-    id: 'e2',
-    nome: 'Carpaccio de Salmão',
-    descricao: 'Fatias finas de salmão com alcaparras',
-    foto: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop',
-    preco: 25,
-    favorito: false,
-    categorias: ['entradas'],
-    dishId: 2,
-    themes: ['Jantar das Meninas', 'Clássicos Mediterrâneos']
-  },
-  {
-    id: 'e3',
-    nome: 'Camarão na Moranga',
-    descricao: 'Camarões refogados servidos na moranga',
-    foto: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=400&h=300&fit=crop',
-    preco: 32,
-    frequente: true,
-    categorias: ['entradas'],
-    dishId: 3,
-    themes: ['Clássicos Brasileiros']
-  },
-  {
-    id: 'cat-e1',
-    nome: 'Hummus com Vegetais',
-    descricao: 'Grão-de-bico, tahine, azeite, vegetais crudité',
-    foto: 'https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?w=400&h=300&fit=crop',
-    preco: 20,
-    categorias: ['entradas'],
-    themes: ['Noite Marroquina', 'Clássicos Mediterrâneos']
-  },
-  {
-    id: 'cat-e2',
-    nome: 'Falafel com Tahine',
-    descricao: 'Crocantes bolinhos de falafel servidos com molho tahine cremoso',
-    foto: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400&h=300&fit=crop',
-    preco: 22,
-    categorias: ['entradas'],
-    themes: ['Noite Marroquina', 'Clássicos Judaicos']
-  },
-  // Saladas
-  {
-    id: 's1',
-    nome: 'Salada Caesar',
-    descricao: 'Alface romana, croutons e molho caesar',
-    foto: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
-    preco: 22,
-    favorito: false,
-    categorias: ['saladas'],
-    dishId: 4,
-    themes: ['Almoço de Country Club']
-  },
-  {
-    id: 's2',
-    nome: 'Salada Caprese',
-    descricao: 'Tomate, muçarela de búfala e manjericão',
-    foto: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop',
-    preco: 28,
-    favorito: true,
-    categorias: ['saladas'],
-    dishId: 5,
-    themes: ['Noite Italiana', 'Festa Italiana']
-  },
-  {
-    id: 's3',
-    nome: 'Salada de Quinoa',
-    descricao: 'Quinoa com vegetais e molho tahine',
-    foto: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
-    preco: 24,
-    frequente: false,
-    categorias: ['saladas'],
-    dishId: 6,
-    themes: ['Clássicos Mediterrâneos', 'Jantar das Meninas']
-  },
-  {
-    id: 'cat-s1',
-    nome: 'Salada Caesar com Camarão',
-    descricao: 'Alface americana, camarão grelhado, croutons, parmesão',
-    foto: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
-    preco: 26,
-    categorias: ['saladas'],
-    themes: ['Almoço de Country Club']
-  },
-  {
-    id: 'cat-s2',
-    nome: 'Salada Mediterrânea',
-    descricao: 'Mix de folhas, tomate cereja, azeitonas e queijo feta',
-    foto: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop',
-    preco: 24,
-    categorias: ['saladas'],
-    themes: ['Clássicos Mediterrâneos']
-  },
-  // Principais
-  {
-    id: 'p1',
-    nome: 'Salmão Grelhado',
-    descricao: 'Salmão com crosta de ervas e legumes',
-    foto: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop',
-    preco: 58,
-    favorito: false,
-    categorias: ['principais'],
-    dishId: 7,
-    themes: ['Clássicos Mediterrâneos', 'Jantar das Meninas']
-  },
-  {
-    id: 'p2',
-    nome: 'Risotto de Camarão',
-    descricao: 'Risotto cremoso com camarões frescos',
-    foto: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop',
-    preco: 52,
-    frequente: true,
-    categorias: ['principais'],
-    dishId: 8,
-    themes: ['Noite Italiana', 'Clássicos Mediterrâneos']
-  },
-  {
-    id: 'p3',
-    nome: 'Filé Wellington',
-    descricao: 'Filé mignon envolvido em massa folhada',
-    foto: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop',
-    preco: 75,
-    favorito: true,
-    categorias: ['principais'],
-    dishId: 9,
-    themes: ['Jantar dos Meninos', 'Almoço de Country Club']
-  },
-  {
-    id: 'cat-p1',
-    nome: 'Yakisoba de Frango',
-    descricao: 'Macarrão yakisoba, frango, legumes, molho shoyu',
-    foto: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop',
-    preco: 45,
-    categorias: ['principais'],
-    themes: ['Comida de Pub']
-  },
-  {
-    id: 'cat-p2',
-    nome: 'Risotto de Cogumelos Porcini',
-    descricao: 'Arroz arbóreo, cogumelos porcini, parmesão',
-    foto: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop',
-    preco: 50,
-    categorias: ['principais'],
-    themes: ['Noite de Massas', 'Noite Italiana']
-  },
-  {
-    id: 'cat-p3',
-    nome: 'Picanha na Brasa',
-    descricao: 'Suculenta picanha grelhada na brasa, temperada apenas com sal grosso',
-    foto: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop',
-    preco: 68,
-    categorias: ['principais'],
-    themes: ['Clássicos da Churrascaria']
-  },
-  {
-    id: 'cat-p4',
-    nome: 'Linguine alle Vongole',
-    descricao: 'Linguine, vongole, alho, vinho branco, salsa',
-    foto: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=400&h=300&fit=crop',
-    preco: 55,
-    categorias: ['principais'],
-    themes: ['Noite Italiana', 'Clássicos Mediterrâneos']
-  },
-  {
-    id: 'cat-p5',
-    nome: 'Lagosta Thermidor',
-    descricao: 'Sofisticada lagosta thermidor com molho bechamel cremoso',
-    foto: 'https://images.unsplash.com/photo-1625944230945-1b7dd3b949ab?w=400&h=300&fit=crop',
-    preco: 120,
-    categorias: ['principais'],
-    themes: ['Jantar Romântico', 'Almoço de Country Club']
-  },
-  // Sobremesas
-  {
-    id: 'so1',
-    nome: 'Tiramisù',
-    descricao: 'Sobremesa italiana com café e mascarpone',
-    foto: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop',
-    preco: 18,
-    favorito: true,
-    categorias: ['sobremesas'],
-    dishId: 10,
-    themes: ['Noite Italiana', 'Festa Italiana', 'Noite de Massas']
-  },
-  {
-    id: 'so2',
-    nome: 'Petit Gateau',
-    descricao: 'Bolinho de chocolate com sorvete de baunilha',
-    foto: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop',
-    preco: 22,
-    frequente: false,
-    categorias: ['sobremesas'],
-    dishId: 11,
-    themes: ['Jantar Romântico']
-  },
-  {
-    id: 'so3',
-    nome: 'Cheesecake de Frutas Vermelhas',
-    descricao: 'Torta cremosa com calda de frutas',
-    foto: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af?w=400&h=300&fit=crop',
-    preco: 20,
-    favorito: false,
-    categorias: ['sobremesas'],
-    dishId: 12,
-    themes: ['Jantar das Meninas']
-  },
-  {
-    id: 'cat-so1',
-    nome: 'Panna Cotta de Frutas Vermelhas',
-    descricao: 'Sobremesa italiana cremosa com calda de frutas vermelhas',
-    foto: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af?w=400&h=300&fit=crop',
-    preco: 18,
-    categorias: ['sobremesas'],
-    themes: ['Festa Italiana', 'Noite de Massas']
-  },
-  {
-    id: 'cat-so2',
-    nome: 'Brownie com Sorvete',
-    descricao: 'Brownie de chocolate com sorvete de creme',
-    foto: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop',
-    preco: 16,
-    categorias: ['sobremesas'],
-    themes: ['Comida de Pub']
-  },
-  {
-    id: 'cat-so3',
-    nome: 'Mousse de Chocolate Belga',
-    descricao: 'Mousse aerado feito com chocolate belga',
-    foto: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop',
-    preco: 19,
-    categorias: ['sobremesas'],
-    themes: ['Jantar dos Meninos']
-  }
-];
+const mockDishes: DishOption[] = [];
 
 const getFallbackThemeName = (id: string): string => {
   const map: Record<string, string> = {
@@ -407,7 +161,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
           setCategorias([{ id: "prato", label: "Prato" }]);
         }
 
-        const request = token ? listDishes({ token }) : listHighlightedDishes();
+        const request = listDishes(token ? { token } : undefined);
         const data = await request;
         const list = extractList(data);
 
@@ -443,7 +197,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
           }
         }
 
-        const allDishes = mapped.length > 0 ? mapped : mockDishes;
+        const allDishes = mapped;
         const filteredDishes = allDishes.filter(prato => 
           dados.temaSelecionado ? isDishInTheme(prato, dados.temaSelecionado, selectedThemeName) : true
         );
@@ -459,25 +213,10 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
           }
         }
       } catch {
-        const fallbackThemeName = dados.temaSelecionado ? getFallbackThemeName(dados.temaSelecionado) : "";
-        const filteredMock = mockDishes.filter(prato =>
-          dados.temaSelecionado ? isDishInTheme(prato, dados.temaSelecionado, fallbackThemeName) : true
-        );
-        setCatalogDishes(filteredMock);
+        setCatalogDishes([]);
         if (!dados.pratosSelecionados || dados.pratosSelecionados.length === 0) {
-          setPratosSelecionados(filteredMock);
-          if (filteredMock.length > 5) {
-            setNivelServico('banquete');
-          } else {
-            setNivelServico('classico');
-          }
+          setPratosSelecionados([]);
         }
-        setCategorias([
-          { id: "entradas", label: "Entradas" },
-          { id: "saladas", label: "Saladas" },
-          { id: "principais", label: "Pratos Principais" },
-          { id: "sobremesas", label: "Sobremesas" },
-        ]);
       } finally {
         setIsLoadingDishes(false);
       }

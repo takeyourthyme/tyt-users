@@ -90,12 +90,11 @@ const Contratacao = () => {
   const [mostrarSucesso, setMostrarSucesso] = useState(false);
   const [codigoReferencia, setCodigoReferencia] = useState<string>("");
 
-  // Verifica se está logado baseado na rota e inicializa dados se necessário
+  // Verifica sessão real no localStorage e inicializa dados se necessário
   useEffect(() => {
-    const isFromDashboard = location.pathname.includes('dashboard') ||
-      location.pathname.includes('contratacao-logado') ||
-      location.state?.fromDashboard;
-    setIsLoggedIn(isFromDashboard);
+    const session = loadSession();
+    const loggedIn = !!(session?.token && session?.user);
+    setIsLoggedIn(loggedIn);
 
     // Se veio do dashboard para ir direto à etapa 3
     if (location.state?.goToStep3 && location.state?.prefilledData) {
@@ -131,7 +130,11 @@ const Contratacao = () => {
       setDadosContratacao(prev => ({ ...prev, ...novosdados }));
     }
 
-    if (isLoggedIn && etapaAtual === 3) {
+    if (etapaAtual === 4) {
+      // Etapa 4 é sempre identificação — ao avancar vem sempre o checkout
+      setEtapaAtual(5);
+    } else if (isLoggedIn && etapaAtual === 3) {
+      // Usuário já logado pula a identificação
       setEtapaAtual(5);
     } else {
       setEtapaAtual(prev => prev + 1);
@@ -254,12 +257,13 @@ const Contratacao = () => {
     const token = session?.token;
 
     if (!token) {
+      // Não deveria chegar aqui — a Etapa 4 exige autenticação antes do checkout
       toast({
         title: "Faça login para continuar",
         description: "Você precisa estar logado para contratar um serviço.",
         variant: "destructive",
       });
-      navigate("/login");
+      setEtapaAtual(4);
       return;
     }
 

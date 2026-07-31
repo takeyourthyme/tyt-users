@@ -211,7 +211,8 @@ export async function listHighlightedDishes() {
   return data as unknown;
 }
 
-export async function getDishById(params: { token: string; id: string | number }) {
-  const { data } = await apiClient.get(`/api/pratos/${params.id}`, createAuthConfig(params.token));
+export async function getDishById(params: { token?: string; id: string | number }) {
+  const config = params.token ? createAuthConfig(params.token) : undefined;
+  const { data } = await apiClient.get(`/api/pratos/${params.id}`, config);
   return data as unknown;
 }

@@ -83,8 +83,8 @@ export default function PratoDetalhes() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const data = token ? await getDishById({ token, id }) : await listHighlightedDishes();
-        const dish = token ? extractDish(data) : extractList(data).find((d) => String((d as Record<string, unknown>).id ?? "") === id);
+        const data = await getDishById({ token: token || undefined, id });
+        const dish = extractDish(data);
         if (!dish) throw new Error("not_found");
 
         const normalized = normalizeDish(dish);

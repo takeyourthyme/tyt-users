@@ -20,9 +20,16 @@ apiClient.interceptors.response.use(
                     return Promise.reject(error);
                 }
 
+                // Só redireciona se havia uma sessão ativa (token no localStorage).
+                // Se não há sessão, a requisição era anônima — não deve redirecionar.
+                const authRaw = localStorage.getItem("auth");
+                const hasActiveSession = !!authRaw;
+                if (!hasActiveSession) {
+                    return Promise.reject(error);
+                }
+
                 let isChef = false;
                 try {
-                    const authRaw = localStorage.getItem("auth");
                     if (authRaw) {
                         const parsed = JSON.parse(authRaw);
                         if (parsed?.user?.tipo_usuario === "chef" || parsed?.user?.tipoUsuario === "chef") {
@@ -53,6 +60,7 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
 
 export function createAuthConfig(token?: string): AxiosRequestConfig {
     if (!token) return {};
