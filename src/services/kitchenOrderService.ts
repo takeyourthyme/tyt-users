@@ -198,9 +198,11 @@ export type CreateKitchenOrderInput = {
   temas?: number[];
   dishes: Array<{ dish_id: number; quantity: number; observations?: string }>;
   // Payment fields (required for MEAL_PREP and GET_TOGETHER, omit for SPECIAL_SERVICE)
+  billingType?: 'CREDIT_CARD' | 'PIX';
   creditCard?: CreditCardInput;
   creditCardHolderInfo?: CreditCardHolderInfoInput;
   creditCardToken?: string;
+  installmentCount?: number;
 };
 
 export async function createKitchenOrder(input: CreateKitchenOrderInput) {
@@ -314,6 +316,42 @@ export function getKitchenOrderCode(order?: KitchenOrder | null): string {
   ];
   const value = candidates.find((item) => typeof item === "string" || typeof item === "number");
   return value ? String(value) : "";
+}
+
+// ─── PIX QR CODE ──────────────────────────────────────────────────────────────
+
+export interface PixQrCodeResponse {
+  success: boolean;
+  data: {
+    encodedImage: string;
+    payload: string;
+    expirationDate: string;
+  };
+}
+
+export async function getPixQrCode(params: { token: string; paymentId: string }) {
+  const { data } = await apiClient.get<PixQrCodeResponse>(
+    `/api/asaas/payments/${params.paymentId}/pix-qrcode`,
+    createAuthConfig(params.token),
+  );
+  return data;
+}
+
+// ─── PAYMENT STATUS ───────────────────────────────────────────────────────────
+
+export interface PaymentStatusResponse {
+  success: boolean;
+  data: {
+    status: string;
+  };
+}
+
+export async function getPaymentStatus(params: { token: string; paymentId: string }) {
+  const { data } = await apiClient.get<PaymentStatusResponse>(
+    `/api/asaas/payments/${params.paymentId}/status`,
+    createAuthConfig(params.token),
+  );
+  return data;
 }
 
 

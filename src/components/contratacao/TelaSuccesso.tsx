@@ -1,40 +1,54 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Clock } from "lucide-react";
 
 interface Props {
   onIrDashboard: () => void;
   tipoServico?: 'cozinha-semanal' | 'eventos' | 'servicos-especiais' | '';
   codigoReferencia?: string;
+  isPendingPayment?: boolean;
 }
 
-export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codigoReferencia }) => {
+export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codigoReferencia, isPendingPayment }) => {
   const isServicoEspecial = tipoServico === 'servicos-especiais';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-yellow-50 flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardContent className="p-8 text-center space-y-6">
-          {/* Animação de Sucesso */}
+          {/* Animação de Sucesso / Pendente */}
           <div className="flex justify-center">
             <div className="relative">
-              <CheckCircle
-                size={80}
-                className="text-green-500 animate-pulse"
-              />
-              <div className="absolute inset-0 rounded-full bg-green-500 opacity-20 animate-ping"></div>
+              {isPendingPayment ? (
+                <Clock
+                  size={80}
+                  className="text-amber-500 animate-pulse"
+                />
+              ) : (
+                <CheckCircle
+                  size={80}
+                  className="text-green-500 animate-pulse"
+                />
+              )}
+              <div className={`absolute inset-0 rounded-full ${isPendingPayment ? 'bg-amber-500' : 'bg-green-500'} opacity-20 animate-ping`}></div>
             </div>
           </div>
 
           {/* Título */}
           <div>
             <h1 className="text-2xl font-light text-gray-900 mb-2">
-              {isServicoEspecial ? 'Solicitação Enviada!' : 'Contratação Realizada!'}
+              {isServicoEspecial
+                ? 'Solicitação Enviada!'
+                : isPendingPayment
+                ? 'Contratação pendente de pagamento'
+                : 'Contratação Realizada!'}
             </h1>
             <p className="text-gray-600">
               {isServicoEspecial
                 ? 'Recebemos sua solicitação de Special Service'
+                : isPendingPayment
+                ? 'Aguardando confirmação do pagamento via Pix'
                 : 'Sua contratação foi confirmada com sucesso'
               }
             </p>
@@ -65,11 +79,20 @@ export const TelaSuccesso: React.FC<Props> = ({ onIrDashboard, tipoServico, codi
                   Você pode acompanhar o status da sua solicitação no seu dashboard.
                 </p>
               </>
+            ) : isPendingPayment ? (
+              <>
+                <p className="font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded p-3 text-xs">
+                  ⏳ O Pix precisa ser pago para confirmar o agendamento do seu serviço.
+                </p>
+                <p className="text-xs text-gray-600">
+                  Você pode acessar os detalhes do pedido no seu Dashboard para visualizar o QR Code e código Copia e Cola a qualquer momento.
+                </p>
+              </>
             ) : (
               <>
                 <p>
                   Sua contratação foi registrada com sucesso e nossa equipe entrará em contato
-                  para confirmar os detalhes finais e o pagamento.
+                  para confirmar os detalhes finais.
                 </p>
                 <p>
                   Você pode acompanhar o status do seu serviço no seu dashboard.

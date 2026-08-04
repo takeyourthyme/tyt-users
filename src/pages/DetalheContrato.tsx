@@ -17,14 +17,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ArrowLeft,
   Calendar,
   MapPin,
-  Clock,
   DollarSign,
-  User,
   CreditCard,
   Receipt,
   ChefHat,
@@ -32,14 +29,15 @@ import {
   Martini,
   PartyPopper,
   AlertTriangle,
-  AlertCircle,
   MessageCircle,
   CheckCircle,
-  Users,
   Info,
   Phone,
   ClipboardList,
-  Star,
+  QrCode,
+  Copy,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -56,6 +54,7 @@ import {
   getKitchenOrderTime,
   getKitchenOrderClient,
   getKitchenOrderByCode,
+  getPixQrCode,
   normalizeKitchenOrderStatusLabel,
   normalizeKitchenOrderTypeLabel,
   updateKitchenOrderStatus,
@@ -138,6 +137,113 @@ const getStatusDetails = (statusRaw: string) => {
   }
 };
 
+const PixDetailsCard: React.FC<{ paymentId: string; token: string; orderCode: string }> = ({ paymentId, token, orderCode }) => {
+  const { toast } = useToast();
+  const [qrCodeImage, setQrCodeImage] = useState("");
+  const [pixPayload, setPixPayload] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!paymentId || !token) return;
+    getPixQrCode({ token, paymentId })
+      .then((res) => {
+        let qrData = res as unknown as Record<string, unknown>;
+        for (let i = 0; i < 3; i++) {
+          if (qrData?.data && typeof qrData.data === "object" && !Array.isArray(qrData.data)) {
+            qrData = qrData.data as Record<string, unknown>;
+          }
+        }
+        setQrCodeImage(String(qrData?.encodedImage || qrData?.qrCode || qrData?.image || ""));
+        setPixPayload(String(qrData?.payload || qrData?.pixCopiaECola || qrData?.copyAndPaste || ""));
+      })
+      .catch((err) => {
+        console.error("Erro ao carregar Pix nos detalhes:", err);
+      })
+      .finally(() => setLoading(false));
+  }, [paymentId, token]);
+
+  const handleCopy = async () => {
+    if (!pixPayload) return;
+    try {
+      await navigator.clipboard.writeText(pixPayload);
+      setCopied(true);
+      toast({ title: "Código Pix copiado!", description: "Cole no aplicativo do seu banco." });
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      toast({ title: "Erro ao copiar", description: "Copie manualmente.", variant: "destructive" });
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="bg-white border border-green-200 shadow-none rounded-xl">
+        <CardContent className="p-6 text-center py-8">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#004B2A] mb-2" />
+          <p className="text-sm text-gray-500">Carregando dados do Pix...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!qrCodeImage && !pixPayload) return null;
+
+  return (
+    <Card className="bg-white border-2 border-green-600/30 shadow-none rounded-xl overflow-hidden">
+      <CardHeader className="bg-green-50/50 pb-3 border-b border-green-100">
+        <CardTitle className="flex items-center gap-2 text-base text-[#004B2A]">
+          <QrCode className="w-5 h-5" />
+          <span>Pagamento via Pix (Pendente)</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 space-y-4">
+        <p className="text-xs text-muted-foreground text-center">
+          Escaneie o QR Code abaixo ou copie a chave Pix para realizar o pagamento no app do seu banco:
+        </p>
+
+        {qrCodeImage && (
+          <div className="flex justify-center py-1">
+            <div className="bg-white p-3 rounded-xl border-2 border-gray-100 shadow-sm">
+              <img
+                src={`data:image/png;base64,${qrCodeImage}`}
+                alt="QR Code Pix"
+                className="w-48 h-48 sm:w-52 sm:h-52 object-contain"
+              />
+            </div>
+          </div>
+        )}
+
+        {pixPayload && (
+          <div className="space-y-1.5 w-full min-w-0">
+            <p className="text-xs font-medium text-muted-foreground text-center">
+              Código Pix Copia e Cola:
+            </p>
+            <div className="flex items-center gap-2 w-full min-w-0">
+              <div className="flex-1 min-w-0 bg-gray-50 rounded-lg p-2.5 border border-gray-200">
+                <p className="text-xs font-mono text-gray-600 truncate select-all">
+                  {pixPayload}
+                </p>
+              </div>
+              <Button
+                variant={copied ? "default" : "outline"}
+                size="sm"
+                onClick={() => void handleCopy()}
+                className={`shrink-0 ${copied ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
+              >
+                {copied ? (
+                  <><CheckCircle2 className="w-4 h-4 mr-1" /> Copiado</>
+                ) : (
+                  <><Copy className="w-4 h-4 mr-1" /> Copiar</>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 const DetalheContrato = () => {
   const navigate = useNavigate();
   const { id: contratoId } = useParams();
@@ -155,7 +261,7 @@ const DetalheContrato = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [errosValidacao, setErrosValidacao] = useState<string[]>([]);
-  
+
   const [cartao, setCartao] = useState({
     numero: "",
     nomeTitular: "",
@@ -537,6 +643,15 @@ const DetalheContrato = () => {
           </button>
           <h1 className="text-xl font-semibold text-gray-900">Detalhes do contrato</h1>
         </div>
+
+        {/* Card de Pagamento Pix Pendente */}
+        {apiOrder.id_pagamento && String(apiOrder.status).toUpperCase() === "PENDING" && token && (
+          <PixDetailsCard
+            paymentId={String(apiOrder.id_pagamento)}
+            token={token}
+            orderCode={code}
+          />
+        )}
 
         {/* Order details card - Figma style */}
         <Card className="bg-white border border-gray-200/70 shadow-none rounded-xl">

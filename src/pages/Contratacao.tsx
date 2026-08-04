@@ -13,6 +13,7 @@ import { TelaSuccesso } from "@/components/contratacao/TelaSuccesso";
 import { useToast } from "@/hooks/use-toast";
 import { loadSession } from "@/services/authService";
 import { createKitchenOrder, CreditCardHolderInfoInput } from "@/services/kitchenOrderService";
+import { PixPaymentModal } from "@/components/contratacao/PixPaymentModal";
 import IllustrationOrder from "@/assets/illustration-order";
 
 export interface DadosContratacao {
@@ -75,6 +76,8 @@ export interface DadosContratacao {
     addressComplement?: string;
     mobilePhone?: string;
   };
+  billingType?: 'CREDIT_CARD' | 'PIX';
+  installmentCount?: number;
 }
 
 const Contratacao = () => {
@@ -89,6 +92,10 @@ const Contratacao = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mostrarSucesso, setMostrarSucesso] = useState(false);
   const [codigoReferencia, setCodigoReferencia] = useState<string>("");
+  const [mostrarPixModal, setMostrarPixModal] = useState(false);
+  const [pixPaymentId, setPixPaymentId] = useState<string>("");
+  const [pixTotalValue, setPixTotalValue] = useState<number>(0);
+  const [isPendingPayment, setIsPendingPayment] = useState<boolean>(false);
 
   // Verifica sessão real no localStorage e inicializa dados se necessário
   useEffect(() => {
@@ -337,6 +344,8 @@ const Contratacao = () => {
         client_request: dados.tipoServico === "servicos-especiais" ? dados.descricaoDetalhada || "" : undefined,
         temas: dados.temaSelecionado ? [parseInt(dados.temaSelecionado, 10)] : undefined,
         dishes,
+        billingType: dados.billingType || 'CREDIT_CARD',
+        installmentCount: dados.installmentCount,
         ...(dados.creditCardToken ? {
           creditCardToken: dados.creditCardToken,
           creditCardHolderInfo: enrichedCardHolderInfo,
@@ -369,6 +378,9 @@ const Contratacao = () => {
 
       const codeCandidate = extracted?.code ?? extracted?.codigo ?? extracted?.order_code ?? extracted?.orderCode;
       const idCandidate = extracted?.id ?? extracted?.kitchen_order_id ?? extracted?.kitchenOrderId;
+      const paymentIdCandidate = extracted?.id_pagamento ?? extracted?.asaas_payment_id ?? extracted?.asaasPaymentId ?? extracted?.paymentId;
+      const serviceValueCandidate = extracted?.service_value ?? extracted?.serviceValue ?? extracted?.total;
+
       const code =
         typeof codeCandidate === "string" || typeof codeCandidate === "number"
           ? String(codeCandidate)
@@ -376,8 +388,20 @@ const Contratacao = () => {
             ? String(idCandidate)
             : "";
 
+      const paymentId = (typeof paymentIdCandidate === "string" || typeof paymentIdCandidate === "number") ? String(paymentIdCandidate) : "";
+      const totalVal = typeof serviceValueCandidate === "number" ? serviceValueCandidate : (Number(serviceValueCandidate) || 0);
+
       setCodigoReferencia(code);
-      setMostrarSucesso(true);
+
+      if (dados.billingType === 'PIX' && paymentId) {
+        setIsPendingPayment(true);
+        setPixPaymentId(paymentId);
+        setPixTotalValue(totalVal);
+        setMostrarPixModal(true);
+      } else {
+        setIsPendingPayment(false);
+        setMostrarSucesso(true);
+      }
     } catch (err: unknown) {
       const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
       const status = axiosErr?.response?.status;
@@ -423,6 +447,7 @@ const Contratacao = () => {
         onIrDashboard={() => navigate('/dashboard-cliente')}
         tipoServico={dadosContratacao.tipoServico}
         codigoReferencia={codigoReferencia}
+        isPendingPayment={isPendingPayment}
       />
     );
   }
@@ -499,6 +524,25 @@ const Contratacao = () => {
         )}
       </div>
       <Footer />
+
+      {/* Pix Payment Modal */}
+      {mostrarPixModal && (
+        <PixPaymentModal
+          open={mostrarPixModal}
+          paymentId={pixPaymentId}
+          orderCode={codigoReferencia}
+          totalValue={pixTotalValue}
+          onClose={() => {
+            setMostrarPixModal(false);
+            setMostrarSucesso(true);
+          }}
+          onPaymentConfirmed={() => {
+            setIsPendingPayment(false);
+            setMostrarPixModal(false);
+            setMostrarSucesso(true);
+          }}
+        />
+      )}
     </div>
   );
 };

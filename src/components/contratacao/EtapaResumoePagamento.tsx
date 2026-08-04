@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, Receipt, User, Info, Home, CreditCard, DollarSign } from "lucide-react";
+import { MapPin, Receipt, User, Info, Home, CreditCard, DollarSign, QrCode } from "lucide-react";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
@@ -19,6 +19,8 @@ interface Props {
   onVoltar: () => void;
   onConcluir: (novosDados: Partial<DadosContratacao>) => void;
 }
+
+type MetodoPagamento = 'CREDIT_CARD' | 'PIX';
 
 export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConcluir }) => {
   const getDishName = (dish: unknown, fallback: string) => {
@@ -65,8 +67,13 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   const [isLoadingProfileAddress, setIsLoadingProfileAddress] = useState(false);
   const [errosValidacao, setErrosValidacao] = useState<string[]>([]);
 
-  // Credit card state
+  // Payment method state
   const isPayableService = dados.tipoServico !== 'servicos-especiais';
+  const isGetTogether = dados.tipoServico === 'eventos';
+  const [metodoPagamento, setMetodoPagamento] = useState<MetodoPagamento>('CREDIT_CARD');
+  const [installmentCount, setInstallmentCount] = useState<number>(1);
+
+  // Credit card state
   const [cartao, setCartao] = useState({
     numero: '',
     validade: '',
@@ -127,7 +134,17 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   );
   const hasCostEstimate = custoIngredientes > 0;
   // Valor total = custo do chef + custo de ingredientes
-  const total = hasCostEstimate ? (precoChef + custoIngredientes) : 0;
+  const totalBase = hasCostEstimate ? (precoChef + custoIngredientes) : 0;
+
+  // Installment interest calculation (2% compound/month)
+  const MONTHLY_INTEREST_RATE = 0.02;
+  const totalComJuros = installmentCount > 1
+    ? Math.round(totalBase * Math.pow(1 + MONTHLY_INTEREST_RATE, installmentCount) * 100) / 100
+    : totalBase;
+  const valorParcela = installmentCount > 1
+    ? Math.round((totalComJuros / installmentCount) * 100) / 100
+    : totalBase;
+  const total = installmentCount > 1 ? totalComJuros : totalBase;
 
   const buscarCEP = async (cep: string) => {
     const digits = toDigits(cep);
@@ -194,8 +211,8 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
     if (!endereco.cidade) erros.push('cidade');
     if (!aceitouTermos) erros.push('termos');
 
-    // Validate card fields for payable services
-    if (isPayableService) {
+    // Validate card fields only for credit card method
+    if (isPayableService && metodoPagamento === 'CREDIT_CARD') {
       if (cartao.numero.replace(/\D/g, '').length < 13) erros.push('cartao_numero');
       if (cartao.validade.length < 5) erros.push('cartao_validade');
       if (cartao.cvv.replace(/\D/g, '').length < 3) erros.push('cartao_cvv');
@@ -220,7 +237,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
 
     setIsSubmitting(true);
 
-    if (isPayableService) {
+    if (isPayableService && metodoPagamento === 'CREDIT_CARD') {
       try {
         const session = loadSession();
         if (!session?.token) {
@@ -266,10 +283,12 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
           throw new Error("Token do cartão não foi retornado pelo Asaas.");
         }
 
-        // 5. Complete with tokenized card payload
+        // 4. Complete with tokenized card payload
         onConcluir({
           endereco,
           aceitouTermos,
+          billingType: 'CREDIT_CARD',
+          installmentCount: isGetTogether && installmentCount > 1 ? installmentCount : undefined,
           creditCardToken: asaasData.creditCardToken,
           creditCardHolderInfo: {
             name: cartao.nomeTitular.trim(),
@@ -291,6 +310,13 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
         });
         setIsSubmitting(false);
       }
+    } else if (isPayableService && metodoPagamento === 'PIX') {
+      // PIX: no card tokenization needed, just pass billingType
+      onConcluir({
+        endereco,
+        aceitouTermos,
+        billingType: 'PIX',
+      });
     } else {
       // Non-payable service (Special Service)
       onConcluir({
@@ -454,6 +480,19 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                     ⚠️ O valor exato será calculado pelo sistema no momento do processamento, com base nos ingredientes dos pratos selecionados.
                   </p>
                 )}
+
+                {/* Installment info for Get Together */}
+                {isGetTogether && metodoPagamento === 'CREDIT_CARD' && installmentCount > 1 && hasCostEstimate && (
+                  <div className="bg-blue-50 border border-blue-200 rounded p-2 space-y-1">
+                    <p className="text-xs font-medium text-blue-800">Parcelamento:</p>
+                    <p className="text-sm text-blue-700">
+                      {installmentCount}x de R$ {valorParcela.toFixed(2)}
+                      <span className="text-xs ml-1">(total c/ juros: R$ {totalComJuros.toFixed(2)})</span>
+                    </p>
+                    <p className="text-xs text-blue-600">Juros de 2% ao mês</p>
+                  </div>
+                )}
+
                 <hr />
                 <div className="flex justify-between font-light text-lg">
                   <span>Total estimado:</span>
@@ -570,81 +609,179 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                   errosValidacao.some(e => e.startsWith('cartao_')) ? 'text-red-600' : ''
                 }`}>
                   <CreditCard className="w-5 h-5" />
-                  Pagamento com Cartão de Crédito
+                  Forma de Pagamento
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Card number */}
-                <div>
-                  <Label htmlFor="cartao-numero" className="text-sm">Número do Cartão</Label>
-                  <Input
-                    id="cartao-numero"
-                    value={cartao.numero}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
-                      const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
-                      setCartao(prev => ({ ...prev, numero: formatted }));
-                    }}
-                    placeholder="0000 0000 0000 0000"
-                    inputMode="numeric"
-                    maxLength={19}
-                    className={`text-sm font-mono ${errosValidacao.includes('cartao_numero') ? 'border-red-500' : ''}`}
-                  />
-                </div>
-
+              <CardContent className="space-y-4">
+                {/* Payment method selector */}
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Expiry */}
-                  <div>
-                    <Label htmlFor="cartao-validade" className="text-sm">Validade (MM/AA)</Label>
-                    <Input
-                      id="cartao-validade"
-                      value={cartao.validade}
-                      onChange={(e) => {
-                        let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-                        if (raw.length > 2) raw = raw.slice(0, 2) + '/' + raw.slice(2);
-                        setCartao(prev => ({ ...prev, validade: raw }));
-                      }}
-                      placeholder="MM/AA"
-                      inputMode="numeric"
-                      maxLength={5}
-                      className={`text-sm font-mono ${errosValidacao.includes('cartao_validade') ? 'border-red-500' : ''}`}
-                    />
-                  </div>
-
-                  {/* CVV */}
-                  <div>
-                    <Label htmlFor="cartao-cvv" className="text-sm">CVV</Label>
-                    <Input
-                      id="cartao-cvv"
-                      value={cartao.cvv}
-                      onChange={(e) => {
-                        const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-                        setCartao(prev => ({ ...prev, cvv: raw }));
-                      }}
-                      placeholder="123"
-                      inputMode="numeric"
-                      maxLength={4}
-                      type="password"
-                      className={`text-sm font-mono ${errosValidacao.includes('cartao_cvv') ? 'border-red-500' : ''}`}
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setMetodoPagamento('CREDIT_CARD'); setInstallmentCount(1); }}
+                    className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                      metodoPagamento === 'CREDIT_CARD'
+                        ? 'border-[#004B2A] bg-[#004B2A]/5 text-[#004B2A]'
+                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    Cartão de Crédito
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMetodoPagamento('PIX'); setInstallmentCount(1); }}
+                    className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                      metodoPagamento === 'PIX'
+                        ? 'border-[#004B2A] bg-[#004B2A]/5 text-[#004B2A]'
+                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}
+                  >
+                    <QrCode className="w-5 h-5" />
+                    Pix
+                  </button>
                 </div>
 
-                {/* Holder name */}
-                <div>
-                  <Label htmlFor="cartao-nome" className="text-sm">Nome do Titular (como no cartão)</Label>
-                  <Input
-                    id="cartao-nome"
-                    value={cartao.nomeTitular}
-                    onChange={(e) => setCartao(prev => ({ ...prev, nomeTitular: e.target.value.toUpperCase() }))}
-                    placeholder="JOÃO DA SILVA"
-                    className={`text-sm ${errosValidacao.includes('cartao_nome') ? 'border-red-500' : ''}`}
-                  />
-                </div>
+                {/* Credit Card form */}
+                {metodoPagamento === 'CREDIT_CARD' && (
+                  <div className="space-y-3 pt-2">
+                    {/* Installment selector — Get Together only */}
+                    {isGetTogether && hasCostEstimate && (
+                      <div>
+                        <Label className="text-sm">Parcelamento</Label>
+                        <div className="grid grid-cols-3 gap-2 mt-1">
+                          {[1, 2, 3].map((n) => {
+                            const totalParc = n > 1
+                              ? Math.round(totalBase * Math.pow(1 + MONTHLY_INTEREST_RATE, n) * 100) / 100
+                              : totalBase;
+                            const parcValue = Math.round((totalParc / n) * 100) / 100;
 
-                <p className="text-xs text-muted-foreground pt-1">
-                  🔒 Seus dados são processados com segurança via Asaas. Não armazenamos dados do cartão.
-                </p>
+                            return (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={() => setInstallmentCount(n)}
+                                className={`p-2 rounded-lg border text-center transition-all ${
+                                  installmentCount === n
+                                    ? 'border-[#004B2A] bg-[#004B2A]/5'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <span className="block text-sm font-medium">
+                                  {n}x de R$ {parcValue.toFixed(2)}
+                                </span>
+                                {n > 1 && (
+                                  <span className="block text-xs text-muted-foreground">
+                                    (c/ juros)
+                                  </span>
+                                )}
+                                {n === 1 && (
+                                  <span className="block text-xs text-green-600">
+                                    sem juros
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Card number */}
+                    <div>
+                      <Label htmlFor="cartao-numero" className="text-sm">Número do Cartão</Label>
+                      <Input
+                        id="cartao-numero"
+                        value={cartao.numero}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+                          const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+                          setCartao(prev => ({ ...prev, numero: formatted }));
+                        }}
+                        placeholder="0000 0000 0000 0000"
+                        inputMode="numeric"
+                        maxLength={19}
+                        className={`text-sm font-mono ${errosValidacao.includes('cartao_numero') ? 'border-red-500' : ''}`}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Expiry */}
+                      <div>
+                        <Label htmlFor="cartao-validade" className="text-sm">Validade (MM/AA)</Label>
+                        <Input
+                          id="cartao-validade"
+                          value={cartao.validade}
+                          onChange={(e) => {
+                            let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+                            if (raw.length > 2) raw = raw.slice(0, 2) + '/' + raw.slice(2);
+                            setCartao(prev => ({ ...prev, validade: raw }));
+                          }}
+                          placeholder="MM/AA"
+                          inputMode="numeric"
+                          maxLength={5}
+                          className={`text-sm font-mono ${errosValidacao.includes('cartao_validade') ? 'border-red-500' : ''}`}
+                        />
+                      </div>
+
+                      {/* CVV */}
+                      <div>
+                        <Label htmlFor="cartao-cvv" className="text-sm">CVV</Label>
+                        <Input
+                          id="cartao-cvv"
+                          value={cartao.cvv}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+                            setCartao(prev => ({ ...prev, cvv: raw }));
+                          }}
+                          placeholder="123"
+                          inputMode="numeric"
+                          maxLength={4}
+                          type="password"
+                          className={`text-sm font-mono ${errosValidacao.includes('cartao_cvv') ? 'border-red-500' : ''}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Holder name */}
+                    <div>
+                      <Label htmlFor="cartao-nome" className="text-sm">Nome do Titular (como no cartão)</Label>
+                      <Input
+                        id="cartao-nome"
+                        value={cartao.nomeTitular}
+                        onChange={(e) => setCartao(prev => ({ ...prev, nomeTitular: e.target.value.toUpperCase() }))}
+                        placeholder="JOÃO DA SILVA"
+                        className={`text-sm ${errosValidacao.includes('cartao_nome') ? 'border-red-500' : ''}`}
+                      />
+                    </div>
+
+                    <p className="text-xs text-muted-foreground pt-1">
+                      🔒 Seus dados são processados com segurança via Asaas. Não armazenamos dados do cartão.
+                    </p>
+                  </div>
+                )}
+
+                {/* Pix info */}
+                {metodoPagamento === 'PIX' && (
+                  <div className="space-y-3 pt-2">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center space-y-2">
+                      <QrCode className="w-10 h-10 mx-auto text-green-600" />
+                      <p className="text-sm font-medium text-green-800">
+                        Pagamento instantâneo via Pix
+                      </p>
+                      <p className="text-xs text-green-700">
+                        Após clicar em "Concluir", um QR Code será gerado para você escanear com o app do seu banco. O pagamento é confirmado em segundos.
+                      </p>
+                      {hasCostEstimate && (
+                        <p className="text-lg font-bold text-green-800 pt-1">
+                          R$ {totalBase.toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      🔒 Pix é processado com segurança via Asaas. Pagamento à vista, sem juros.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ) : (

@@ -92,22 +92,44 @@ export function saveSession(session: AuthSession) {
 }
 
 export function loadSession(): AuthSession | null {
+  const session: AuthSession = {};
+
   const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object") return null;
-    const record = parsed as Record<string, unknown>;
-    const session: AuthSession = {};
-    if (typeof record.token === "string") session.token = record.token;
-    if (typeof record.userId === "string" || typeof record.userId === "number") session.userId = record.userId;
-    if (record.user && typeof record.user === "object" && !Array.isArray(record.user)) {
-      session.user = record.user as Record<string, unknown>;
-    }
-    return session;
-  } catch {
-    return null;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === "object") {
+        const record = parsed as Record<string, unknown>;
+        if (typeof record.token === "string") session.token = record.token;
+        if (typeof record.userId === "string" || typeof record.userId === "number") session.userId = record.userId;
+        if (record.user && typeof record.user === "object" && !Array.isArray(record.user)) {
+          session.user = record.user as Record<string, unknown>;
+        }
+      }
+    } catch {}
   }
+
+  if (!session.token) {
+    const fallbackToken = localStorage.getItem("tyt_access_token") || localStorage.getItem("token");
+    if (fallbackToken) session.token = fallbackToken;
+  }
+
+  if (!session.user) {
+    const rawUser = localStorage.getItem("tyt_user");
+    if (rawUser) {
+      try {
+        const parsedUser = JSON.parse(rawUser) as Record<string, unknown>;
+        if (parsedUser && typeof parsedUser === "object") {
+          session.user = parsedUser;
+          if (parsedUser.id || parsedUser.userId) {
+            session.userId = (parsedUser.id ?? parsedUser.userId) as string | number;
+          }
+        }
+      } catch {}
+    }
+  }
+
+  return session.token ? session : null;
 }
 
 export function clearSession() {
