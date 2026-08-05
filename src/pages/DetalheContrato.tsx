@@ -703,28 +703,15 @@ const DetalheContrato = () => {
                     )}
                   </p>
                 </div>
-                {(apiOrder as any)?.chef_amount !== undefined && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-gray-50 p-3 rounded-lg border border-gray-100">
-                    <div>
-                      <span className="text-gray-400 block">Chef recebe</span>
-                      <span className="font-medium text-gray-700">
-                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((apiOrder as any).chef_amount)}
-                      </span>
-                    </div>
-                    {Number((apiOrder as any)?.sub_chef_amount) > 0 && (
-                      <div>
-                        <span className="text-gray-400 block">Sub Chef (via TYT)</span>
-                        <span className="font-medium text-amber-700">
-                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((apiOrder as any).sub_chef_amount)}
-                        </span>
-                      </div>
-                    )}
-                    <div>
-                      <span className="text-gray-400 block">TYT Plataforma</span>
-                      <span className="font-medium text-gray-700">
-                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((apiOrder as any).tyt_amount ?? 0)}
-                      </span>
-                    </div>
+                {/** show ingredient value if it exists */}
+                {((apiOrder as any)?.ingredients_value !== undefined || (apiOrder as any)?.ingredient_cost !== undefined || (apiOrder as any)?.ingredient_value !== undefined) && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-400">Valor dos ingredientes</p>
+                    <p className="text-base font-semibold text-gray-800">
+                      {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+                        (apiOrder as any)?.ingredients_value ?? (apiOrder as any)?.ingredient_cost ?? (apiOrder as any)?.ingredient_value ?? 0
+                      )}
+                    </p>
                   </div>
                 )}
               </div>

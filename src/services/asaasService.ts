@@ -38,6 +38,21 @@ export interface TokenizeCardResponse {
   creditCardToken: string;
 }
 
+export interface AsaasSimulationResult {
+  installmentCount: number;
+  /** Value of each installment (as charged to the customer) */
+  paymentValue: number | null;
+  /** Total amount charged across all installments (service value + Asaas fee) */
+  totalValue: number | null;
+  /** Asaas fee percentage applied */
+  feePercentage: number | null;
+}
+
+export interface AsaasSimulationResponse {
+  success: boolean;
+  data: AsaasSimulationResult;
+}
+
 export async function getAsaasCustomerId(token: string) {
   const { data } = await apiClient.get<AsaasCustomerIdResponse>(
     "/api/asaas/customer-id",
@@ -61,4 +76,21 @@ export async function tokenizeCard(token: string, payload: TokenizeCardRequest) 
     createAuthConfig(token)
   );
   return data;
+}
+
+/**
+ * Queries the TYT backend to simulate Asaas installment fees.
+ * Uses POST /api/asaas/payments/simulate — does NOT create any charge.
+ */
+export async function simulatePayment(
+  token: string,
+  value: number,
+  installmentCount: number
+): Promise<AsaasSimulationResult> {
+  const { data } = await apiClient.post<AsaasSimulationResponse>(
+    "/api/asaas/payments/simulate",
+    { value, installmentCount },
+    createAuthConfig(token)
+  );
+  return data.data;
 }

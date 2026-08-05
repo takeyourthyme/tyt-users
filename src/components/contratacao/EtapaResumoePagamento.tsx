@@ -12,7 +12,7 @@ import { getUserById } from "@/services/userService";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
-import { getAsaasCustomerId, getAsaasTokenizationConfig, tokenizeCard } from "@/services/asaasService";
+import { getAsaasCustomerId, getAsaasTokenizationConfig, tokenizeCard, simulatePayment, type AsaasSimulationResult } from "@/services/asaasService";
 import { calculateServicePrice, fetchPricingTiers, type PricingTier } from "@/services/pricingService";
 
 interface Props {
@@ -128,6 +128,9 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   };
 
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
+  // Asaas simulation results: keyed by installmentCount (2 and 3)
+  const [asaasSimulations, setAsaasSimulations] = useState<Record<number, AsaasSimulationResult | null>>({});
+  const [isLoadingSimulation, setIsLoadingSimulation] = useState(false);
 
   React.useEffect(() => {
     fetchPricingTiers().then(setPricingTiers);
@@ -146,15 +149,57 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   );
   const totalBase = valorServico + custoIngredientes;
 
-  // Installment interest calculation (2% compound/month)
-  const MONTHLY_INTEREST_RATE = 0.02;
-  const totalComJuros = installmentCount > 1
-    ? Math.round(totalBase * Math.pow(1 + MONTHLY_INTEREST_RATE, installmentCount) * 100) / 100
-    : totalBase;
-  const valorParcela = installmentCount > 1
-    ? Math.round((totalComJuros / installmentCount) * 100) / 100
-    : totalBase;
-  const total = installmentCount > 1 ? totalComJuros : totalBase;
+  // Load Asaas simulations when service type is Get Together and user is logged in
+  React.useEffect(() => {
+    if (!isGetTogether || valorServico <= 0) return;
+    const session = loadSession();
+    if (!session?.token) return;
+
+    const fetchSimulations = async () => {
+      setIsLoadingSimulation(true);
+      try {
+        const [sim2, sim3] = await Promise.all([
+          simulatePayment(session.token!, valorServico, 2).catch(() => null),
+          simulatePayment(session.token!, valorServico, 3).catch(() => null),
+        ]);
+        setAsaasSimulations({ 2: sim2, 3: sim3 });
+      } finally {
+        setIsLoadingSimulation(false);
+      }
+    };
+    void fetchSimulations();
+  }, [isGetTogether, valorServico]);
+
+  /**
+   * Returns installment details for a given count.
+   * For Get Together with Asaas simulation available: uses real Asaas fees.
+   * Otherwise falls back to face value (no interest).
+   */
+  const getInstallmentInfo = (n: number): { parcelValue: number; totalCharged: number; hasAsaasFee: boolean } => {
+    if (n === 1 || !isGetTogether) {
+      return { parcelValue: totalBase, totalCharged: totalBase, hasAsaasFee: false };
+    }
+    const sim = asaasSimulations[n];
+    if (sim?.paymentValue && sim.totalValue) {
+      // Asaas fees apply only to the service portion; ingredients are charged at face value
+      const serviceParcela = sim.paymentValue; // per installment of service value
+      const serviceTotalWithFee = sim.totalValue; // total service with Asaas fee
+      const firstMonthTotal = custoIngredientes + serviceParcela;
+      return {
+        parcelValue: serviceParcela,
+        totalCharged: custoIngredientes + serviceTotalWithFee,
+        hasAsaasFee: true
+      };
+      // unused warning suppression:
+      void firstMonthTotal;
+    }
+    // Fallback: no fee info yet
+    const parcelValue = Math.round((totalBase / n) * 100) / 100;
+    return { parcelValue, totalCharged: totalBase, hasAsaasFee: false };
+  };
+
+  const currentInstallmentInfo = getInstallmentInfo(installmentCount);
+  const total = currentInstallmentInfo.totalCharged;
 
   const buscarCEP = async (cep: string) => {
     const digits = toDigits(cep);
@@ -467,13 +512,13 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                     <span>R$ {pricing.chefAmount.toFixed(2)}</span>
                   </div>
                   {pricing.subChefAmount > 0 && (
-                    <div className="flex justify-between text-amber-800 font-medium">
+                    <div className="flex justify-between text-gray-600">
                       <span>• Sub Chef:</span>
                       <span>R$ {pricing.subChefAmount.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>• Taxa da Plataforma TYT:</span>
+                    <span>• Serviço Take Your Thyme:</span>
                     <span>R$ {pricing.tytAmount.toFixed(2)}</span>
                   </div>
                 </div>
@@ -504,17 +549,36 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                   </span>
                 </div>
 
-                {/* Installment info for Get Together */}
-                {isGetTogether && metodoPagamento === 'CREDIT_CARD' && installmentCount > 1 && (
-                  <div className="bg-blue-50 border border-blue-200 rounded p-2 space-y-1">
-                    <p className="text-xs font-medium text-blue-800">Parcelamento:</p>
-                    <p className="text-sm text-blue-700">
-                      {installmentCount}x de R$ {valorParcela.toFixed(2)}
-                      <span className="text-xs ml-1">(total c/ juros: R$ {totalComJuros.toFixed(2)})</span>
-                    </p>
-                    <p className="text-xs text-blue-600">Juros de 2% ao mês</p>
-                  </div>
-                )}
+                {/* Dual-charge breakdown for Get Together installments */}
+                {isGetTogether && metodoPagamento === 'CREDIT_CARD' && installmentCount > 1 && (() => {
+                  const sim = asaasSimulations[installmentCount];
+                  return (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-3 space-y-2">
+                      <p className="text-xs font-semibold text-blue-800">Detalhamento do parcelamento:</p>
+                      {custoIngredientes > 0 && (
+                        <div className="flex justify-between text-xs text-blue-700">
+                          <span>• Ingredientes (à vista, 1ª cobrança):</span>
+                          <span>R$ {custoIngredientes.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-xs text-blue-700">
+                        <span>• Serviço ({installmentCount}x, 2ª cobrança):</span>
+                        <span>
+                          {isLoadingSimulation ? 'Calculando...' : sim?.paymentValue
+                            ? `${installmentCount}x de R$ ${sim.paymentValue.toFixed(2)}${sim.feePercentage ? ` (${sim.feePercentage.toFixed(2)}% Asaas)` : ''}`
+                            : `${installmentCount}x de R$ ${(valorServico / installmentCount).toFixed(2)}`
+                          }
+                        </span>
+                      </div>
+                      {custoIngredientes > 0 && sim?.paymentValue && (
+                        <div className="flex justify-between text-xs font-medium text-blue-800 border-t border-blue-200 pt-1">
+                          <span>• Estimativa fatura 1º mês:</span>
+                          <span>R$ {(custoIngredientes + sim.paymentValue).toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <hr />
                 <div className="flex justify-between font-semibold text-lg text-primary">
@@ -667,35 +731,48 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                     {/* Installment selector — Get Together only */}
                     {isGetTogether && (
                       <div>
-                        <Label className="text-sm">Parcelamento</Label>
+                        <Label className="text-sm">Parcelamento do Serviço</Label>
+                        <p className="text-xs text-gray-500 mb-1">Ingredientes sempre cobrados à vista</p>
                         <div className="grid grid-cols-3 gap-2 mt-1">
                           {[1, 2, 3].map((n) => {
-                            const totalParc = n > 1
-                              ? Math.round(totalBase * Math.pow(1 + MONTHLY_INTEREST_RATE, n) * 100) / 100
-                              : totalBase;
-                            const parcValue = Math.round((totalParc / n) * 100) / 100;
+                            const info = getInstallmentInfo(n);
+                            const sim = n > 1 ? asaasSimulations[n] : null;
+                            const displayValue = n === 1
+                              ? totalBase
+                              : (sim?.paymentValue ?? Math.round((valorServico / n) * 100) / 100);
 
                             return (
                               <button
                                 key={n}
                                 type="button"
                                 onClick={() => setInstallmentCount(n)}
+                                disabled={isLoadingSimulation && n > 1}
                                 className={`p-2 rounded-lg border text-center transition-all ${installmentCount === n
                                   ? 'border-[#004B2A] bg-[#004B2A]/5'
                                   : 'border-gray-200 hover:border-gray-300'
-                                  }`}
+                                  } ${isLoadingSimulation && n > 1 ? 'opacity-60' : ''}`}
                               >
                                 <span className="block text-sm font-medium">
-                                  {n}x de R$ {parcValue.toFixed(2)}
+                                  {n === 1
+                                    ? `1x de R$ ${totalBase.toFixed(2)}`
+                                    : isLoadingSimulation
+                                      ? `${n}x...`
+                                      : `Serviço ${n}x R$ ${displayValue.toFixed(2)}`
+                                  }
                                 </span>
-                                {n > 1 && (
-                                  <span className="block text-xs text-muted-foreground">
-                                    (c/ juros)
+                                {n > 1 && sim?.feePercentage && (
+                                  <span className="block text-xs text-amber-600">
+                                    + {sim.feePercentage.toFixed(2)}% Asaas
                                   </span>
                                 )}
                                 {n === 1 && (
                                   <span className="block text-xs text-green-600">
                                     sem juros
+                                  </span>
+                                )}
+                                {n > 1 && !sim && !isLoadingSimulation && (
+                                  <span className="block text-xs text-muted-foreground">
+                                    taxa Asaas
                                   </span>
                                 )}
                               </button>
