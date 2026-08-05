@@ -52,9 +52,9 @@ const ServicosAtivos = () => {
                 return {
                   ...order,
                   ...detailData,
-                  service_value: (detailData.service_value !== undefined && detailData.service_value !== null && Number(detailData.service_value) !== 0)
-                    ? detailData.service_value
-                    : (order.service_value ?? (order as any).serviceValue ?? detailData.service_value)
+                  service_value: (detailData.chef_amount ?? detailData.chefAmount ?? detailData.chef_value ?? detailData.valor_chef ?? detailData.service_value) !== undefined
+                    ? (detailData.chef_amount ?? detailData.chefAmount ?? detailData.chef_value ?? detailData.valor_chef ?? detailData.service_value)
+                    : ((order as any).chef_amount ?? (order as any).chefAmount ?? (order as any).chef_value ?? order.service_value ?? (order as any).serviceValue ?? detailData.service_value)
                 } as KitchenOrder;
               } catch (e) {
                 return order;
@@ -80,7 +80,7 @@ const ServicosAtivos = () => {
         const location = getKitchenOrderLocation(order) || "—";
         const frequency = "Sessão";
 
-        const serviceValueRaw = order.service_value ?? (order as any).serviceValue;
+        const serviceValueRaw = (order as any).chef_amount ?? (order as any).chefAmount ?? (order as any).chef_value ?? (order as any).valor_chef ?? order.service_value ?? (order as any).serviceValue;
 
         const serviceValue = serviceValueRaw
           ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(serviceValueRaw))

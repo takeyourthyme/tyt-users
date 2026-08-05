@@ -107,11 +107,11 @@ const ServicoDetalhes = () => {
       totalSessions: 1,
       completedSessions: status === 'concluido' ? 1 : 0,
       remainingSessions: status === 'concluido' ? 0 : 1,
-      monthlyValue: (kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue)
-        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue) * 4)
+      monthlyValue: ((kitchenOrder as any)?.chef_amount ?? (kitchenOrder as any)?.chefAmount ?? (kitchenOrder as any)?.chef_value ?? (kitchenOrder as any)?.valor_chef ?? kitchenOrder.service_value ?? (kitchenOrder as any)?.serviceValue)
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number((kitchenOrder as any)?.chef_amount ?? (kitchenOrder as any)?.chefAmount ?? (kitchenOrder as any)?.chef_value ?? (kitchenOrder as any)?.valor_chef ?? kitchenOrder.service_value ?? (kitchenOrder as any)?.serviceValue) * 4)
         : "—",
-      sessionValue: (kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue)
-        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue))
+      sessionValue: ((kitchenOrder as any)?.chef_amount ?? (kitchenOrder as any)?.chefAmount ?? (kitchenOrder as any)?.chef_value ?? (kitchenOrder as any)?.valor_chef ?? kitchenOrder.service_value ?? (kitchenOrder as any)?.serviceValue)
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number((kitchenOrder as any)?.chef_amount ?? (kitchenOrder as any)?.chefAmount ?? (kitchenOrder as any)?.chef_value ?? (kitchenOrder as any)?.valor_chef ?? kitchenOrder.service_value ?? (kitchenOrder as any)?.serviceValue))
         : "—"
     };
   }, [kitchenOrder, id]);
@@ -119,7 +119,7 @@ const ServicoDetalhes = () => {
   const ordensServico = useMemo(() => {
     if (!kitchenOrder) return [];
 
-    const serviceValueRaw = kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue;
+    const serviceValueRaw = (kitchenOrder as any)?.chef_amount ?? (kitchenOrder as any)?.chefAmount ?? (kitchenOrder as any)?.chef_value ?? (kitchenOrder as any)?.valor_chef ?? kitchenOrder.service_value ?? (kitchenOrder as any)?.serviceValue;
     const valorFormatted = serviceValueRaw
       ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(serviceValueRaw))
       : "—";

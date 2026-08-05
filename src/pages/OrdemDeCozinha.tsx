@@ -473,8 +473,8 @@ const OrdemDeCozinha = () => {
         }).filter(Boolean) as Array<{ dish: any; quantity: number }>
         : [],
       observations: (kitchenOrder.observations as string) || (kitchenOrder.client_request as string) || "Sem observações adicionais.",
-      budget: (kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue)
-        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue))
+      budget: ((kitchenOrder as any)?.chef_amount ?? (kitchenOrder as any)?.chefAmount ?? (kitchenOrder as any)?.chef_value ?? (kitchenOrder as any)?.valor_chef ?? kitchenOrder.service_value ?? (kitchenOrder as any)?.serviceValue)
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number((kitchenOrder as any)?.chef_amount ?? (kitchenOrder as any)?.chefAmount ?? (kitchenOrder as any)?.chef_value ?? (kitchenOrder as any)?.valor_chef ?? kitchenOrder.service_value ?? (kitchenOrder as any)?.serviceValue))
         : "—"
     };
   }, [kitchenOrder, id]);
@@ -514,19 +514,21 @@ const OrdemDeCozinha = () => {
       if (item && typeof item === 'object' && item.dish) {
         const normalized = normalizeDish(item.dish as Dish);
         const dishQty = item.quantity ?? 1;
+        const servings = normalized.servings || 1;
+        const batches = Math.ceil(dishQty / servings);
 
         if (normalized.ingredients && normalized.ingredients.length > 0) {
           normalized.ingredients.forEach(ing => {
             const key = ing.name.toLowerCase().trim();
             const existing = consolidated.get(key);
             if (existing) {
-              existing.quantityValue += ing.quantityValue * dishQty;
-              existing.totalCost += ing.price * dishQty;
+              existing.quantityValue += ing.quantityValue * batches;
+              existing.totalCost += ing.price * ing.quantityValue * batches;
             } else {
               consolidated.set(key, {
-                quantityValue: ing.quantityValue * dishQty,
+                quantityValue: ing.quantityValue * batches,
                 unit: ing.unit,
-                totalCost: ing.price * dishQty
+                totalCost: ing.price * ing.quantityValue * batches
               });
             }
           });
@@ -555,7 +557,11 @@ const OrdemDeCozinha = () => {
       };
     });
 
-    const total = Array.from(consolidated.values()).reduce((acc, curr) => acc + curr.totalCost, 0);
+    const officialCost = (kitchenOrder as any)?.ingredient_cost ?? (kitchenOrder as any)?.ingredients_value ?? (kitchenOrder as any)?.ingredient_value;
+    const calculatedSum = Array.from(consolidated.values()).reduce((acc, curr) => acc + curr.totalCost, 0);
+    const total = officialCost !== undefined && officialCost !== null && Number(officialCost) > 0
+      ? Number(officialCost)
+      : calculatedSum;
 
     return { shoppingList: list, totalEstimatedPrice: total };
   }, [kitchenOrder]);

@@ -265,8 +265,8 @@ const OrdemPendente = () => {
         ? kitchenOrder.dishes.map(d => typeof d === 'object' && d !== null && 'dish' in d ? (d.dish as Record<string, unknown>)?.name as string : "Prato")
         : ["Menu Personalizado"],
       observations: (kitchenOrder.observations as string) || (kitchenOrder.client_request as string) || "Sem observações adicionais.",
-      budget: (kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue)
-        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(kitchenOrder.service_value ?? (kitchenOrder as any).serviceValue))
+      budget: ((kitchenOrder as any)?.chef_amount ?? (kitchenOrder as any)?.chefAmount ?? (kitchenOrder as any)?.chef_value ?? (kitchenOrder as any)?.valor_chef ?? kitchenOrder.service_value ?? (kitchenOrder as any)?.serviceValue)
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number((kitchenOrder as any)?.chef_amount ?? (kitchenOrder as any)?.chefAmount ?? (kitchenOrder as any)?.chef_value ?? (kitchenOrder as any)?.valor_chef ?? kitchenOrder.service_value ?? (kitchenOrder as any)?.serviceValue))
         : "—"
     };
   }, [kitchenOrder, id]);

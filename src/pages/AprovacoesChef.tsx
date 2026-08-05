@@ -86,9 +86,9 @@ const AprovacoesChef = () => {
                 return {
                   ...order,
                   ...detailData,
-                  service_value: (detailData.service_value !== undefined && detailData.service_value !== null && Number(detailData.service_value) !== 0)
-                    ? detailData.service_value
-                    : (order.service_value ?? (order as any).serviceValue ?? detailData.service_value)
+                  service_value: (detailData.chef_amount ?? detailData.chefAmount ?? detailData.chef_value ?? detailData.valor_chef ?? detailData.service_value) !== undefined
+                    ? (detailData.chef_amount ?? detailData.chefAmount ?? detailData.chef_value ?? detailData.valor_chef ?? detailData.service_value)
+                    : ((order as any).chef_amount ?? (order as any).chefAmount ?? (order as any).chef_value ?? order.service_value ?? (order as any).serviceValue ?? detailData.service_value)
                 } as KitchenOrder;
               } catch (e) {
                 return order;

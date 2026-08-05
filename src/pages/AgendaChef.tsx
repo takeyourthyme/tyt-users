@@ -197,7 +197,7 @@ const AgendaChef = () => {
         const status = normalizeKitchenOrderStatusLabel(order);
         const location = getKitchenOrderLocation(order) || "—";
 
-        const serviceValueRaw = order.service_value ?? (order as any).serviceValue;
+        const serviceValueRaw = (order as any).chef_amount ?? (order as any).chefAmount ?? (order as any).chef_value ?? (order as any).valor_chef ?? order.service_value ?? (order as any).serviceValue;
         const serviceValue = serviceValueRaw
           ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(serviceValueRaw))
           : "—";
