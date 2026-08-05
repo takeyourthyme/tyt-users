@@ -280,11 +280,18 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
             <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(Math.max(1, quantidadePessoas - 1))} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
               <Minus size={14} />
             </Button>
-            <Input type="number" value={quantidadePessoas} onChange={e => setQuantidadePessoas(parseInt(e.target.value) || 1)} className="w-16 text-center h-8 border-gray-300" min="1" />
-            <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(quantidadePessoas + 1)} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
+            <Input type="number" value={quantidadePessoas} onChange={e => setQuantidadePessoas(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))} className="w-16 text-center h-8 border-gray-300" min="1" max="30" />
+            <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(Math.min(30, quantidadePessoas + 1))} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
               <Plus size={14} />
             </Button>
+            <span className="text-xs text-gray-500">(Máximo: 30 pessoas)</span>
           </div>
+          {quantidadePessoas >= 21 && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
+              <Info className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Eventos entre 21 e 30 pessoas incluem a presença e taxa de Sub Chef.</span>
+            </div>
+          )}
         </div>
 
         {/* Data do Evento e Horários */}

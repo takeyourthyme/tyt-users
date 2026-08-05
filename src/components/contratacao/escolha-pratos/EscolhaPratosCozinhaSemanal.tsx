@@ -13,6 +13,7 @@ import { DadosContratacao } from "@/pages/Contratacao";
 import { useToast } from "@/hooks/use-toast";
 import { loadSession } from "@/services/authService";
 import { listDishes, listHighlightedDishes, normalizeDish, type Dish } from "@/services/dishService";
+import { calculateServicePrice, fetchPricingTiers, type PricingTier } from "@/services/pricingService";
 
 // Import das imagens
 import yakisobaFrango from "@/assets/yakisoba-frango.jpg";
@@ -389,12 +390,17 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
       pratosSelecionados: pratosConsolidados
     });
   };
+  const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
+
+  useEffect(() => {
+    fetchPricingTiers().then(setPricingTiers);
+  }, []);
+
   const calcularTotal = () => {
-    const precoChef = 550;
-    let precoCompras = 0;
-
+    const pricing = calculateServicePrice("cozinha-semanal", dados.tamanhoPortacao, pricingTiers);
+    const valorServico = pricing.clientPrice;
     const multiplier = dados.tamanhoPortacao === "grande" ? 6 : dados.tamanhoPortacao === "media" ? 4 : 2;
-
+    let precoCompras = 0;
     diasEntrega.forEach((_, diaIndex) => {
       const pratosDoDia = pratosPorDia[diaIndex] || [];
       precoCompras += pratosDoDia.reduce((total, prato: any) => {
@@ -405,13 +411,19 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
     });
 
     return {
-      precoChef,
+      valorServico,
+      precoChef: pricing.chefAmount,
+      subChefAmount: pricing.subChefAmount,
+      tytAmount: pricing.tytAmount,
       precoCompras,
-      total: precoChef + precoCompras
+      total: valorServico + precoCompras
     };
   };
   const {
+    valorServico,
     precoChef,
+    subChefAmount,
+    tytAmount,
     precoCompras,
     total
   } = calcularTotal();
@@ -744,13 +756,13 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
 
             {/* Resumo Financeiro */}
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Serviço do Chef:</span>
-                <span className="font-medium">R$ {precoChef.toFixed(2)}</span>
+              <div className="flex justify-between font-medium">
+                <span>Valor do Serviço:</span>
+                <span>R$ {valorServico.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  <span>Compras:</span>
+                  <span>Estimativa de Compras:</span>
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-4 w-4">
@@ -771,8 +783,9 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
                 </div>
                 <span className="font-medium">R$ {precoCompras.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between font-light">
-                <span>Total:</span>
+              <hr className="my-1" />
+              <div className="flex justify-between font-semibold text-base">
+                <span>Total Estimado:</span>
                 <span>R$ {total.toFixed(2)}</span>
               </div>
             </div>

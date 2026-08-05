@@ -15,6 +15,7 @@ import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
 import { listDishes, listHighlightedDishes, normalizeDish, type Dish } from "@/services/dishService";
 import { listDishCategories, listThemes, type LookupOption } from "@/services/lookupService";
+import { calculateServicePrice, fetchPricingTiers, type PricingTier } from "@/services/pricingService";
 
 interface Props {
   dados: DadosContratacao;
@@ -65,7 +66,7 @@ const getFallbackThemeName = (id: string): string => {
 
 const isDishInTheme = (prato: DishOption, temaId: string, selectedThemeName?: string) => {
   if (!temaId) return true;
-  
+
   const numericThemeId = parseInt(temaId, 10);
   if (!isNaN(numericThemeId) && prato.themeIds?.includes(numericThemeId)) {
     return true;
@@ -73,7 +74,7 @@ const isDishInTheme = (prato: DishOption, temaId: string, selectedThemeName?: st
 
   const themeName = selectedThemeName || getFallbackThemeName(temaId);
   const normTheme = themeName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-  
+
   if (prato.themes) {
     return prato.themes.some((tName) => {
       const normDishTheme = tName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -198,7 +199,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
         }
 
         const allDishes = mapped;
-        const filteredDishes = allDishes.filter(prato => 
+        const filteredDishes = allDishes.filter(prato =>
           dados.temaSelecionado ? isDishInTheme(prato, dados.temaSelecionado, selectedThemeName) : true
         );
 
@@ -259,23 +260,37 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
     }
   };
 
+  const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
+
+  useEffect(() => {
+    fetchPricingTiers().then(setPricingTiers);
+  }, []);
+
   const calcularTotal = () => {
-    const precoChef = 550;
+    const pricing = calculateServicePrice("eventos", dados.quantidadePessoas, pricingTiers);
+    const valorServico = pricing.clientPrice;
     const multiplier = Number(dados.quantidadePessoas || 1);
     const precoCompras = pratosSelecionados.reduce((acc, p: any) => {
       const servings = p.servings && p.servings > 0 ? p.servings : 1;
       const batches = Math.ceil(multiplier / servings);
       return acc + (p.preco * batches);
     }, 0);
+
     return {
-      precoChef,
+      valorServico,
+      precoChef: pricing.chefAmount,
+      subChefAmount: pricing.subChefAmount,
+      tytAmount: pricing.tytAmount,
       precoCompras,
-      total: precoChef + precoCompras
+      total: valorServico + precoCompras
     };
   };
 
   const {
+    valorServico,
     precoChef,
+    subChefAmount,
+    tytAmount,
     precoCompras,
     total
   } = calcularTotal();
@@ -586,13 +601,13 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
 
             {/* Resumo Financeiro */}
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Serviço do Chef:</span>
-                <span>R$ {precoChef.toFixed(2)}</span>
+              <div className="flex justify-between font-medium">
+                <span>Valor do Serviço:</span>
+                <span>R$ {valorServico.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  <span>Compras:</span>
+                  <span>Estimativa de Compras:</span>
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-4 w-4">
@@ -611,10 +626,11 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                     </DialogContent>
                   </Dialog>
                 </div>
-                <span>R$ {precoCompras.toFixed(2)}</span>
+                <span className="font-medium">R$ {precoCompras.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm font-light border-t pt-2 mt-2">
-                <span>Total:</span>
+              <hr className="my-1" />
+              <div className="flex justify-between font-semibold text-base">
+                <span>Total Estimado:</span>
                 <span>R$ {total.toFixed(2)}</span>
               </div>
             </div>

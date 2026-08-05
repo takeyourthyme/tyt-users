@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAsaasCustomerId, getAsaasTokenizationConfig, tokenizeCard } from "@/services/asaasService";
+import { calculateServicePrice, fetchPricingTiers, type PricingTier } from "@/services/pricingService";
 
 interface Props {
   dados: DadosContratacao;
@@ -82,7 +83,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   });
 
   const selectedDishes: unknown[] = Array.isArray(dados.pratosSelecionados) ? dados.pratosSelecionados : [];
-  
+
   /**
    * Calculates the actual number of portions needed for the selected dish.
    * Multiplies the selection count by the plan/event multiplier.
@@ -90,20 +91,20 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   const getDishRealQuantity = (prato: unknown): number => {
     if (!prato || typeof prato !== "object") return 1;
     const record = prato as Record<string, unknown>;
-    
+
     // Number of times the dish was selected in the menu (default 1)
     const selectionQty = typeof record.quantity === 'number' ? record.quantity : 1;
-    
+
     if (dados.tipoServico === 'cozinha-semanal') {
       const multiplier = dados.tamanhoPortacao === "grande" ? 6 : dados.tamanhoPortacao === "media" ? 4 : 2;
       return selectionQty * multiplier;
     }
-    
+
     if (dados.tipoServico === 'eventos') {
       const multiplier = Number(dados.quantidadePessoas || 1);
       return selectionQty * multiplier;
     }
-    
+
     return selectionQty;
   };
 
@@ -114,27 +115,36 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   const getDishSubtotal = (prato: unknown): number => {
     if (!prato || typeof prato !== "object") return 0;
     const record = prato as Record<string, unknown>;
-    
+
     // User requested quantity (multiplied by portion size/people)
     const qty = getDishRealQuantity(prato);
-    
+
     // Recipe servings yield
     const servings = typeof record.servings === 'number' && record.servings > 0 ? record.servings : 1;
-    
+
     // Number of batches required
     const batches = Math.ceil(qty / servings);
     return getDishCost(prato) * batches;
   };
 
-  const precoChef = 550;
-  // Custo estimado de ingredientes baseado em Prato.total_cost por lote (calculado pelo backend)
+  const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
+
+  React.useEffect(() => {
+    fetchPricingTiers().then(setPricingTiers);
+  }, []);
+
+  const pricing = calculateServicePrice(
+    dados.tipoServico,
+    dados.tipoServico === 'eventos' ? dados.quantidadePessoas : dados.tamanhoPortacao,
+    pricingTiers
+  );
+
+  const valorServico = pricing.clientPrice;
   const custoIngredientes = selectedDishes.reduce<number>(
     (acc, prato) => acc + getDishSubtotal(prato),
     0
   );
-  const hasCostEstimate = custoIngredientes > 0;
-  // Valor total = custo do chef + custo de ingredientes
-  const totalBase = hasCostEstimate ? (precoChef + custoIngredientes) : 0;
+  const totalBase = valorServico + custoIngredientes;
 
   // Installment interest calculation (2% compound/month)
   const MONTHLY_INTEREST_RATE = 0.02;
@@ -446,10 +456,28 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Serviço do Chef:</span>
-                  <span className="font-medium">R$ {precoChef.toFixed(2)}</span>
+                <div className="flex justify-between text-sm font-medium">
+                  <span>Valor do Serviço:</span>
+                  <span>R$ {valorServico.toFixed(2)}</span>
                 </div>
+
+                <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-100 pl-4">
+                  <div className="flex justify-between">
+                    <span>• Chef profissional:</span>
+                    <span>R$ {pricing.chefAmount.toFixed(2)}</span>
+                  </div>
+                  {pricing.subChefAmount > 0 && (
+                    <div className="flex justify-between text-amber-800 font-medium">
+                      <span>• Sub Chef:</span>
+                      <span>R$ {pricing.subChefAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span>• Taxa da Plataforma TYT:</span>
+                    <span>R$ {pricing.tytAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-1">
                     <span>Custo estimado de ingredientes:</span>
@@ -459,7 +487,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Sobre o valor estimado</DialogTitle>
+                          <DialogTitle>Sobre o valor estimado de ingredientes</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-3">
                           <p className="text-sm text-gray-600">
@@ -470,19 +498,14 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                     </Dialog>
                   </div>
                   <span className="font-medium">
-                    {hasCostEstimate
+                    {custoIngredientes > 0
                       ? `R$ ${custoIngredientes.toFixed(2)}`
                       : <span className="text-amber-600 text-xs">A calcular</span>}
                   </span>
                 </div>
-                {!hasCostEstimate && isPayableService && (
-                  <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded p-2">
-                    ⚠️ O valor exato será calculado pelo sistema no momento do processamento, com base nos ingredientes dos pratos selecionados.
-                  </p>
-                )}
 
                 {/* Installment info for Get Together */}
-                {isGetTogether && metodoPagamento === 'CREDIT_CARD' && installmentCount > 1 && hasCostEstimate && (
+                {isGetTogether && metodoPagamento === 'CREDIT_CARD' && installmentCount > 1 && (
                   <div className="bg-blue-50 border border-blue-200 rounded p-2 space-y-1">
                     <p className="text-xs font-medium text-blue-800">Parcelamento:</p>
                     <p className="text-sm text-blue-700">
@@ -494,9 +517,9 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                 )}
 
                 <hr />
-                <div className="flex justify-between font-light text-lg">
-                  <span>Total estimado:</span>
-                  <span>{hasCostEstimate ? `R$ ${total.toFixed(2)}` : '–'}</span>
+                <div className="flex justify-between font-semibold text-lg text-primary">
+                  <span>Total a pagar:</span>
+                  <span>R$ {total.toFixed(2)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -605,9 +628,8 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
           {isPayableService ? (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className={`flex items-center gap-2 text-lg ${
-                  errosValidacao.some(e => e.startsWith('cartao_')) ? 'text-red-600' : ''
-                }`}>
+                <CardTitle className={`flex items-center gap-2 text-lg ${errosValidacao.some(e => e.startsWith('cartao_')) ? 'text-red-600' : ''
+                  }`}>
                   <CreditCard className="w-5 h-5" />
                   Forma de Pagamento
                 </CardTitle>
@@ -618,11 +640,10 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                   <button
                     type="button"
                     onClick={() => { setMetodoPagamento('CREDIT_CARD'); setInstallmentCount(1); }}
-                    className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all text-sm font-medium ${
-                      metodoPagamento === 'CREDIT_CARD'
-                        ? 'border-[#004B2A] bg-[#004B2A]/5 text-[#004B2A]'
-                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}
+                    className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all text-sm font-medium ${metodoPagamento === 'CREDIT_CARD'
+                      ? 'border-[#004B2A] bg-[#004B2A]/5 text-[#004B2A]'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                      }`}
                   >
                     <CreditCard className="w-5 h-5" />
                     Cartão de Crédito
@@ -630,11 +651,10 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                   <button
                     type="button"
                     onClick={() => { setMetodoPagamento('PIX'); setInstallmentCount(1); }}
-                    className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all text-sm font-medium ${
-                      metodoPagamento === 'PIX'
-                        ? 'border-[#004B2A] bg-[#004B2A]/5 text-[#004B2A]'
-                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}
+                    className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all text-sm font-medium ${metodoPagamento === 'PIX'
+                      ? 'border-[#004B2A] bg-[#004B2A]/5 text-[#004B2A]'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                      }`}
                   >
                     <QrCode className="w-5 h-5" />
                     Pix
@@ -645,7 +665,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                 {metodoPagamento === 'CREDIT_CARD' && (
                   <div className="space-y-3 pt-2">
                     {/* Installment selector — Get Together only */}
-                    {isGetTogether && hasCostEstimate && (
+                    {isGetTogether && (
                       <div>
                         <Label className="text-sm">Parcelamento</Label>
                         <div className="grid grid-cols-3 gap-2 mt-1">
@@ -660,11 +680,10 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                                 key={n}
                                 type="button"
                                 onClick={() => setInstallmentCount(n)}
-                                className={`p-2 rounded-lg border text-center transition-all ${
-                                  installmentCount === n
-                                    ? 'border-[#004B2A] bg-[#004B2A]/5'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                }`}
+                                className={`p-2 rounded-lg border text-center transition-all ${installmentCount === n
+                                  ? 'border-[#004B2A] bg-[#004B2A]/5'
+                                  : 'border-gray-200 hover:border-gray-300'
+                                  }`}
                               >
                                 <span className="block text-sm font-medium">
                                   {n}x de R$ {parcValue.toFixed(2)}
@@ -771,7 +790,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                       <p className="text-xs text-green-700">
                         Após clicar em "Concluir", um QR Code será gerado para você escanear com o app do seu banco. O pagamento é confirmado em segundos.
                       </p>
-                      {hasCostEstimate && (
+                      {totalBase > 0 && (
                         <p className="text-lg font-bold text-green-800 pt-1">
                           R$ {totalBase.toFixed(2)}
                         </p>

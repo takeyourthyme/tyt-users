@@ -692,13 +692,41 @@ const DetalheContrato = () => {
               </div>
             </div>
 
-            {/* Estimated value */}
-            {proposalTotalPrice > 0 && (
-              <div className="mt-5 pt-4 border-t border-gray-100">
-                <p className="text-xs text-gray-400 mb-0.5">Valor estimado</p>
-                <p className="text-base font-semibold text-gray-800">
-                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}
-                </p>
+            {/* Financial breakdown */}
+            {((apiOrder as any)?.service_value > 0 || proposalTotalPrice > 0) && (
+              <div className="mt-5 pt-4 border-t border-gray-100 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-400">Valor do Serviço</p>
+                  <p className="text-base font-semibold text-gray-800">
+                    {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+                      (apiOrder as any)?.service_value ?? proposalTotalPrice
+                    )}
+                  </p>
+                </div>
+                {(apiOrder as any)?.chef_amount !== undefined && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div>
+                      <span className="text-gray-400 block">Chef recebe</span>
+                      <span className="font-medium text-gray-700">
+                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((apiOrder as any).chef_amount)}
+                      </span>
+                    </div>
+                    {Number((apiOrder as any)?.sub_chef_amount) > 0 && (
+                      <div>
+                        <span className="text-gray-400 block">Sub Chef (via TYT)</span>
+                        <span className="font-medium text-amber-700">
+                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((apiOrder as any).sub_chef_amount)}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-gray-400 block">TYT Plataforma</span>
+                      <span className="font-medium text-gray-700">
+                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((apiOrder as any).tyt_amount ?? 0)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
