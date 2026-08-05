@@ -1005,6 +1005,25 @@ const OrdemDeCozinha = () => {
                     </DialogContent>
                   </Dialog>
 
+                  <Button
+                    variant="outline"
+                    className="w-full border-blue-200 bg-blue-50/50 text-blue-900 hover:bg-blue-100 hover:text-blue-950 font-medium"
+                    onClick={() => {
+                      const url = (kitchenOrder as any)?.shopping_list_url ?? (kitchenOrder as any)?.shoppingListUrl;
+                      if (url) {
+                        window.open(resolveMediaUrl(url), "_blank");
+                      } else {
+                        toast({
+                          title: "Lista de Compras em PDF",
+                          description: "O documento em PDF está sendo gerado ou não está disponível no momento.",
+                        });
+                      }
+                    }}
+                  >
+                    <FileText className="w-4 h-4 mr-2 text-blue-700" />
+                    Baixar Lista de Compras (PDF)
+                  </Button>
+
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full">
@@ -1013,8 +1032,21 @@ const OrdemDeCozinha = () => {
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
-                      <DialogHeader>
+                      <DialogHeader className="flex flex-row items-center justify-between pr-6">
                         <DialogTitle>Lista de Compras</DialogTitle>
+                        {((kitchenOrder as any)?.shopping_list_url || (kitchenOrder as any)?.shoppingListUrl) && (
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={() => {
+                              const url = (kitchenOrder as any)?.shopping_list_url ?? (kitchenOrder as any)?.shoppingListUrl;
+                              window.open(resolveMediaUrl(url), "_blank");
+                            }}
+                          >
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            Baixar PDF
+                          </Button>
+                        )}
                       </DialogHeader>
                       <div className="max-h-96 overflow-y-auto">
                         <div className="grid gap-2">
@@ -1056,6 +1088,7 @@ const OrdemDeCozinha = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
+
                 </>
               )}
 
