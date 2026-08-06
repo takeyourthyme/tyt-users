@@ -182,7 +182,12 @@ export function normalizeDish(dish: Dish): NormalizedDish {
   const receitaValue = receitaCandidates.find((value) => typeof value === "string") as string | undefined;
   const receita = receitaValue?.trim() ? sanitizeUrl(receitaValue) : undefined;
 
-  const ingredients = getIngredients(dish.pratos_ingredientes ?? dish.ingredientes ?? dish.ingredients);
+  const sheetRaw = dish.technical_sheet ?? dish.technicalSheet;
+  const sheet = Array.isArray(sheetRaw) && sheetRaw.length > 0 ? sheetRaw : null;
+  const ingredients = sheet
+    ? getIngredients(sheet)
+    : getIngredients(dish.pratos_ingredientes ?? dish.ingredientes ?? dish.ingredients);
+
 
   const priceCandidates: Array<unknown> = [dish.total_cost, dish.totalCost, dish.preco, dish.price, dish.valor, dish.value];
   const priceValue = priceCandidates.find((value) => typeof value === "number") as number | undefined;
