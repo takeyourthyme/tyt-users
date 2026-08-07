@@ -505,24 +505,6 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                   <span>Valor do Serviço:</span>
                   <span>R$ {valorServico.toFixed(2)}</span>
                 </div>
-
-                <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-100 pl-4">
-                  <div className="flex justify-between">
-                    <span>• Chef profissional:</span>
-                    <span>R$ {pricing.chefAmount.toFixed(2)}</span>
-                  </div>
-                  {pricing.subChefAmount > 0 && (
-                    <div className="flex justify-between text-gray-600">
-                      <span>• Sub Chef:</span>
-                      <span>R$ {pricing.subChefAmount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span>• Serviço Take Your Thyme:</span>
-                    <span>R$ {pricing.tytAmount.toFixed(2)}</span>
-                  </div>
-                </div>
-
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-1">
                     <span>Custo estimado de ingredientes:</span>
