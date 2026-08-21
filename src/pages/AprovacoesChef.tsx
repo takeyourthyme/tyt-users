@@ -221,7 +221,7 @@ const AprovacoesChef = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/dashboard-chef')}
+            onClick={() => navigate('/chef/inicio')}
             className="text-gray-600 hover:text-gray-900 p-2"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -307,7 +307,7 @@ const AprovacoesChef = () => {
                         size="sm"
                         variant="outline"
                         className="flex-1 md:w-full"
-                        onClick={() => navigate(`/servico-detalhes/${code}`)}
+                        onClick={() => navigate(`/chef/servicos/${code}`)}
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         Detalhes

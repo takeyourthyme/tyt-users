@@ -40,34 +40,34 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
   const menuItems = [{
     icon: UtensilsCrossed,
     label: "Novo Serviço",
-    route: "/contratacao-logado",
+    route: "/contratar",
     highlighted: true
   }, {
     icon: Home,
     label: "Dashboard",
-    route: "/dashboard-cliente"
+    route: "/inicio"
   }, {
     icon: User,
     label: "Minha Conta",
-    route: "/editar-dados"
+    route: "/minha-conta"
   }, {
     icon: FileText,
     label: "Serviços Ativos",
-    route: "/meus-contratos"
+    route: "/meus-pedidos"
   }, {
     icon: Clock,
     label: "Histórico de Pagamento",
-    route: "/historico-pagamento",
+    route: "/pagamentos",
     disabled: true
   }, {
     icon: CreditCard,
     label: "Gerenciar Cartões",
-    route: "/gerenciar-cartoes",
+    route: "/cartoes",
     disabled: true
   }, {
     icon: Book,
     label: "Ver Pratos",
-    route: "/pratos"
+    route: "/cardapio"
   }, {
     icon: MessageCircle,
     label: "Suporte",
@@ -83,7 +83,7 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
       <div className="max-w-4xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
         {/* Logo */}
         <div className="flex-shrink-0">
-          <LogoText linkTo="/dashboard-cliente" />
+          <LogoText linkTo="/inicio" />
         </div>
 
         {/* Menu Hamburger */}

@@ -61,7 +61,7 @@ const Login = () => {
         description: "Bem-vindo de volta ao Take Your Thyme",
       });
 
-      navigate("/dashboard-cliente");
+      navigate("/inicio");
     } catch (error) {
       const message = (() => {
         if (isAxiosError(error)) {
@@ -162,7 +162,7 @@ const Login = () => {
             <div className="pt-2 space-y-3 text-center">
               <div>
                 <Link
-                  to="/esqueci-senha"
+                  to="/recuperar-senha"
                   className="inline-flex items-center justify-center gap-1.5 text-xs text-gray-500 hover:text-[#004B2A] transition-colors"
                 >
                   <HelpCircle className="w-4 h-4" />

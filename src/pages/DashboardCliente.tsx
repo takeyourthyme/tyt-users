@@ -329,7 +329,7 @@ const DashboardCliente = () => {
                         variant="outline"
                         className="flex-1"
                         disabled={!code}
-                        onClick={() => navigate(`/detalhes-contrato/${code}`)}
+                        onClick={() => navigate(`/meus-pedidos/${code}`)}
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         Ver detalhes
@@ -360,7 +360,7 @@ const DashboardCliente = () => {
                 <p></p>
                 <Button
                   className="w-full bg-tyt-green-700 hover:bg-tyt-green-700 text-white"
-                  onClick={() => navigate("/contratacao-logado")}
+                  onClick={() => navigate("/contratar")}
                 >
                   Começar agora
                 </Button>
@@ -378,7 +378,7 @@ const DashboardCliente = () => {
                   <h4 className="text-xl font-bodoni font-normal text-gray-800">Conhecer nossos pratos</h4>
                 </div>
                 <p className="text-sm text-gray-600">Deixe o jantar da semana mais prático. Escolha seus pratos e deixe o preparo com um chef da TYT.</p>
-                <Button variant="outline" className="w-full border-tyt-blue-400 text-gray-800 hover:text-white hover:bg-tyt-blue-400" onClick={() => navigate("/pratos")}>
+                <Button variant="outline" className="w-full border-tyt-blue-400 text-gray-800 hover:text-white hover:bg-tyt-blue-400" onClick={() => navigate("/cardapio")}>
                   Ver opções
                 </Button>
               </div>

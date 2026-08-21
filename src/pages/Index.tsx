@@ -10,14 +10,14 @@ const Index = () => {
     if (session?.token && session?.user) {
       const userType = session.user?.tipo_usuario || session.user?.tipoUsuario;
       if (userType === "chef") {
-        navigate("/dashboard-chef", { replace: true });
+        navigate("/chef/inicio", { replace: true });
         return;
       } else if (userType === "cliente") {
-        navigate("/dashboard-cliente", { replace: true });
+        navigate("/inicio", { replace: true });
         return;
       }
     }
-    navigate("/login", { replace: true });
+    navigate("/entrar", { replace: true });
   }, [navigate]);
 
   return null;

@@ -121,7 +121,7 @@ const CadastroChefSucesso = () => {
                   IR PARA O SITE
                 </Button>
                 <Button
-                  onClick={() => navigate("/login/chef")}
+                  onClick={() => navigate("/chef/entrar")}
                   variant="ghost"
                   className="w-full text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                   size="lg"

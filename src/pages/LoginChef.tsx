@@ -61,7 +61,7 @@ const LoginChef = () => {
       });
 
       // Navigate to chef dashboard
-      navigate("/dashboard-chef");
+      navigate("/chef/inicio");
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 403) {
         const payload = error.response.data;
@@ -72,7 +72,7 @@ const LoginChef = () => {
               title: "Cadastro em análise",
               description: "Redirecionando para o acompanhamento do seu cadastro...",
             });
-            navigate("/cadastro-chef-sucesso", { state: { status: record.status } });
+            navigate("/chef/cadastro/status", { state: { status: record.status } });
             return;
           }
         }
@@ -108,7 +108,7 @@ const LoginChef = () => {
       {/* Header with blue background for chef and logo on the left */}
       <header className="bg-[#0E4684] border-b border-[#0a3769] px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <LogoText variant="white" linkTo="/login/chef" />
+          <LogoText variant="white" linkTo="/chef/entrar" />
         </div>
       </header>
 
@@ -167,7 +167,7 @@ const LoginChef = () => {
 
             <div className="mt-6 pt-4 text-center space-y-3">
               <Link
-                to="/esqueci-senha"
+                to="/recuperar-senha"
                 className="inline-flex items-center justify-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <HelpCircle className="w-4 h-4 text-gray-400" />
@@ -176,7 +176,7 @@ const LoginChef = () => {
 
               <div className="text-sm text-gray-500 flex items-center justify-center gap-1.5 pt-1">
                 <span>Não tem conta?</span>
-                <Link to="/cadastro-chef" className="text-[#0E4684] hover:underline font-medium inline-flex items-center gap-1">
+                <Link to="/chef/cadastro" className="text-[#0E4684] hover:underline font-medium inline-flex items-center gap-1">
                   <UserPlus className="w-4 h-4 text-[#0E4684]" />
                   Criar Conta
                 </Link>

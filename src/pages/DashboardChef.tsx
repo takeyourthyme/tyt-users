@@ -175,15 +175,15 @@ const DashboardChef = () => {
   }, [kitchenOrders]);
 
   const handleNavigateToAgenda = (filter?: string) => {
-    navigate('/agenda-chef', { state: { filter, scrollTo: 'proximos-compromissos' } });
+    navigate('/chef/agenda', { state: { filter, scrollTo: 'proximos-compromissos' } });
   };
 
   const handleNavigateToDisponibilidade = () => {
-    navigate('/editar-cadastro-chef', { state: { scrollTo: 'disponibilidade' } });
+    navigate('/chef/meu-perfil', { state: { scrollTo: 'disponibilidade' } });
   };
 
   const handleNavigateToPagamentos = () => {
-    navigate('/meus-pagamentos');
+    navigate('/chef/pagamentos');
   };
 
   const handleLogout = () => {
@@ -263,7 +263,7 @@ const DashboardChef = () => {
         {/* Welcome Message */}
         <div
           className="bg-white rounded-lg p-6 border border-gray-200 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
-          onClick={() => navigate('/editar-cadastro-chef')}
+          onClick={() => navigate('/chef/meu-perfil')}
         >
           <div className="flex items-start gap-4">
             {/* Profile Photo */}

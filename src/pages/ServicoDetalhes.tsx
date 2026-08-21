@@ -183,7 +183,7 @@ const ServicoDetalhes = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/servicos-ativos')}
+            onClick={() => navigate('/chef/servicos')}
             className="text-gray-600 hover:text-gray-900 p-2"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -375,7 +375,7 @@ const ServicoDetalhes = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/ordem-de-cozinha/${ordem.id}`)}
+                      onClick={() => navigate(`/chef/ordem/${ordem.id}`)}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>

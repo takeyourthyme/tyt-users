@@ -14,28 +14,28 @@ Todas as páginas do cliente estão sob `src/pages/` e configuradas no roteador 
 
 ### 1.1 Telas Públicas (Fluxo de Entrada)
 * **`/` ([Index.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/Index.tsx))**: Landing Page com cards direcionando o cliente para login ou contratação de serviços.
-* **`/login` ([Login.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/Login.tsx))**: Autenticação de clientes.
+* **`/entrar` ([Login.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/Login.tsx))**: Autenticação de clientes.
   * Validações: Formato de e-mail e senha (mínimo de 6 caracteres).
-  * Redireciona para `/dashboard-cliente` em caso de sucesso.
+  * Redireciona para `/inicio` em caso de sucesso.
 * **`/cadastro` ([Cadastro.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/Cadastro.tsx))**: Criação de novas contas de cliente.
   * Requer: Nome, E-mail, Telefone/WhatsApp, CPF, Senha e Confirmação.
   * Validações: CPF válido e único, formato de e-mail único, senha com mínimo de 8 caracteres contendo letras e números, aceite dos Termos de Uso.
-  * Redireciona para `/login` em caso de sucesso.
-* **`/esqueci-senha` ([EsqueciSenha.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/EsqueciSenha.tsx))**: Recuperação de senha do cliente via e-mail.
+  * Redireciona para `/entrar` em caso de sucesso.
+* **`/recuperar-senha` ([EsqueciSenha.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/EsqueciSenha.tsx))**: Recuperação de senha do cliente via e-mail.
 
 ### 1.2 Telas Autenticadas do Cliente
-* **`/dashboard-cliente` ([DashboardCliente.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/DashboardCliente.tsx))**: Painel inicial do cliente logado. Exibe resumo de serviços ativos, próximas entregas/eventos, atalhos para nova contratação e notificações.
-* **`/meus-contratos` ([MeusContratos.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/MeusContratos.tsx))**: Histórico de todos os contratos/pedidos solicitados pelo cliente.
+* **`/inicio` ([DashboardCliente.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/DashboardCliente.tsx))**: Painel inicial do cliente logado. Exibe resumo de serviços ativos, próximas entregas/eventos, atalhos para nova contratação e notificações.
+* **`/meus-pedidos` ([MeusContratos.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/MeusContratos.tsx))**: Histórico de todos os contratos/pedidos solicitados pelo cliente.
   * Status dos contratos: `Pendente`, `Confirmado` (atribuído ao Chef), `Concluido`, `Cancelado`.
-* **`/detalhes-contrato/:id` ([DetalheContrato.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/DetalheContrato.tsx))**: Detalhes completos do contrato, incluindo dados do Chef atribuído, cronograma, cardápio selecionado e formulário de avaliação do serviço (disponível apenas após a conclusão do serviço).
-* **`/historico-pagamento` ([HistoricoPagamento.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/HistoricoPagamento.tsx))**: Extrato financeiro de todas as cobranças do cliente, mostrando os últimos 4 dígitos do cartão, status do pagamento e links para download de comprovantes.
-* **`/gerenciar-cartoes` ([GerenciarCartoes.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/GerenciarCartoes.tsx))**: Cadastro e exclusão de cartões de crédito. Máximo de 5 cartões salvos. Permite definir um cartão padrão.
-* **`/editar-dados` ([EditarDadosPessoais.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/EditarDadosPessoais.tsx))**: Atualização cadastral (Nome, E-mail, WhatsApp, Endereço, Foto de Perfil) e alteração de senha (Senha Atual, Nova Senha, Confirmar Nova Senha).
+* **`/meus-pedidos/:id` ([DetalheContrato.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/DetalheContrato.tsx))**: Detalhes completos do contrato, incluindo dados do Chef atribuído, cronograma, cardápio selecionado e formulário de avaliação do serviço (disponível apenas após a conclusão do serviço).
+* **`/pagamentos` ([HistoricoPagamento.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/HistoricoPagamento.tsx))**: Extrato financeiro de todas as cobranças do cliente, mostrando os últimos 4 dígitos do cartão, status do pagamento e links para download de comprovantes.
+* **`/cartoes` ([GerenciarCartoes.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/GerenciarCartoes.tsx))**: Cadastro e exclusão de cartões de crédito. Máximo de 5 cartões salvos. Permite definir um cartão padrão.
+* **`/minha-conta` ([EditarDadosPessoais.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/EditarDadosPessoais.tsx))**: Atualização cadastral (Nome, E-mail, WhatsApp, Endereço, Foto de Perfil) e alteração de senha (Senha Atual, Nova Senha, Confirmar Nova Senha).
 * **`/cardapio` ([Cardapio.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/Cardapio.tsx))**: Catálogo de pratos disponíveis para filtragem por preferência culinária, categoria, restrições e ingredientes.
-* **`/prato/:id` ([PratoDetalhes.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/PratoDetalhes.tsx))**: Página de detalhes nutricionais, ingredientes e fotos de um prato específico.
+* **`/cardapio/:id` ([PratoDetalhes.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/PratoDetalhes.tsx))**: Página de detalhes nutricionais, ingredientes e fotos de um prato específico.
 
 ### 1.3 O Fluxo de Contratação
-* **`/contratacao` / `/contratacao-logado` ([Contratacao.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/Contratacao.tsx))**: Fluxo multi-etapas.
+* **`/contratar`** — Unificado em uma única rota pública para não logados e logados ([Contratacao.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/Contratacao.tsx))
   * **Etapa 1: Escolha do Serviço**: Seleção de cidade (obrigatório) e modalidade:
     * *Cozinha Semanal*: Refeições recorrentes pré-preparadas.
     * *Eventos*: Jantares e celebrações presenciais.

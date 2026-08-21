@@ -302,7 +302,7 @@ const DetalheContrato = () => {
           title: "Erro ao carregar detalhes",
           description: "Serviço não encontrado.",
         });
-        navigate("/meus-contratos");
+        navigate("/meus-pedidos");
       })
       .catch((err) => {
         console.error("Erro ao carregar serviço:", err);
@@ -311,7 +311,7 @@ const DetalheContrato = () => {
           title: "Não foi possível obter os detalhes",
           description: "Verifique sua conexão ou tente novamente.",
         });
-        navigate("/meus-contratos");
+        navigate("/meus-pedidos");
       })
       .finally(() => setApiLoading(false));
   };
@@ -636,7 +636,7 @@ const DetalheContrato = () => {
         {/* Navigation and Title */}
         <div className="flex items-center gap-3 mb-1">
           <button
-            onClick={() => navigate("/meus-contratos")}
+            onClick={() => navigate("/meus-pedidos")}
             className="text-gray-500 hover:text-gray-700 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -1058,7 +1058,7 @@ const DetalheContrato = () => {
             className="w-full bg-primary hover:bg-primary/90 text-white"
             size="lg"
             onClick={() =>
-              navigate("/contratacao-logado", {
+              navigate("/contratar", {
                 state: {
                   fromDashboard: true,
                   goToStep3: true,
@@ -1142,7 +1142,7 @@ const DetalheContrato = () => {
                             title: "Serviço cancelado",
                             description: "Seu agendamento foi cancelado com sucesso.",
                           });
-                          navigate("/meus-contratos");
+                          navigate("/meus-pedidos");
                         } catch (err) {
                           console.error("Erro ao cancelar:", err);
                           toast({

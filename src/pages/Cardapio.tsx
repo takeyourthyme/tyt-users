@@ -424,7 +424,7 @@ export default function Cardapio() {
               <Card
                 key={prato.id}
                 className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col"
-                onClick={() => navigate(`/prato/${prato.id}`)}
+                onClick={() => navigate(`/cardapio/${prato.id}`)}
               >
                 <div className="p-4 flex flex-col flex-1">
                   <img
@@ -476,7 +476,7 @@ export default function Cardapio() {
                         className="text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/prato/${prato.id}`);
+                          navigate(`/cardapio/${prato.id}`);
                         }}
                       >
                         <Eye className="h-3 w-3 mr-1" />

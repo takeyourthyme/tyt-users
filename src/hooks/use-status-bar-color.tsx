@@ -3,15 +3,13 @@ import { useLocation } from 'react-router-dom';
 
 // Routes that should have blue status bar (internal app routes)
 const BLUE_STATUS_BAR_ROUTES = [
-  '/dashboard-cliente',
-  '/contratacao-logado',
-  '/meus-contratos',
-  '/detalhes-contrato',
-  '/editar-dados',
-  '/gerenciar-cartoes',
-  '/historico-pagamento',
-  '/pratos',
-  '/prato/'
+  '/inicio',
+  '/contratar',
+  '/meus-pedidos',
+  '/minha-conta',
+  '/cartoes',
+  '/pagamentos',
+  '/cardapio',
 ];
 
 export const useStatusBarColor = () => {

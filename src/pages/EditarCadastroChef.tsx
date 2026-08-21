@@ -465,7 +465,7 @@ const EditarCadastroChef = () => {
           description: "Faça login novamente para atualizar seus dados",
           variant: "destructive",
         });
-        navigate("/login/chef");
+        navigate("/chef/entrar");
         return;
       }
 
@@ -539,7 +539,7 @@ const EditarCadastroChef = () => {
         title: "Cadastro atualizado!",
         description: "Suas informações foram atualizadas com sucesso"
       });
-      navigate("/dashboard-chef");
+      navigate("/chef/inicio");
     } catch (error) {
       const message = (() => {
         if (isAxiosError(error)) {
@@ -618,11 +618,11 @@ const EditarCadastroChef = () => {
       {/* Header */}
       <header className="bg-[#0E4684] border-b border-[#0a3769] px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <LogoText variant="white" linkTo="/dashboard-chef" />
+          <LogoText variant="white" linkTo="/chef/inicio" />
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/dashboard-chef")}
+            onClick={() => navigate("/chef/inicio")}
             className="text-white hover:bg-white/20"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

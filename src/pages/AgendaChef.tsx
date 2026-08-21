@@ -319,9 +319,9 @@ const AgendaChef = () => {
   // Função para determinar a rota de destino baseado no filtro ativo
   const getOrderRoute = (itemId: string) => {
     if (appliedFilters.isPendentesFilter) {
-      return `/ordem-pendente/${itemId}`;
+      return `/chef/ordem/${itemId}/pendente`;
     }
-    return `/ordem-de-cozinha/${itemId}`;
+    return `/chef/ordem/${itemId}`;
   };
 
   return (
@@ -336,7 +336,7 @@ const AgendaChef = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/dashboard-chef')}
+            onClick={() => navigate('/chef/inicio')}
             className="text-gray-600 hover:text-gray-900 p-2"
           >
             <ChevronLeft className="w-5 h-5" />

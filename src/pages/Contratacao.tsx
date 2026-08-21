@@ -444,7 +444,7 @@ const Contratacao = () => {
   if (mostrarSucesso) {
     return (
       <TelaSuccesso
-        onIrDashboard={() => navigate('/dashboard-cliente')}
+        onIrDashboard={() => navigate('/inicio')}
         tipoServico={dadosContratacao.tipoServico}
         codigoReferencia={codigoReferencia}
         isPendingPayment={isPendingPayment}

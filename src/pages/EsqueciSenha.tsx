@@ -103,7 +103,7 @@ const EsqueciSenha = () => {
         title: "Senha alterada com sucesso!",
         description: "Você já pode fazer login com sua nova senha.",
       });
-      navigate("/login");
+      navigate("/entrar");
     } catch (error) {
       const message = (() => {
         if (isAxiosError(error)) {

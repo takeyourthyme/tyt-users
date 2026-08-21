@@ -155,7 +155,7 @@ const ServicosAtivos = () => {
       <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard-chef')} className="text-gray-600 hover:text-gray-900 p-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/chef/inicio')} className="text-gray-600 hover:text-gray-900 p-2">
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div>
@@ -168,7 +168,7 @@ const ServicosAtivos = () => {
       <div className="space-y-4">
         {servicosAtivos.map(servico => {
           const IconComponent = getServiceIcon(servico.type);
-          return <Card key={servico.id} className="bg-white border-gray-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/servico-detalhes/${servico.id}`)}>
+          return <Card key={servico.id} className="bg-white border-gray-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/chef/servicos/${servico.id}`)}>
             <CardContent className="p-4">
               {/* Desktop Layout */}
               <div className="hidden md:flex items-start justify-between gap-3">
@@ -220,7 +220,7 @@ const ServicosAtivos = () => {
                   className="p-2 h-8 w-8 flex-shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/servico-detalhes/${servico.id}`);
+                    navigate(`/chef/servicos/${servico.id}`);
                   }}
                 >
                   <Eye className="w-4 h-4" />
@@ -278,7 +278,7 @@ const ServicosAtivos = () => {
                     className="px-3 py-1 h-auto text-xs"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/servico-detalhes/${servico.id}`);
+                      navigate(`/chef/servicos/${servico.id}`);
                     }}
                   >
                     <Eye className="w-3 h-3 mr-1" />

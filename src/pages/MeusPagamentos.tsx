@@ -110,7 +110,7 @@ const MeusPagamentos = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/dashboard-chef')}
+            onClick={() => navigate('/chef/inicio')}
             className="text-gray-600 hover:text-gray-900 p-2"
           >
             <ChevronLeft className="w-5 h-5" />

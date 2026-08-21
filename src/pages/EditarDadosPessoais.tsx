@@ -159,7 +159,7 @@ const EditarDadosPessoais = () => {
         description: "Faça login novamente para atualizar seus dados.",
         variant: "destructive",
       });
-      navigate("/login");
+      navigate("/entrar");
       return;
     }
 
@@ -192,7 +192,7 @@ const EditarDadosPessoais = () => {
         title: "Dados salvos com sucesso!",
         description: "Suas informações pessoais foram atualizadas.",
       });
-      navigate("/dashboard-cliente");
+      navigate("/inicio");
     } catch (error) {
       const message = (() => {
         if (isAxiosError(error)) {
@@ -267,7 +267,7 @@ const EditarDadosPessoais = () => {
   };
 
   const handleCancel = () => {
-    navigate("/dashboard-cliente");
+    navigate("/inicio");
   };
 
   const photoUrl = getUserPhotoUrl(user ?? undefined) ?? formData.foto;
@@ -278,7 +278,7 @@ const EditarDadosPessoais = () => {
       <div className="flex-1 container mx-auto px-4 py-6">
       {/* Título da página */}
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard-cliente")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/inicio")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-2xl font-light">Minha Conta</h1>

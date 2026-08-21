@@ -172,7 +172,7 @@ const GerenciarCartoes = () => {
         {/* Título da página */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard-cliente")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/inicio")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-h2">Gerenciar Cartões</h1>

@@ -161,7 +161,7 @@ const MeusContratos = () => {
       <main className="flex-1 p-4 space-y-6 max-w-4xl mx-auto w-full">
       {/* Cabeçalho */}
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard-cliente")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/inicio")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-2xl font-light">Serviços </h1>
@@ -268,7 +268,7 @@ const MeusContratos = () => {
                       variant="outline"
                       className={`flex-1`}
                       disabled={!code}
-                      onClick={() => navigate(`/detalhes-contrato/${code}`)}
+                      onClick={() => navigate(`/meus-pedidos/${code}`)}
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       Ver detalhes
@@ -294,7 +294,7 @@ const MeusContratos = () => {
                 ? "Você não possui contratos pendentes no momento."
                 : "Você não possui contratos anteriores."}
           </p>
-          {(filtroAtivo === "ativos" || filtroAtivo === "pendentes") && <Button onClick={() => navigate("/dashboard-cliente")}>
+          {(filtroAtivo === "ativos" || filtroAtivo === "pendentes") && <Button onClick={() => navigate("/inicio")}>
             Contratar novo serviço
           </Button>}
         </CardContent>

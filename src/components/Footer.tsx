@@ -12,11 +12,7 @@ const Footer = ({ variant }: FooterProps) => {
   const isChefRoute =
     variant === "chef" ||
     session?.user?.tipo_usuario === "chef" ||
-    location.pathname.includes("chef") ||
-    location.pathname.includes("ordem") ||
-    location.pathname.includes("servicos-ativos") ||
-    location.pathname.includes("servico-detalhes") ||
-    location.pathname.includes("meus-pagamentos");
+    location.pathname.includes("/chef");
 
   const bgClass = isChefRoute
     ? "bg-[#0E4684]/10 border-t border-[#0E4684]/20"

@@ -35,26 +35,26 @@ export const ChefMenu = ({ hasActiveFilter = false, onGoAgenda, activeItem }: Ch
     setOpen(false);
     switch (action) {
       case 'dashboard':
-        navigate('/dashboard-chef');
+        navigate('/chef/inicio');
         break;
       case 'agenda':
         if (onGoAgenda) {
           onGoAgenda();
         } else {
-          navigate('/agenda-chef', { state: { scrollTo: 'proximos-compromissos', clear: true } });
+          navigate('/chef/agenda', { state: { scrollTo: 'proximos-compromissos', clear: true } });
         }
         break;
       case 'servicos-ativos':
-        navigate('/servicos-ativos');
+        navigate('/chef/servicos');
         break;
       case 'aprovacoes':
-        navigate('/servicos-pendentes');
+        navigate('/chef/pendentes');
         break;
       case 'pagamentos':
-        navigate('/meus-pagamentos');
+        navigate('/chef/pagamentos');
         break;
       case 'editar-cadastro':
-        navigate('/editar-cadastro-chef');
+        navigate('/chef/meu-perfil');
         break;
       case 'guia':
         // Navigation to chef guide
@@ -83,7 +83,7 @@ export const ChefMenu = ({ hasActiveFilter = false, onGoAgenda, activeItem }: Ch
             src={logoWhite}
             alt="Take Your Thyme"
             className="h-6 w-auto cursor-pointer"
-            onClick={() => navigate('/dashboard-chef')}
+            onClick={() => navigate('/chef/inicio')}
           />
         </div>
 

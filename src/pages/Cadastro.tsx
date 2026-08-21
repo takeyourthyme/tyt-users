@@ -225,7 +225,7 @@ const Cadastro = () => {
         description: "Você já pode fazer login",
       });
 
-      navigate("/login");
+      navigate("/entrar");
     } catch (error) {
       const apiMessage = (() => {
         if (isAxiosError(error)) {
@@ -837,7 +837,7 @@ const Cadastro = () => {
           <div className="mt-6 text-center">
             <p className="text-caption text-muted-foreground">
               Já tem conta?{" "}
-              <Link to="/login" className="text-primary hover:underline font-medium">
+              <Link to="/entrar" className="text-primary hover:underline font-medium">
                 Fazer login
               </Link>
             </p>

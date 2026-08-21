@@ -8,24 +8,24 @@ interface ProtectedRouteProps {
 
 /**
  * ClientRoute
- * Blocks unauthenticated users (redirects to /login)
- * Blocks chefs (redirects to /dashboard-chef)
+ * Blocks unauthenticated users (redirects to /entrar)
+ * Blocks chefs (redirects to /chef/inicio)
  */
 export const ClientRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const session = loadSession();
 
   if (!session?.token || !session?.user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/entrar" replace />;
   }
 
   const userType = session.user?.tipo_usuario || session.user?.tipoUsuario;
 
   if (userType === "chef") {
-    return <Navigate to="/dashboard-chef" replace />;
+    return <Navigate to="/chef/inicio" replace />;
   }
 
   if (userType !== "cliente") {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/entrar" replace />;
   }
 
   return <>{children}</>;
@@ -33,24 +33,24 @@ export const ClientRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 /**
  * ChefRoute
- * Blocks unauthenticated users (redirects to /login/chef)
- * Blocks clients (redirects to /dashboard-cliente)
+ * Blocks unauthenticated users (redirects to /chef/entrar)
+ * Blocks clients (redirects to /inicio)
  */
 export const ChefRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const session = loadSession();
 
   if (!session?.token || !session?.user) {
-    return <Navigate to="/login/chef" replace />;
+    return <Navigate to="/chef/entrar" replace />;
   }
 
   const userType = session.user?.tipo_usuario || session.user?.tipoUsuario;
 
   if (userType === "cliente") {
-    return <Navigate to="/dashboard-cliente" replace />;
+    return <Navigate to="/inicio" replace />;
   }
 
   if (userType !== "chef") {
-    return <Navigate to="/login/chef" replace />;
+    return <Navigate to="/chef/entrar" replace />;
   }
 
   return <>{children}</>;
@@ -59,8 +59,8 @@ export const ChefRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 /**
  * PublicClientRoute
  * Allows unauthenticated guests and logged-in clients.
- * Blocks chefs (redirects to /dashboard-chef).
- * Used for pages like /pratos, /prato/:id, /contratacao.
+ * Blocks chefs (redirects to /chef/inicio).
+ * Used for pages like /cardapio, /cardapio/:id, /contratar.
  */
 export const PublicClientRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const session = loadSession();
@@ -68,7 +68,7 @@ export const PublicClientRoute: React.FC<ProtectedRouteProps> = ({ children }) =
   if (session?.token && session?.user) {
     const userType = session.user?.tipo_usuario || session.user?.tipoUsuario;
     if (userType === "chef") {
-      return <Navigate to="/dashboard-chef" replace />;
+      return <Navigate to="/chef/inicio" replace />;
     }
   }
 
@@ -78,8 +78,8 @@ export const PublicClientRoute: React.FC<ProtectedRouteProps> = ({ children }) =
 /**
  * GuestRoute
  * Allows only unauthenticated users (guests).
- * Redirects logged-in clients to /dashboard-cliente.
- * Redirects logged-in chefs to /dashboard-chef.
+ * Redirects logged-in clients to /inicio.
+ * Redirects logged-in chefs to /chef/inicio.
  * Used for login, signup, and reset password pages.
  */
 export const GuestRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
@@ -88,10 +88,10 @@ export const GuestRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   if (session?.token && session?.user) {
     const userType = session.user?.tipo_usuario || session.user?.tipoUsuario;
     if (userType === "chef") {
-      return <Navigate to="/dashboard-chef" replace />;
+      return <Navigate to="/chef/inicio" replace />;
     }
     if (userType === "cliente") {
-      return <Navigate to="/dashboard-cliente" replace />;
+      return <Navigate to="/inicio" replace />;
     }
   }
 

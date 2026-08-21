@@ -54,7 +54,7 @@ apiClient.interceptors.response.use(
                 localStorage.removeItem("tyt_user");
                 localStorage.removeItem("auth");
                 localStorage.removeItem("token");
-                window.location.hash = isChef ? "/login/chef" : "/login";
+                window.location.href = isChef ? "/chef/entrar" : "/entrar";
             }
         }
         return Promise.reject(error);

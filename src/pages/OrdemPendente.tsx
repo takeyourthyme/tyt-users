@@ -176,7 +176,7 @@ const OrdemPendente = () => {
       if (kitchenOrder) {
         setKitchenOrder(prev => prev ? { ...prev, status: "FINALIZED" } : null);
       }
-      navigate('/dashboard-chef');
+      navigate('/chef/inicio');
     } catch (error) {
       console.error("Erro ao concluir ordem:", error);
       toast({
@@ -200,7 +200,7 @@ const OrdemPendente = () => {
         title: "Serviço aceito!",
         description: "A ordem de cozinha foi aceita.",
       });
-      navigate('/dashboard-chef');
+      navigate('/chef/inicio');
     } catch (error) {
       console.error("Erro ao aceitar ordem:", error);
       toast({
@@ -224,7 +224,7 @@ const OrdemPendente = () => {
         title: "Serviço recusado",
         description: "A ordem foi recusada.",
       });
-      navigate('/dashboard-chef');
+      navigate('/chef/inicio');
     } catch (error) {
       console.error("Erro ao recusar ordem:", error);
       toast({

@@ -255,7 +255,7 @@ export const EtapaIdentificacao: React.FC<Props> = ({ dados, onAvancar, onVoltar
 
                   <div className="text-center pt-1">
                     <a
-                      href="/#/esqueci-senha"
+                      href="/recuperar-senha"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-[#004B2A] transition-colors"
