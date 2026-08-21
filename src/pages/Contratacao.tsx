@@ -408,13 +408,22 @@ const Contratacao = () => {
       const serverMsg = axiosErr?.response?.data?.error;
 
       if (status === 422 && serverMsg) {
-        // Payment-specific error from Asaas
+        // Defensive check: ensure no internal business/split rules or raw gateway terms are shown to the user
+        const lower = String(serverMsg).toLowerCase();
+        const hasInternalTerms = [
+          'split', 'wallet', 'subconta', 'subaccount', 'escrow', 'valor a receber', 'desconto', 'fundo'
+        ].some(term => lower.includes(term));
+
+        const safeMsg = hasInternalTerms
+          ? "Não foi possível processar o pagamento. Verifique os dados do cartão ou tente outra forma de pagamento."
+          : serverMsg;
+
         toast({
           title: "Pagamento não autorizado",
-          description: serverMsg,
+          description: safeMsg,
           variant: "destructive",
         });
-        return;
+        throw new Error(safeMsg);
       }
 
       toast({
@@ -422,6 +431,7 @@ const Contratacao = () => {
         description: "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
+      throw err;
     }
   };
 
@@ -515,10 +525,10 @@ const Contratacao = () => {
           <EtapaResumoePagamento
             dados={dadosContratacao}
             onVoltar={voltarEtapa}
-            onConcluir={(novosDados) => {
+            onConcluir={async (novosDados) => {
               const merged = { ...dadosContratacao, ...novosDados };
               setDadosContratacao(merged);
-              void concluirContratacao(merged);
+              await concluirContratacao(merged);
             }}
           />
         )}

@@ -18,7 +18,8 @@ import { calculateServicePrice, fetchPricingTiers, type PricingTier } from "@/se
 interface Props {
   dados: DadosContratacao;
   onVoltar: () => void;
-  onConcluir: (novosDados: Partial<DadosContratacao>) => void;
+  /** Async: the child awaits this so it can reset isSubmitting if the backend call fails. */
+  onConcluir: (novosDados: Partial<DadosContratacao>) => Promise<void>;
 }
 
 type MetodoPagamento = 'CREDIT_CARD' | 'PIX';
@@ -338,23 +339,29 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
           throw new Error("Token do cartão não foi retornado pelo Asaas.");
         }
 
-        // 4. Complete with tokenized card payload
-        onConcluir({
-          endereco,
-          aceitouTermos,
-          billingType: 'CREDIT_CARD',
-          installmentCount: isGetTogether && installmentCount > 1 ? installmentCount : undefined,
-          creditCardToken: asaasData.creditCardToken,
-          creditCardHolderInfo: {
-            name: cartao.nomeTitular.trim(),
-            postalCode: endereco.cep.replace(/\D/g, ''),
-            addressNumber: endereco.numero,
-            addressComplement: endereco.complemento,
-            phone: String(userRecord.whatsapp || "").replace(/\D/g, ""),
-            email: String(userRecord.email || ""),
-            cpfCnpj: String(userRecord.cpf || "").replace(/\D/g, ""),
-          }
-        });
+        // 4. Complete with tokenized card payload — await so we can reset on API error.
+        try {
+          await onConcluir({
+            endereco,
+            aceitouTermos,
+            billingType: 'CREDIT_CARD',
+            installmentCount: isGetTogether && installmentCount > 1 ? installmentCount : undefined,
+            creditCardToken: asaasData.creditCardToken,
+            creditCardHolderInfo: {
+              name: cartao.nomeTitular.trim(),
+              postalCode: endereco.cep.replace(/\D/g, ''),
+              addressNumber: endereco.numero,
+              addressComplement: endereco.complemento,
+              phone: String(userRecord.whatsapp || "").replace(/\D/g, ""),
+              email: String(userRecord.email || ""),
+              cpfCnpj: String(userRecord.cpf || "").replace(/\D/g, ""),
+            }
+          });
+          // Parent navigates away on success — no reset needed here.
+        } catch (apiErr: any) {
+          // Backend rejected the payment — reset button so user can retry.
+          setIsSubmitting(false);
+        }
 
       } catch (err: any) {
         console.error("Erro no fluxo de tokenização:", err);
@@ -366,20 +373,39 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
         setIsSubmitting(false);
       }
     } else if (isPayableService && metodoPagamento === 'PIX') {
-      // PIX: no card tokenization needed, just pass billingType
-      onConcluir({
-        endereco,
-        aceitouTermos,
-        billingType: 'PIX',
-      });
+      // PIX: no card tokenization needed
+      try {
+        await onConcluir({
+          endereco,
+          aceitouTermos,
+          billingType: 'PIX',
+        });
+      } catch (apiErr: any) {
+        toast({
+          title: "Erro no pagamento",
+          description: apiErr?.message || "Não foi possível registrar o pedido. Tente novamente.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+      }
     } else {
       // Non-payable service (Special Service)
-      onConcluir({
-        endereco,
-        aceitouTermos,
-      });
+      try {
+        await onConcluir({
+          endereco,
+          aceitouTermos,
+        });
+      } catch (apiErr: any) {
+        toast({
+          title: "Erro ao registrar pedido",
+          description: apiErr?.message || "Tente novamente em alguns instantes.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+      }
     }
   };
+
 
   return (
     <div className="space-y-6">
