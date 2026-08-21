@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -36,6 +36,7 @@ type EmailData = z.infer<typeof emailSchema>;
 type ResetData = z.infer<typeof resetSchema>;
 
 const EsqueciSenha = () => {
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState<"email" | "reset">("email");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSentTo, setEmailSentTo] = useState("");
@@ -52,11 +53,19 @@ const EsqueciSenha = () => {
   const formReset = useForm<ResetData>({
     resolver: zodResolver(resetSchema),
     defaultValues: {
-      token: "",
+      token: searchParams.get("token") || "",
       novaSenha: "",
       confirmarSenha: "",
     },
   });
+
+  useEffect(() => {
+    const tokenFromUrl = searchParams.get("token");
+    if (tokenFromUrl) {
+      formReset.setValue("token", tokenFromUrl);
+      setStep("reset");
+    }
+  }, [searchParams, formReset]);
 
   const onSubmitEmail = async (data: EmailData) => {
     try {
