@@ -127,7 +127,7 @@ const availableLanguages = [{
   name: "Alemão",
   flag: "🇩🇪"
 }, {
-  id: "ja",
+  id: "jp",
   name: "Japonês",
   flag: "🇯🇵"
 }];

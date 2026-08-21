@@ -133,7 +133,22 @@ const normalizeLanguage = (value: string) => {
   const lower = value.toLowerCase();
   if (lower === "pt") return "br";
   if (lower === "en") return "us";
+  if (lower === "ja") return "jp";
   return value;
+};
+
+const normalizeSpecialty = (value: string) => {
+  const map: Record<string, string> = {
+    arabe: "Árabe",
+    mediterranea: "Mediterrânea",
+    panificacao: "Panificação",
+    sem_gluten: "Sem Glúten",
+    "sem gluten": "Sem Glúten",
+    doces_e_sobremesas: "Doces e Sobremesas",
+    "doces e sobremesas": "Doces e Sobremesas",
+  };
+  const key = value.toLowerCase();
+  return map[key] ?? value;
 };
 
 const dayApiToKey: Record<string, keyof typeof defaultAvailability> = {
@@ -221,7 +236,7 @@ const availableLanguages = [
   { id: "fr", name: "Francês", flag: "🇫🇷" },
   { id: "it", name: "Italiano", flag: "🇮🇹" },
   { id: "de", name: "Alemão", flag: "🇩🇪" },
-  { id: "ja", name: "Japonês", flag: "🇯🇵" }
+  { id: "jp", name: "Japonês", flag: "🇯🇵" }
 ];
 
 const cuisineSpecialties = [
@@ -334,9 +349,11 @@ const EditarCadastroChef = () => {
           : getStringArray(user.idiomas ?? user.languages)
       ).map(normalizeLanguage);
 
-      const especialidades = chef
-        ? getActiveObjectArrayValues(chef.usuario_chef_especialidades, "especialidade")
-        : getStringArray(user.especialidades ?? user.specialties);
+      const especialidades = (
+        chef
+          ? getActiveObjectArrayValues(chef.usuario_chef_especialidades, "especialidade")
+          : getStringArray(user.especialidades ?? user.specialties)
+      ).map(normalizeSpecialty);
 
       const disponivelPara = (
         chef
