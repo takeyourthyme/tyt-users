@@ -565,7 +565,7 @@ src/
 - Cards de serviços em andamento
 - Filtros por tipo e status
 - Ordenação por data
-- Ações rápidas: ver ordem de cozinha, iniciar serviço
+- Ações rápidas: ver ordem de serviço, iniciar serviço
 
 **Regras de Negócio:**
 
@@ -596,10 +596,10 @@ src/
 
 ---
 
-#### **2.3.6 Ordem de Cozinha**
+#### **2.3.6 Ordem de Serviço**
 
-- **Rota**: `/ordem-de-cozinha/:id`
-- **Componente**: `OrdemDeCozinha.tsx`
+- **Rota**: `/ordem-de-servico/:id`
+- **Componente**: `OrdemDeServico.tsx`
 - **Descrição**: Documento técnico com instruções de preparo.
 
 **Funcionalidades:**
@@ -619,7 +619,7 @@ src/
 
 - **Rota**: `/ordem-pendente/:id`
 - **Componente**: `OrdemPendente.tsx`
-- **Descrição**: Ordem de cozinha que ainda não foram finalizadas pelo chef.
+- **Descrição**: Ordem de serviço que ainda não foram finalizadas pelo chef.
 
 **Funcionalidades:**
 
@@ -1357,7 +1357,7 @@ npm run build
 - **Chef**: Profissional de culinária cadastrado na plataforma
 - **Cliente**: Usuário que contrata serviços de chef
 - **Contrato**: Acordo de prestação de serviço entre cliente e chef
-- **Ordem de Cozinha**: Documento técnico com instruções de preparo
+- **Ordem de Serviço**: Documento técnico com instruções de preparo
 - **Serviço Ativo**: Contrato confirmado e em execução
 - **Cozinha Semanal**: Modalidade de serviço recorrente
 - **Eventos**: Modalidade para ocasiões especiais
@@ -1688,7 +1688,7 @@ O painel administrativo TYT é a interface central para gerenciamento completo d
 
 - Busca simples: ID, nome chef, nome cliente
 - Busca avançada: status, data do serviço (range), chef
-- Exportação: PDF (formato de ordem de cozinha)
+- Exportação: PDF (formato de ordem de serviço)
 
 ---
 
@@ -3080,7 +3080,7 @@ Gerenciada pelo Supabase Auth. Não modificável diretamente.
 3. Chef aceita → Status: `confirmado`
 4. Chef recusa → Status: `chef_recusou` (volta para passo 2)
 
-### 4.5 Geração de Ordem de Cozinha
+### 4.5 Geração de Ordem de Serviço
 
 - Automática: 48h antes da `service_date` do contrato
 - Apenas para contratos com status `confirmado`

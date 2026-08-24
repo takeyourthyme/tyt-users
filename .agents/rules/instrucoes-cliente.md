@@ -50,7 +50,7 @@ Todas as páginas do cliente estão sob `src/pages/` e configuradas no roteador 
     * *Serviços Especiais*: Campo de texto aberto para descrever a necessidade (mínimo de 100 caracteres).
   * **Etapa 4: Identificação**: Solicitado apenas se o cliente não estiver logado. Permite fazer login ou efetuar cadastro rápido (se logado, esta etapa é ignorada automaticamente).
   * **Etapa 5: Resumo e Pagamento**:
-    * *Cozinha Semanal / Eventos*: Exibe o valor total do serviço, permite cadastrar/selecionar cartão e endereço e efetuar a compra.
+    * *Cozinha Semanal / Eventos*: Exibe o valor total do serviço, exige o aceite obrigatório do termo de disponibilidade de chef/estorno em 24-48h antes da inserção dos dados do cartão de crédito, permite selecionar forma de pagamento e endereço, e efetuar a contratação.
     * *Serviços Especiais*: **Não passa por esta etapa**. Após a Etapa 3, o pedido é registrado como `aguardando_orcamento`, pois o Backoffice enviará uma proposta personalizada em até 48h.
 
 ---
@@ -124,6 +124,7 @@ Obtenção de termos normalizados para filtros e cadastros:
 * **RN-C08 (Avaliação Pós-Conclusão)**: A interface de avaliações (dar notas de 1 a 5 e tecer comentários) no detalhe do contrato só fica ativa quando a ordem estiver marcada como `concluido` e liberada pelo fluxo do Chef.
 * **RN-C09 (Cancelamento Dinâmico de Pedidos)**: Se o cliente tentar cancelar um pedido que já teve o pagamento processado (status `CONFIRMED`, `COMPLETED` ou com chave `id_pagamento` preenchida), o botão "Cancelar Pedido" redirecionará o cliente para o WhatsApp oficial de suporte (`5511999999999`) com uma mensagem automática contendo o código do serviço e o nome do cliente. Se o pedido não estiver pago, o cancelamento é realizado diretamente pela interface após confirmação.
 * **RN-C10 (Mensagens de Erro Amigáveis e Proteção de Regras de Negócio)**: Mensagens de erro de pagamento, gateway ou validações de backend exibidas ao cliente ou chef NUNCA devem expor termos internos de arquitetura/negócio (tais como *split*, *subconta*, *escrow*, *wallets*, taxas internas ou valores detalhados de repasse). Erros não mapeados ou técnicos devem ser traduzidos para mensagens amigáveis e orientativas (ex.: "Não foi possível processar o pagamento. Verifique os dados do cartão ou tente outra forma de pagamento.").
+* **RN-C11 (Aceite de Disponibilidade de Chef e Estorno no Checkout)**: Na etapa de Resumo e Pagamento, o cliente deve obrigatoriamente aceitar o termo de que o serviço está "sujeito à disponibilidade de chef e que, se em 24h a 48h não houver chef disponível, o dinheiro será estornado integralmente". No pagamento com Cartão de Crédito, os campos para inserção dos dados do cartão ficam bloqueados/desabilitados até que o cliente marque esse aceite.
 
 ---
 

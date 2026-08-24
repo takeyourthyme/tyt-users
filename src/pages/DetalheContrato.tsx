@@ -1052,47 +1052,6 @@ const DetalheContrato = () => {
           </Card>
         )}
 
-        {/* Action Buttons for Meal Prep */}
-        {type === "Meal Prep" && status === "pendente" && (
-          <Button
-            className="w-full bg-primary hover:bg-primary/90 text-white"
-            size="lg"
-            onClick={() =>
-              navigate("/contratar", {
-                state: {
-                  fromDashboard: true,
-                  goToStep3: true,
-                  prefilledData: {
-                    cidade: apiOrder.city || "",
-                    tipoServico: "cozinha-semanal",
-                    tamanhoPortacao:
-                      Number(apiOrder.people_quantity) <= 2
-                        ? "pequena"
-                        : Number(apiOrder.people_quantity) <= 4
-                          ? "media"
-                          : "grande",
-                    categorias: [],
-                    preferencias: [],
-                    ingredientes: [],
-                    tiposCozinha: [],
-                    pratosSelecionados: dishes.map((item) => ({
-                      id: item.dish?.id,
-                      dishId: item.dish?.id,
-                      nome: item.dish?.nome_prato ?? item.dish?.nome,
-                      descricao: item.dish?.descricao ?? "",
-                      foto: resolveMediaUrl(item.dish?.foto1 ?? item.dish?.foto) ?? "",
-                      quantity: item.quantity ?? 1,
-                    })),
-                  },
-                },
-              })
-            }
-          >
-            <Utensils className="h-4 w-4 mr-2" />
-            Alterar Pratos da Semana / Editar
-          </Button>
-        )}
-
         {/* Cancel button - centered as per Figma */}
         {canCancel && (
           <div className="flex justify-center">

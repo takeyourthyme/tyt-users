@@ -126,7 +126,7 @@ const AprovacoesChef = () => {
       });
       toast({
         title: "Serviço aceito!",
-        description: "A ordem de cozinha foi aceita e movida para seus serviços confirmados.",
+        description: "A ordem de serviço foi aceita e movida para seus serviços confirmados.",
       });
       loadPendingOrders();
     } catch (error) {
@@ -345,7 +345,7 @@ const AprovacoesChef = () => {
       <Dialog open={declineOrderId !== null} onOpenChange={(open) => !open && setDeclineOrderId(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Recusar Ordem de Cozinha</DialogTitle>
+            <DialogTitle>Recusar Ordem de Serviço</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">

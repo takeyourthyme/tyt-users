@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, Receipt, User, Info, Home, CreditCard, DollarSign, QrCode } from "lucide-react";
+import { MapPin, Receipt, User, Info, Home, CreditCard, DollarSign, QrCode, AlertCircle } from "lucide-react";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
@@ -65,6 +65,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   });
   const [usarEnderecoMesmoCadastro, setUsarEnderecoMesmoCadastro] = useState(false);
   const [aceitouTermos, setAceitouTermos] = useState(false);
+  const [aceitouDisponibilidadeChef, setAceitouDisponibilidadeChef] = useState(dados.aceitouDisponibilidadeChef || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfileAddress, setIsLoadingProfileAddress] = useState(false);
   const [errosValidacao, setErrosValidacao] = useState<string[]>([]);
@@ -269,6 +270,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
 
     // Validate card fields only for credit card method
     if (isPayableService && metodoPagamento === 'CREDIT_CARD') {
+      if (!aceitouDisponibilidadeChef) erros.push('disponibilidade_chef');
       if (cartao.numero.replace(/\D/g, '').length < 13) erros.push('cartao_numero');
       if (cartao.validade.length < 5) erros.push('cartao_validade');
       if (cartao.cvv.replace(/\D/g, '').length < 3) erros.push('cartao_cvv');
@@ -344,6 +346,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
           await onConcluir({
             endereco,
             aceitouTermos,
+            aceitouDisponibilidadeChef,
             billingType: 'CREDIT_CARD',
             installmentCount: isGetTogether && installmentCount > 1 ? installmentCount : undefined,
             creditCardToken: asaasData.creditCardToken,
@@ -378,6 +381,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
         await onConcluir({
           endereco,
           aceitouTermos,
+          aceitouDisponibilidadeChef,
           billingType: 'PIX',
         });
       } catch (apiErr: any) {
@@ -394,6 +398,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
         await onConcluir({
           endereco,
           aceitouTermos,
+          aceitouDisponibilidadeChef,
         });
       } catch (apiErr: any) {
         toast({
@@ -735,7 +740,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
 
                 {/* Credit Card form */}
                 {metodoPagamento === 'CREDIT_CARD' && (
-                  <div className="space-y-3 pt-2">
+                  <div className="space-y-4 pt-2">
                     {/* Installment selector — Get Together only */}
                     {isGetTogether && (
                       <div>
@@ -790,77 +795,135 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                       </div>
                     )}
 
-                    {/* Card number */}
-                    <div>
-                      <Label htmlFor="cartao-numero" className="text-sm">Número do Cartão</Label>
-                      <Input
-                        id="cartao-numero"
-                        value={cartao.numero}
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
-                          const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
-                          setCartao(prev => ({ ...prev, numero: formatted }));
-                        }}
-                        placeholder="0000 0000 0000 0000"
-                        inputMode="numeric"
-                        maxLength={19}
-                        className={`text-sm font-mono ${errosValidacao.includes('cartao_numero') ? 'border-red-500' : ''}`}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* Expiry */}
-                      <div>
-                        <Label htmlFor="cartao-validade" className="text-sm">Validade (MM/AA)</Label>
-                        <Input
-                          id="cartao-validade"
-                          value={cartao.validade}
-                          onChange={(e) => {
-                            let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-                            if (raw.length > 2) raw = raw.slice(0, 2) + '/' + raw.slice(2);
-                            setCartao(prev => ({ ...prev, validade: raw }));
-                          }}
-                          placeholder="MM/AA"
-                          inputMode="numeric"
-                          maxLength={5}
-                          className={`text-sm font-mono ${errosValidacao.includes('cartao_validade') ? 'border-red-500' : ''}`}
-                        />
-                      </div>
-
-                      {/* CVV */}
-                      <div>
-                        <Label htmlFor="cartao-cvv" className="text-sm">CVV</Label>
-                        <Input
-                          id="cartao-cvv"
-                          value={cartao.cvv}
-                          onChange={(e) => {
-                            const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-                            setCartao(prev => ({ ...prev, cvv: raw }));
-                          }}
-                          placeholder="123"
-                          inputMode="numeric"
-                          maxLength={4}
-                          type="password"
-                          className={`text-sm font-mono ${errosValidacao.includes('cartao_cvv') ? 'border-red-500' : ''}`}
-                        />
+                    {/* Aviso de Disponibilidade de Chef */}
+                    <div className={`p-3.5 rounded-lg border transition-all ${
+                      aceitouDisponibilidadeChef
+                        ? 'bg-amber-50/60 border-amber-200'
+                        : errosValidacao.includes('disponibilidade_chef')
+                          ? 'bg-red-50 border-red-300 ring-1 ring-red-300'
+                          : 'bg-amber-50/90 border-amber-200'
+                    }`}>
+                      <div className="flex items-start gap-2.5">
+                        <AlertCircle className={`w-4 h-4 mt-0.5 shrink-0 ${
+                          errosValidacao.includes('disponibilidade_chef') ? 'text-red-600' : 'text-amber-600'
+                        }`} />
+                        <div className="space-y-2 flex-1">
+                          <p className="text-xs text-amber-900 leading-relaxed">
+                            <strong>Aviso importante:</strong> Sujeito a disponibilidade de chef. Se entre 24h e 48h não tivermos chef disponível, seu dinheiro será estornado integralmente.
+                          </p>
+                          <div className="flex items-center space-x-2 pt-0.5">
+                            <Checkbox
+                              id="aceitar-disponibilidade-chef"
+                              checked={aceitouDisponibilidadeChef}
+                              onCheckedChange={(checked) => {
+                                const isChecked = checked === true;
+                                setAceitouDisponibilidadeChef(isChecked);
+                                if (isChecked) {
+                                  setErrosValidacao((prev) => prev.filter((e) => e !== 'disponibilidade_chef'));
+                                }
+                              }}
+                              className={errosValidacao.includes('disponibilidade_chef') ? 'border-red-500' : ''}
+                            />
+                            <Label
+                              htmlFor="aceitar-disponibilidade-chef"
+                              className={`text-xs cursor-pointer select-none ${
+                                errosValidacao.includes('disponibilidade_chef') ? 'text-red-700 font-semibold' : 'text-amber-950 font-medium'
+                              }`}
+                            >
+                              Estou ciente e aceito as condições de disponibilidade e estorno
+                            </Label>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Holder name */}
-                    <div>
-                      <Label htmlFor="cartao-nome" className="text-sm">Nome do Titular (como no cartão)</Label>
-                      <Input
-                        id="cartao-nome"
-                        value={cartao.nomeTitular}
-                        onChange={(e) => setCartao(prev => ({ ...prev, nomeTitular: e.target.value.toUpperCase() }))}
-                        placeholder="JOÃO DA SILVA"
-                        className={`text-sm ${errosValidacao.includes('cartao_nome') ? 'border-red-500' : ''}`}
-                      />
-                    </div>
+                    {/* Card fields */}
+                    <div className={`space-y-3 transition-all ${
+                      !aceitouDisponibilidadeChef ? 'opacity-50 pointer-events-none select-none' : ''
+                    }`}>
+                      {!aceitouDisponibilidadeChef && (
+                        <p className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
+                          <Info className="w-3.5 h-3.5 shrink-0" />
+                          Marque o aceite acima para liberar o preenchimento dos dados do cartão.
+                        </p>
+                      )}
 
-                    <p className="text-xs text-muted-foreground pt-1">
-                      🔒 Seus dados são processados com segurança via Asaas. Não armazenamos dados do cartão.
-                    </p>
+                      {/* Card number */}
+                      <div>
+                        <Label htmlFor="cartao-numero" className="text-sm">Número do Cartão</Label>
+                        <Input
+                          id="cartao-numero"
+                          disabled={!aceitouDisponibilidadeChef}
+                          value={cartao.numero}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+                            const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+                            setCartao(prev => ({ ...prev, numero: formatted }));
+                          }}
+                          placeholder="0000 0000 0000 0000"
+                          inputMode="numeric"
+                          maxLength={19}
+                          className={`text-sm font-mono ${errosValidacao.includes('cartao_numero') ? 'border-red-500' : ''}`}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Expiry */}
+                        <div>
+                          <Label htmlFor="cartao-validade" className="text-sm">Validade (MM/AA)</Label>
+                          <Input
+                            id="cartao-validade"
+                            disabled={!aceitouDisponibilidadeChef}
+                            value={cartao.validade}
+                            onChange={(e) => {
+                              let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+                              if (raw.length > 2) raw = raw.slice(0, 2) + '/' + raw.slice(2);
+                              setCartao(prev => ({ ...prev, validade: raw }));
+                            }}
+                            placeholder="MM/AA"
+                            inputMode="numeric"
+                            maxLength={5}
+                            className={`text-sm font-mono ${errosValidacao.includes('cartao_validade') ? 'border-red-500' : ''}`}
+                          />
+                        </div>
+
+                        {/* CVV */}
+                        <div>
+                          <Label htmlFor="cartao-cvv" className="text-sm">CVV</Label>
+                          <Input
+                            id="cartao-cvv"
+                            disabled={!aceitouDisponibilidadeChef}
+                            value={cartao.cvv}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+                              setCartao(prev => ({ ...prev, cvv: raw }));
+                            }}
+                            placeholder="123"
+                            inputMode="numeric"
+                            maxLength={4}
+                            type="password"
+                            className={`text-sm font-mono ${errosValidacao.includes('cartao_cvv') ? 'border-red-500' : ''}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Holder name */}
+                      <div>
+                        <Label htmlFor="cartao-nome" className="text-sm">Nome do Titular (como no cartão)</Label>
+                        <Input
+                          id="cartao-nome"
+                          disabled={!aceitouDisponibilidadeChef}
+                          value={cartao.nomeTitular}
+                          onChange={(e) => setCartao(prev => ({ ...prev, nomeTitular: e.target.value.toUpperCase() }))}
+                          placeholder="JOÃO DA SILVA"
+                          className={`text-sm ${errosValidacao.includes('cartao_nome') ? 'border-red-500' : ''}`}
+                        />
+                      </div>
+
+                      <p className="text-xs text-muted-foreground pt-1">
+                        🔒 Seus dados são processados com segurança via Asaas. Não armazenamos dados do cartão.
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -875,6 +938,9 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                       <p className="text-xs text-green-700">
                         Após clicar em "Concluir", um QR Code será gerado para você escanear com o app do seu banco. O pagamento é confirmado em segundos.
                       </p>
+                      <div className="bg-amber-50/90 border border-amber-200 rounded p-2.5 text-left text-xs text-amber-900 leading-relaxed">
+                        ⚠️ <strong>Aviso importante:</strong> Sujeito a disponibilidade de chef. Se entre 24h e 48h não tivermos chef disponível, seu dinheiro será estornado integralmente.
+                      </div>
                       {totalBase > 0 && (
                         <p className="text-lg font-bold text-green-800 pt-1">
                           R$ {totalBase.toFixed(2)}

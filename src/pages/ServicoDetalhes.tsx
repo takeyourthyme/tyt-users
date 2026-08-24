@@ -233,12 +233,8 @@ const ServicoDetalhes = () => {
                   <h4 className="font-medium text-gray-900">Valores</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span>Por sessão:</span>
+                      <span>Valor do Serviço:</span>
                       <span className="font-medium">{servico.sessionValue}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Mensal:</span>
-                      <span className="font-medium text-green-600">{servico.monthlyValue}</span>
                     </div>
                   </div>
                 </div>

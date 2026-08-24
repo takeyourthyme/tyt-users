@@ -227,10 +227,10 @@ const OrdemDeCozinha = () => {
       setKitchenOrder((prev) =>
         prev
           ? {
-              ...prev,
-              grocery_receipt_url: "uploaded",
-              grocery_receipt_amount: numericAmount,
-            }
+            ...prev,
+            grocery_receipt_url: "uploaded",
+            grocery_receipt_amount: numericAmount,
+          }
           : null
       );
     } catch (error: any) {
@@ -321,7 +321,7 @@ const OrdemDeCozinha = () => {
       });
       toast({
         title: "Serviço aceito!",
-        description: "A ordem de cozinha foi aceita.",
+        description: "A ordem de serviço foi aceita.",
       });
       navigate('/chef/inicio');
     } catch (error) {
@@ -631,7 +631,7 @@ const OrdemDeCozinha = () => {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-light text-gray-900">Ordem de Cozinha</h1>
+            <h1 className="text-2xl font-light text-gray-900">Ordem de Serviço</h1>
             <p className="text-gray-600">Detalhes do serviço agendado</p>
           </div>
         </div>
@@ -827,7 +827,7 @@ const OrdemDeCozinha = () => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirmar aceitação</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tem certeza que deseja aceitar esta ordem de cozinha? Esta ação não pode ser desfeita.
+                      Tem certeza que deseja aceitar esta ordem de serviço? Esta ação não pode ser desfeita.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -853,7 +853,7 @@ const OrdemDeCozinha = () => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirmar recusa</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tem certeza que deseja recusar esta ordem de cozinha? Esta ação não pode ser desfeita.
+                      Tem certeza que deseja recusar esta ordem de serviço? Esta ação não pode ser desfeita.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

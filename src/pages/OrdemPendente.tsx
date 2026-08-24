@@ -198,7 +198,7 @@ const OrdemPendente = () => {
       });
       toast({
         title: "Serviço aceito!",
-        description: "A ordem de cozinha foi aceita.",
+        description: "A ordem de serviço foi aceita.",
       });
       navigate('/chef/inicio');
     } catch (error) {
@@ -391,7 +391,7 @@ const OrdemPendente = () => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirmar aceitação</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tem certeza que deseja aceitar esta ordem de cozinha? Esta ação não pode ser desfeita.
+                      Tem certeza que deseja aceitar esta ordem de serviço? Esta ação não pode ser desfeita.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -417,7 +417,7 @@ const OrdemPendente = () => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirmar recusa</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tem certeza que deseja recusar esta ordem de cozinha? Esta ação não pode ser desfeita.
+                      Tem certeza que deseja recusar esta ordem de serviço? Esta ação não pode ser desfeita.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

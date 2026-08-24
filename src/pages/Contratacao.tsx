@@ -57,6 +57,7 @@ export interface DadosContratacao {
   cartaoSelecionado?: string;
   novoCartao?: unknown;
   aceitouTermos?: boolean;
+  aceitouDisponibilidadeChef?: boolean;
   // Payment fields (from EtapaResumoePagamento)
   creditCardToken?: string;
   creditCard?: {
