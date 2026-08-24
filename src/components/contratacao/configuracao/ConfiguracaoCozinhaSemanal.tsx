@@ -13,7 +13,7 @@ import { listCulinaryPreferences, listCuisineTypes, listDishCategories, listMain
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
-  onVoltar: () => void;
+  onVoltar: (rascunho?: Partial<DadosContratacao>) => void;
 }
 const tamanhosPorcao = [{
   id: 'pequena',
@@ -401,7 +401,16 @@ export const ConfiguracaoCozinhaSemanal: React.FC<Props> = ({
 
     {/* Botões */}
     <div className="flex justify-between">
-      <Button variant="outline" onClick={onVoltar}>
+      <Button variant="outline" onClick={() =>
+        onVoltar({
+          tamanhoPortacao: tamanhoSelecionado as DadosContratacao['tamanhoPortacao'],
+          categorias: categoriasSelecionadas,
+          preferencias: preferenciaseSelecionadas,
+          ingredientes: ingredientesSelecionados,
+          tiposCozinha: tiposCozinhaSelecionados,
+          diasEntrega: diasEntrega.filter(d => d.dia && d.periodo),
+        })
+      }>
         Voltar
       </Button>
       <Button onClick={handleAvancar}>

@@ -7,7 +7,7 @@ import { DetalhamentoServicosEspeciais } from "./escolha-pratos/DetalhamentoServ
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
-  onVoltar: () => void;
+  onVoltar: (rascunho?: Partial<DadosContratacao>) => void;
 }
 
 export const EtapaEscolhaPratos: React.FC<Props> = ({ dados, onAvancar, onVoltar }) => {

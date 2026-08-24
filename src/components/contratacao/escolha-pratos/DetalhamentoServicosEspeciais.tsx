@@ -7,7 +7,7 @@ import { DadosContratacao } from "@/pages/Contratacao";
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
-  onVoltar: () => void;
+  onVoltar: (rascunho?: Partial<DadosContratacao>) => void;
 }
 export const DetalhamentoServicosEspeciais: React.FC<Props> = ({
   dados,
@@ -50,7 +50,7 @@ export const DetalhamentoServicosEspeciais: React.FC<Props> = ({
 
     {/* Botões */}
     <div className="flex justify-between">
-      <Button variant="outline" onClick={onVoltar}>
+      <Button variant="outline" onClick={() => onVoltar({ descricaoDetalhada })}>
         Voltar
       </Button>
       <Button onClick={handleAvancar}>

@@ -20,7 +20,7 @@ import { calculateServicePrice, fetchPricingTiers, type PricingTier } from "@/se
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
-  onVoltar: () => void;
+  onVoltar: (rascunho?: Partial<DadosContratacao>) => void;
 }
 
 type DishOption = {
@@ -831,7 +831,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
 
     {/* Botão Voltar */}
     <div className="flex justify-start">
-      <Button variant="outline" onClick={onVoltar}>
+      <Button variant="outline" onClick={() => onVoltar({ pratosSelecionados, nivelServico })}>
         Voltar
       </Button>
     </div>

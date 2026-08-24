@@ -7,7 +7,7 @@ import { ConfiguracaoServicosEspeciais } from "./configuracao/ConfiguracaoServic
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
-  onVoltar: () => void;
+  onVoltar: (rascunho?: Partial<DadosContratacao>) => void;
 }
 
 export const EtapaConfiguracao: React.FC<Props> = ({ dados, onAvancar, onVoltar }) => {

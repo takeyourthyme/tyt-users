@@ -25,7 +25,7 @@ import lagostaThermidor from "@/assets/lagosta-thermidor.jpg";
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
-  onVoltar: () => void;
+  onVoltar: (rascunho?: Partial<DadosContratacao>) => void;
 }
 
 interface DishOption {
@@ -341,27 +341,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
   const abrirDetalhes = (pratoId: string) => {
     setDialogDetalhes(pratoId);
   };
-  const handleAvancar = () => {
-    // Verificar se todos os dias têm pelo menos 1 prato
-    const diasIncompletos: string[] = [];
-
-    for (let i = 0; i < diasEntrega.length; i++) {
-      const pratosDoDia = pratosPorDia[i] || [];
-      if (pratosDoDia.length < 1) {
-        diasIncompletos.push(diasEntrega[i].dia);
-      }
-    }
-
-    if (diasIncompletos.length > 0) {
-      toast({
-        title: "Seleção incompleta",
-        description: `Você precisa selecionar pelo menos 1 prato para: ${diasIncompletos.join(', ')}`,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Consolidar todos os pratos com informações do dia
+  const getPratosConsolidados = () => {
     const pratosConsolidados: Array<
       DishOption & {
         diaEntrega: string;
@@ -385,9 +365,31 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
         });
       });
     });
+    return pratosConsolidados;
+  };
+
+  const handleAvancar = () => {
+    // Verificar se todos os dias têm pelo menos 1 prato
+    const diasIncompletos: string[] = [];
+
+    for (let i = 0; i < diasEntrega.length; i++) {
+      const pratosDoDia = pratosPorDia[i] || [];
+      if (pratosDoDia.length < 1) {
+        diasIncompletos.push(diasEntrega[i].dia);
+      }
+    }
+
+    if (diasIncompletos.length > 0) {
+      toast({
+        title: "Seleção incompleta",
+        description: `Você precisa selecionar pelo menos 1 prato para: ${diasIncompletos.join(', ')}`,
+        variant: "destructive"
+      });
+      return;
+    }
 
     onAvancar({
-      pratosSelecionados: pratosConsolidados
+      pratosSelecionados: getPratosConsolidados()
     });
   };
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
@@ -957,7 +959,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
 
     {/* Botões - Apenas no Mobile */}
     <div ref={avancarButtonRef} className="flex justify-between lg:hidden">
-      <Button variant="outline" onClick={onVoltar}>
+      <Button variant="outline" onClick={() => onVoltar({ pratosSelecionados: getPratosConsolidados() })}>
         Voltar
       </Button>
       <Button onClick={handleAvancar}>
@@ -967,7 +969,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
 
     {/* Botão Voltar fixo no Desktop */}
     <div className="hidden lg:block">
-      <Button variant="outline" onClick={onVoltar}>
+      <Button variant="outline" onClick={() => onVoltar({ pratosSelecionados: getPratosConsolidados() })}>
         Voltar
       </Button>
     </div>

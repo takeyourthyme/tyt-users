@@ -17,7 +17,7 @@ import { toast } from "@/hooks/use-toast";
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
-  onVoltar: () => void;
+  onVoltar: (rascunho?: Partial<DadosContratacao>) => void;
 }
 export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
   dados,
@@ -96,7 +96,13 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
             <Button variant="outline" className="h-10 w-10 rounded-md border-gray-300 text-gray-600 hover:bg-gray-50" onClick={() => setQuantidadePessoas(Math.max(1, quantidadePessoas - 1))}>
               <Minus size={16} />
             </Button>
-            <Input type="number" value={quantidadePessoas} onChange={e => setQuantidadePessoas(parseInt(e.target.value) || 1)} className="h-10 w-20 text-center rounded-md border-gray-300 text-gray-900" min="1" />
+            <Input
+              type="number"
+              value={quantidadePessoas}
+              onChange={e => setQuantidadePessoas(parseInt(e.target.value) || 1)}
+              className="h-10 w-20 text-center rounded-md border-gray-300 text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              min="1"
+            />
             <Button variant="outline" className="h-10 w-10 rounded-md border-gray-300 text-gray-600 hover:bg-gray-50" onClick={() => setQuantidadePessoas(quantidadePessoas + 1)}>
               <Plus size={16} />
             </Button>
@@ -211,7 +217,14 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
 
     {/* Botões */}
     <div className="flex justify-between">
-      <Button variant="outline" onClick={onVoltar}>
+      <Button variant="outline" onClick={() =>
+        onVoltar({
+          quantidadePessoas,
+          dataEvento,
+          horarioInicio,
+          horarioFim,
+        })
+      }>
         Voltar
       </Button>
       <Button onClick={handleAvancar}>

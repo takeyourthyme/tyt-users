@@ -133,9 +133,58 @@ const Contratacao = () => {
     return etapaAtual;
   };
 
+  /**
+   * Helper to strip fields that belong exclusively to the OTHER service type,
+   * so switching between Meal Prep and Get Together won't carry stale data.
+   */
+  const limparDadosTipoAnterior = (
+    tipoAtual: DadosContratacao['tipoServico'],
+    tipoAnterior: DadosContratacao['tipoServico']
+  ): Partial<DadosContratacao> => {
+    if (tipoAtual === tipoAnterior) return {};
+
+    const mealPrepFields: Partial<DadosContratacao> = {
+      tamanhoPortacao: undefined,
+      categorias: undefined,
+      preferencias: undefined,
+      ingredientes: undefined,
+      tiposCozinha: undefined,
+      diasEntrega: undefined,
+    };
+    const getTogetherFields: Partial<DadosContratacao> = {
+      quantidadePessoas: undefined,
+      dataEvento: undefined,
+      horarioInicio: undefined,
+      horarioFim: undefined,
+      temaSelecionado: undefined,
+    };
+    const sharedClearFields: Partial<DadosContratacao> = {
+      pratosSelecionados: undefined,
+      nivelServico: undefined,
+      descricaoDetalhada: undefined,
+    };
+
+    if (tipoAnterior === 'cozinha-semanal') {
+      return { ...mealPrepFields, ...sharedClearFields };
+    }
+    if (tipoAnterior === 'eventos') {
+      return { ...getTogetherFields, ...sharedClearFields };
+    }
+    if (tipoAnterior === 'servicos-especiais') {
+      return { ...sharedClearFields };
+    }
+    return {};
+  };
+
   const avancarEtapa = (novosdados?: Partial<DadosContratacao>) => {
     if (novosdados) {
-      setDadosContratacao(prev => ({ ...prev, ...novosdados }));
+      setDadosContratacao(prev => {
+        // If service type changed, clear incompatible fields from the previous type
+        const tipoAnterior = prev.tipoServico;
+        const tipoNovo = (novosdados.tipoServico ?? prev.tipoServico) as DadosContratacao['tipoServico'];
+        const camposLimpos = limparDadosTipoAnterior(tipoNovo, tipoAnterior);
+        return { ...prev, ...camposLimpos, ...novosdados };
+      });
     }
 
     if (etapaAtual === 4) {
@@ -149,13 +198,18 @@ const Contratacao = () => {
     }
   };
 
-  const voltarEtapa = () => {
+
+  const voltarEtapa = (dadosRascunho?: Partial<DadosContratacao>) => {
+    if (dadosRascunho) {
+      setDadosContratacao(prev => ({ ...prev, ...dadosRascunho }));
+    }
     if (isLoggedIn && etapaAtual === 5) {
       setEtapaAtual(3);
     } else {
       setEtapaAtual(prev => Math.max(1, prev - 1));
     }
   };
+
 
   const getNextDateForWeekday = (weekday: string) => {
     const key = weekday
@@ -509,7 +563,7 @@ const Contratacao = () => {
           <EtapaEscolhaPratos
             dados={dadosContratacao}
             onAvancar={avancarEtapa}
-            onVoltar={voltarEtapa}
+            onVoltar={(rascunho) => voltarEtapa(rascunho)}
           />
         )}
 

@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CalendarIcon, Info, Minus, Plus, Search } from "lucide-react";
-import { format } from "date-fns";
+import { format, addDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ import temaRomantico from "@/assets/tema-romantico.jpg";
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
-  onVoltar: () => void;
+  onVoltar: (rascunho?: Partial<DadosContratacao>) => void;
 }
 type ThemeCard = {
   id: string;
@@ -145,8 +145,11 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
   onAvancar,
   onVoltar
 }) => {
+  const minDataEvento = useMemo(() => addDays(startOfDay(new Date()), 7), []);
   const [quantidadePessoas, setQuantidadePessoas] = useState(dados.quantidadePessoas || 1);
-  const [dataEvento, setDataEvento] = useState<Date>(dados.dataEvento || new Date());
+  const [dataEvento, setDataEvento] = useState<Date | undefined>(
+    dados.dataEvento && dados.dataEvento >= minDataEvento ? dados.dataEvento : undefined
+  );
   const [horarioInicio, setHorarioInicio] = useState(dados.horarioInicio || '');
   const [horarioFim, setHorarioFim] = useState(dados.horarioFim || '');
   const [preferenciaseSelecionadas, setPreferenciasSelecionadas] = useState<string[]>(dados.preferencias || []);
@@ -243,7 +246,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
     const novosErrors: {
       [key: string]: boolean;
     } = {};
-    if (!dataEvento) novosErrors.dataEvento = true;
+    if (!dataEvento || dataEvento < minDataEvento) novosErrors.dataEvento = true;
     if (!horarioInicio) novosErrors.horarioInicio = true;
     if (!horarioFim) novosErrors.horarioFim = true;
     if (!temaSelecionado) novosErrors.temaSelecionado = true;
@@ -280,7 +283,14 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
             <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(Math.max(1, quantidadePessoas - 1))} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
               <Minus size={14} />
             </Button>
-            <Input type="number" value={quantidadePessoas} onChange={e => setQuantidadePessoas(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))} className="w-16 text-center h-8 border-gray-300" min="1" max="30" />
+            <Input
+              type="number"
+              value={quantidadePessoas}
+              onChange={e => setQuantidadePessoas(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+              className="w-16 text-center h-8 border-gray-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              min="1"
+              max="30"
+            />
             <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(Math.min(30, quantidadePessoas + 1))} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
               <Plus size={14} />
             </Button>
@@ -298,7 +308,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
         <div className="grid md:grid-cols-3 gap-4">
           <div className="space-y-3">
             <Label className="text-base font-light">Data do evento</Label>
-            <p className="text-sm text-gray-500">Quando será seu evento especial?</p>
+            <p className="text-sm text-gray-500">Mínimo de 7 dias de antecedência</p>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" className={cn("w-full justify-start text-left font-normal border rounded-md px-3 py-2 text-sm ring-offset-background", "file:border-0 file:bg-transparent file:text-sm file:font-medium", "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", "disabled:cursor-not-allowed disabled:opacity-50", errors.dataEvento ? "border-red-500" : "border-input", !dataEvento && "text-muted-foreground")}>
@@ -309,7 +319,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={dataEvento} onSelect={date => date && setDataEvento(date)} disabled={date => date < new Date()} initialFocus className="pointer-events-auto" />
+                <Calendar mode="single" selected={dataEvento} onSelect={date => date && setDataEvento(date)} disabled={date => date < minDataEvento} initialFocus className="pointer-events-auto" />
               </PopoverContent>
             </Popover>
           </div>
@@ -451,7 +461,17 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
 
     {/* Botões */}
     <div ref={avancarButtonsRef} className="flex justify-between">
-      <Button variant="outline" onClick={onVoltar}>
+      <Button variant="outline" onClick={() =>
+        onVoltar({
+          quantidadePessoas,
+          dataEvento,
+          horarioInicio,
+          horarioFim,
+          preferencias: preferenciaseSelecionadas,
+          tiposCozinha: tiposCozinhaSelecionados,
+          temaSelecionado,
+        })
+      }>
         Voltar
       </Button>
       <Button onClick={handleAvancar}>
