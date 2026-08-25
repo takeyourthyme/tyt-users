@@ -94,3 +94,48 @@ export async function simulatePayment(
   );
   return data.data;
 }
+
+// ─── PAYMENT DETAILS ──────────────────────────────────────────────────────────
+
+export interface AsaasPaymentDetails {
+  id: string;
+  status: string;
+  billingType: string;
+  value: number;
+  netValue?: number;
+  dateCreated?: string;
+  paymentDate?: string;
+  clientPaymentDate?: string;
+  description?: string;
+  externalReference?: string;
+  installmentCount?: number;
+  installmentValue?: number;
+  transactionReceiptUrl?: string;
+  invoiceUrl?: string;
+  bankSlipUrl?: string;
+  creditCard?: {
+    creditCardNumber?: string;  // últimos 4 dígitos
+    creditCardBrand?: string;
+    creditCardToken?: string;
+  };
+}
+
+export interface AsaasPaymentDetailsResponse {
+  success: boolean;
+  data: AsaasPaymentDetails;
+}
+
+export async function getPaymentDetails(
+  token: string,
+  paymentId: string
+): Promise<AsaasPaymentDetails | null> {
+  try {
+    const { data } = await apiClient.get<AsaasPaymentDetailsResponse>(
+      `/api/asaas/payments/${encodeURIComponent(paymentId)}`,
+      createAuthConfig(token)
+    );
+    return data?.data ?? null;
+  } catch {
+    return null;
+  }
+}

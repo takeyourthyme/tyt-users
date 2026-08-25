@@ -1,6 +1,15 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User, Menu, CreditCard, FileText, MessageCircle, UtensilsCrossed, Clock, Book, Home } from "lucide-react";
+import { type LucideIcon, LogOut, User, Menu, CreditCard, FileText, MessageCircle, UtensilsCrossed, Clock, Book, Home } from "lucide-react";
+
+interface MenuItem {
+  icon: LucideIcon;
+  label: string;
+  route?: string;
+  action?: () => void;
+  highlighted?: boolean;
+  disabled?: boolean;
+}
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import LogoText from "@/components/LogoText";
@@ -37,7 +46,7 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
     window.open("https://wa.me/5511999999999", "_blank");
   };
 
-  const menuItems = [{
+  const menuItems: MenuItem[] = [{
     icon: UtensilsCrossed,
     label: "Novo Serviço",
     route: "/contratar",
@@ -57,14 +66,15 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
   }, {
     icon: Clock,
     label: "Histórico de Pagamento",
-    route: "/pagamentos",
-    disabled: true
-  }, {
+    route: "/pagamentos"
+  },
+  /* {
     icon: CreditCard,
     label: "Gerenciar Cartões",
     route: "/cartoes",
     disabled: true
-  }, {
+  }, */
+  {
     icon: Book,
     label: "Ver Pratos",
     route: "/cardapio"
@@ -122,7 +132,7 @@ export function AppMenu({ title = "Dashboard", user }: AppMenuProps) {
                 </div>
                 <div>
                   <h4 className="font-light text-gray-800 text-sm">{fullName}</h4>
-                  <p className="text-xs text-gray-600">Bem-vinda!</p>
+                  <p className="text-xs text-gray-600">Bem-vindo(a)!</p>
                 </div>
               </div>
             </div>
