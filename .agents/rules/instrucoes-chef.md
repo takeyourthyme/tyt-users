@@ -70,7 +70,7 @@ O frontend interage com a API RESTful através dos seguintes serviços:
 * **RN-CH04 (Restrição de Informações)**: Em respeito à LGPD e segurança de dados, o número completo de WhatsApp/Telefone e o endereço detalhado do cliente ficam ocultos na listagem até que o chef clique em "Aceitar Ordem".
 * **RN-CH05 (Geração Automática de Ordens)**: Para a modalidade de *Cozinha Semanal*, as ordens de cozinha (`kitchen_orders`) são geradas de forma automatizada pelo sistema com 48 horas de antecedência da data agendada de atendimento, alertando o chef para a necessidade de compras e preparação.
 * **RN-CH06 (Lista de Compras Digital)**: O chef é instruído a acompanhar e validar os ingredientes diretamente na tela de `/ordem-de-cozinha/:id`, dando checklist à medida que os obtém para certificar o cumprimento das especificações de porções e restrições.
-* **RN-CH07 (Prazo de Recebimento/Repasse)**: Após o chef alterar o status da ordem para `"concluido"`, o sistema calcula e agenda o repasse líquido (`chef_payouts`) com base na porcentagem de comissão estabelecida em `system_settings` (geralmente compensado em até 48h após a conclusão do serviço).
+* **RN-CH07 (Prazo de Recebimento/Repasse)**: Após o chef alterar o status da ordem para `"concluido"`, o sistema calcula e agenda o repasse líquido (`chef_payouts`). Para *Serviços Especiais*, o repasse ao chef corresponde a 30% do valor total da proposta orçada (e 70% para a plataforma TYT). Para *Meal Prep* e *Get Together*, o repasse segue a tabela fixa do `pricingService`. O repasse é liberado do escrow no Asaas após a finalização do serviço.
 
 ---
 

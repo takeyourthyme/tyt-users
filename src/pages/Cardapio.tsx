@@ -1,24 +1,18 @@
-import { useState, useEffect } from "react";
-import { Search, Filter, Heart, Eye, ChefHat, Utensils, Beef, Fish, Leaf, Soup, Salad, Wheat, Zap, ChevronDown, ChevronUp, Tag, Star, Globe, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, Filter, Heart, Eye, ChefHat, Utensils, Beef, Fish, Leaf, Soup, Salad, Wheat, Zap, ChevronDown, ChevronUp, Tag, Globe, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
 import Footer from "@/components/Footer";
 import { loadSession } from "@/services/authService";
-import { listDishes, listHighlightedDishes, normalizeDish, type Dish } from "@/services/dishService";
+import { listDishes, normalizeDish, type Dish } from "@/services/dishService";
 
-// Import das imagens geradas
-import yakisobaFrango from "@/assets/yakisoba-frango.jpg";
-import tacosCarnitas from "@/assets/tacos-carnitas.jpg";
-import moussakaGrega from "@/assets/moussaka-grega.jpg";
-import schnitzelVienense from "@/assets/schnitzel-vienense.jpg";
-import hummusVegetais from "@/assets/hummus-vegetais.jpg";
-import lagostaThermidor from "@/assets/lagosta-thermidor.jpg";
+import { Checkbox } from "@radix-ui/react-checkbox";
 
 interface Prato {
   id: string;

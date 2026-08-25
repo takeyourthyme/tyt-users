@@ -684,7 +684,7 @@ const OrdemDeCozinha = () => {
                     <>
                       <Button
                         className="bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => window.open(`https://wa.me/55${ordem.client.phone.replace(/\D/g, '')}`, '_blank')}
+                        onClick={() => window.open(`https://wa.me/${ordem.client.phone.replace(/\D/g, '')}`, '_blank')}
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />
                         Mandar mensagem
@@ -715,7 +715,7 @@ const OrdemDeCozinha = () => {
                   <>
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white w-full"
-                      onClick={() => window.open(`https://wa.me/55${ordem.client.phone.replace(/\D/g, '')}`, '_blank')}
+                      onClick={() => window.open(`https://wa.me/${ordem.client.phone.replace(/\D/g, '')}`, '_blank')}
                     >
                       <MessageCircle className="w-4 h-4 mr-2" />
                       Mandar mensagem
