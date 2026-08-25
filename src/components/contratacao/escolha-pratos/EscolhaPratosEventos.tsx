@@ -43,8 +43,6 @@ type DishOption = {
   servings?: number;
 };
 
-const mockDishes: DishOption[] = [];
-
 const getFallbackThemeName = (id: string): string => {
   const map: Record<string, string> = {
     'noite-italiana': 'Noite Italiana',

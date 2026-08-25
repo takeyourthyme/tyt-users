@@ -43,7 +43,6 @@ import { useToast } from "@/hooks/use-toast";
 
 import { useEffect, useMemo } from "react";
 import { loadSession } from "@/services/authService";
-import { getUserPhotoUrl } from "@/services/userService";
 import {
   getKitchenOrderClient,
   getKitchenOrderDate,
@@ -357,52 +356,6 @@ const OrdemDeCozinha = () => {
       });
     }
   };
-
-  // Mock data for the order
-  const clientPhotos = {
-    male: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    female: ""
-  };
-
-  // Mock dish images
-  const dishImages: Record<string, string> = {
-    "Salmão Grelhado com Aspargos": "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop",
-    "Risotto de Camarão": "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=300&h=200&fit=crop",
-    "Salada Mediterranean": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop",
-    "Torta de Limão": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=300&h=200&fit=crop",
-    "Paella Valenciana": "https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=300&h=200&fit=crop",
-    "Lasanha Bolonhesa": "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=300&h=200&fit=crop",
-    "Picanha na Brasa": "https://images.unsplash.com/photo-1544025162-d76694265947?w=300&h=200&fit=crop",
-    "Sushi Variado": "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=300&h=200&fit=crop",
-    "Gazpacho Andaluz": "https://images.unsplash.com/photo-1564671165093-20688ff1fffa?w=300&h=200&fit=crop",
-    "Crema Catalana": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=300&h=200&fit=crop",
-    "Tapas Variadas": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300&h=200&fit=crop",
-    "Vinagrete": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop",
-    "Farofa Especial": "https://images.unsplash.com/photo-1544025162-d76694265947?w=300&h=200&fit=crop",
-    "Pavê de Chocolate": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&h=200&fit=crop",
-    "Bruschetta": "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=300&h=200&fit=crop",
-    "Tiramisu": "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=300&h=200&fit=crop",
-    "Carpaccio": "https://images.unsplash.com/photo-1598866594230-a7c12756260f?w=300&h=200&fit=crop",
-    "Frango Grelhado": "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=300&h=200&fit=crop",
-    "Legumes no Vapor": "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=300&h=200&fit=crop",
-    "Arroz Integral": "https://images.unsplash.com/photo-1516684732162-798a0062be99?w=300&h=200&fit=crop",
-    "Salada Verde": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop",
-    "Sashimi": "https://images.unsplash.com/photo-1617196034183-421b4917c92d?w=300&h=200&fit=crop",
-    "Temaki": "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=300&h=200&fit=crop",
-    "Yakisoba": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=200&fit=crop",
-    "Buffet Completo": "https://images.unsplash.com/photo-1555244162-803834f70033?w=300&h=200&fit=crop",
-    "Carnes Variadas": "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=300&h=200&fit=crop",
-    "Massas": "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&h=200&fit=crop",
-    "Sobremesas": "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=300&h=200&fit=crop",
-    "Peixe Grelhado": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=300&h=200&fit=crop",
-    "Quinoa com Legumes": "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=300&h=200&fit=crop",
-    "Salada de Folhas": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop",
-    "Massa Fresca ao Molho Pesto": "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=300&h=200&fit=crop",
-    "Burrata": "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=300&h=200&fit=crop",
-    "Panna Cotta": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=300&h=200&fit=crop"
-  };
-
-
 
   const toggleCheckItem = (index: number) => {
     setCheckedItems(prev => ({

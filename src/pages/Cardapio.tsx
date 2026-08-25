@@ -50,11 +50,6 @@ const CATEGORIAS_ICONES = {
   "grãos": { icon: Wheat, color: "bg-stone-100 text-stone-700 border-stone-200" }
 };
 
-const CATEGORIAS = Object.keys(CATEGORIAS_ICONES);
-const PREFERENCIAS = ["orgânica", "sem óleo", "menos óleo", "baixo sal", "picante", "sem molho", "com molho", "frutos do mar", "vegetariano", "vegano", "sem fritura", "rica em proteínas", "light", "mediterrânea", "cuidados com temperos"];
-const INGREDIENTES = ["laticínios", "soja", "nozes", "glúten", "carne de porco", "alho", "ovo", "frutos do mar", "amendoim"];
-const TIPOS_COZINHA = ["brasileira", "japonesa", "mexicana", "mediterrânea", "italiana", "grega", "espanhola", "asiática", "judaica", "alemã", "árabe", "contemporânea", "francesa"];
-
 export default function Cardapio() {
   const navigate = useNavigate();
   const [pratos, setPratos] = useState<Prato[]>([]);
@@ -76,6 +71,57 @@ export default function Cardapio() {
     tiposCozinha: [] as string[],
     apenasavoritos: false
   });
+
+  const opcoesFiltro = React.useMemo(() => {
+    const categoriasMap = new Map<string, string>();
+    const preferenciasMap = new Map<string, string>();
+    const ingredientesMap = new Map<string, string>();
+    const tiposCozinhaMap = new Map<string, string>();
+
+    pratos.forEach(prato => {
+      if (prato.categoria && prato.categoria.trim()) {
+        const trimmed = prato.categoria.trim();
+        const key = trimmed.toLowerCase();
+        if (!categoriasMap.has(key)) {
+          categoriasMap.set(key, trimmed);
+        }
+      }
+      (prato.preferencias || []).forEach(p => {
+        const trimmed = p.trim();
+        if (trimmed) {
+          const key = trimmed.toLowerCase();
+          if (!preferenciasMap.has(key)) {
+            preferenciasMap.set(key, trimmed);
+          }
+        }
+      });
+      (prato.ingredientes || []).forEach(i => {
+        const trimmed = i.trim();
+        if (trimmed) {
+          const key = trimmed.toLowerCase();
+          if (!ingredientesMap.has(key)) {
+            ingredientesMap.set(key, trimmed);
+          }
+        }
+      });
+      (prato.tiposCozinha || []).forEach(t => {
+        const trimmed = t.trim();
+        if (trimmed) {
+          const key = trimmed.toLowerCase();
+          if (!tiposCozinhaMap.has(key)) {
+            tiposCozinhaMap.set(key, trimmed);
+          }
+        }
+      });
+    });
+
+    return {
+      categorias: Array.from(categoriasMap.values()).sort((a, b) => a.localeCompare(b, "pt-BR")),
+      preferencias: Array.from(preferenciasMap.values()).sort((a, b) => a.localeCompare(b, "pt-BR")),
+      ingredientes: Array.from(ingredientesMap.values()).sort((a, b) => a.localeCompare(b, "pt-BR")),
+      tiposCozinha: Array.from(tiposCozinhaMap.values()).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    };
+  }, [pratos]);
 
   useEffect(() => {
     const rawFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
@@ -144,7 +190,6 @@ export default function Cardapio() {
   useEffect(() => {
     let resultado = pratos;
 
-    // Filtro por pesquisa
     if (pesquisa) {
       resultado = resultado.filter(prato =>
         prato.nome.toLowerCase().includes(pesquisa.toLowerCase()) ||
@@ -152,26 +197,33 @@ export default function Cardapio() {
       );
     }
 
-    // Filtros avançados
     if (filtros.categorias.length > 0) {
-      resultado = resultado.filter(prato => filtros.categorias.includes(prato.categoria));
+      resultado = resultado.filter(prato =>
+        filtros.categorias.some(cat => cat.toLowerCase() === prato.categoria.toLowerCase())
+      );
     }
 
     if (filtros.preferencias.length > 0) {
       resultado = resultado.filter(prato =>
-        filtros.preferencias.some(pref => prato.preferencias.includes(pref))
+        filtros.preferencias.some(pref =>
+          (prato.preferencias || []).some(p => p.toLowerCase() === pref.toLowerCase())
+        )
       );
     }
 
     if (filtros.ingredientes.length > 0) {
       resultado = resultado.filter(prato =>
-        filtros.ingredientes.some(ing => prato.ingredientes.includes(ing))
+        filtros.ingredientes.some(ing =>
+          (prato.ingredientes || []).some(i => i.toLowerCase() === ing.toLowerCase())
+        )
       );
     }
 
     if (filtros.tiposCozinha.length > 0) {
       resultado = resultado.filter(prato =>
-        filtros.tiposCozinha.some(tipo => prato.tiposCozinha.includes(tipo))
+        filtros.tiposCozinha.some(tipo =>
+          (prato.tiposCozinha || []).some(t => t.toLowerCase() === tipo.toLowerCase())
+        )
       );
     }
 
@@ -197,10 +249,11 @@ export default function Cardapio() {
         return { ...prev, [tipo]: !prev[tipo] };
       }
       const currentArray = prev[tipo] as string[];
+      const exists = currentArray.some(item => item.toLowerCase() === valor.toLowerCase());
       return {
         ...prev,
-        [tipo]: currentArray.includes(valor)
-          ? currentArray.filter(item => item !== valor)
+        [tipo]: exists
+          ? currentArray.filter(item => item.toLowerCase() !== valor.toLowerCase())
           : [...currentArray, valor]
       };
     });
@@ -224,19 +277,13 @@ export default function Cardapio() {
     <div className="min-h-screen flex flex-col bg-background pt-20">
       <AppHeader />
       <div className="flex-1 container mx-auto px-4 py-6">
-        {/* Título da página */}
         <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-2xl font-light">Pratos</h1>
         </div>
 
-        {/* Pesquisa e Filtros */}
         <div className="mb-6 space-y-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -248,35 +295,28 @@ export default function Cardapio() {
                 className="pl-10"
               />
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setMostrarFiltros(!mostrarFiltros)}
-            >
+            <Button variant="outline" onClick={() => setMostrarFiltros(!mostrarFiltros)}>
               <Filter className="h-4 w-4 mr-2" />
               Filtros
             </Button>
           </div>
 
-          {/* Filtros Avançados */}
           {mostrarFiltros && (
-            <Card className="bg-card/60 backdrop-blur border-2">
-              <CardContent className="p-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-light">Filtros Avançados</h3>
-                  <Button variant="ghost" size="sm" onClick={limparFiltros}>
-                    Limpar Filtros
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-medium">Filtros</CardTitle>
+                  <Button variant="ghost" size="sm" onClick={limparFiltros} className="text-muted-foreground hover:text-foreground">
+                    Limpar filtros
                   </Button>
                 </div>
-
-                {/* Apenas Favoritos - Primeiro */}
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30 border">
-                  <Heart className="h-4 w-4 text-red-500" />
-                  <input
-                    type="checkbox"
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
                     id="favoritos"
                     checked={filtros.apenasavoritos}
-                    onChange={() => toggleFiltro('apenasavoritos', '')}
-                    className="rounded"
+                    onCheckedChange={() => toggleFiltro('apenasavoritos', '')}
                   />
                   <label htmlFor="favoritos" className="text-sm font-medium cursor-pointer">
                     Apenas favoritos
@@ -284,125 +324,139 @@ export default function Cardapio() {
                 </div>
 
                 <div className="space-y-3">
-                  {/* Categorias */}
-                  <Collapsible open={filtrosAbertos.categorias} onOpenChange={() => toggleFiltroAberto('categorias')}>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-between p-3 h-auto rounded-lg bg-muted/50 hover:bg-muted">
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-4 w-4 text-primary" />
-                          <span className="font-medium">Categorias</span>
+                  {opcoesFiltro.categorias.length > 0 && (
+                    <Collapsible open={filtrosAbertos.categorias} onOpenChange={() => toggleFiltroAberto('categorias')}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between p-3 h-auto rounded-lg bg-muted/50 hover:bg-muted">
+                          <div className="flex items-center gap-2">
+                            <Tag className="h-4 w-4 text-primary" />
+                            <span className="font-medium">Categorias</span>
+                          </div>
+                          {filtrosAbertos.categorias ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2 pt-2">
+                        <div className="flex flex-wrap gap-2">
+                          {opcoesFiltro.categorias.map(categoria => {
+                            const categoriaKey = categoria.toLowerCase();
+                            const CategoryIcon = CATEGORIAS_ICONES[categoriaKey as keyof typeof CATEGORIAS_ICONES]?.icon;
+                            const categoryColor = CATEGORIAS_ICONES[categoriaKey as keyof typeof CATEGORIAS_ICONES]?.color;
+                            const isSelected = filtros.categorias.some(c => c.toLowerCase() === categoriaKey);
+                            return (
+                              <Badge
+                                key={categoria}
+                                variant={isSelected ? "default" : "outline"}
+                                className={`cursor-pointer gap-1 font-normal ${!isSelected && categoryColor ? categoryColor : ''}`}
+                                onClick={() => toggleFiltro('categorias', categoria)}
+                              >
+                                {CategoryIcon && <CategoryIcon className="h-3 w-3" />}
+                                {categoria}
+                              </Badge>
+                            );
+                          })}
                         </div>
-                        {filtrosAbertos.categorias ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-2 pt-2">
-                      <div className="flex flex-wrap gap-2">
-                        {CATEGORIAS.map(categoria => {
-                          const CategoryIcon = CATEGORIAS_ICONES[categoria as keyof typeof CATEGORIAS_ICONES]?.icon;
-                          const categoryColor = CATEGORIAS_ICONES[categoria as keyof typeof CATEGORIAS_ICONES]?.color;
-                          return (
-                            <Badge
-                              key={categoria}
-                              variant={filtros.categorias.includes(categoria) ? "default" : "outline"}
-                              className={`cursor-pointer gap-1 font-normal ${!filtros.categorias.includes(categoria) ? categoryColor : ''}`}
-                              onClick={() => toggleFiltro('categorias', categoria)}
-                            >
-                              {CategoryIcon && <CategoryIcon className="h-3 w-3" />}
-                              {categoria}
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
 
-                  {/* Preferências */}
-                  <Collapsible open={filtrosAbertos.preferencias} onOpenChange={() => toggleFiltroAberto('preferencias')}>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-between p-3 h-auto rounded-lg bg-muted/50 hover:bg-muted">
-                        <div className="flex items-center gap-2">
-                          <Heart className="h-4 w-4 text-primary" />
-                          <span className="font-medium">Preferências</span>
+                  {opcoesFiltro.preferencias.length > 0 && (
+                    <Collapsible open={filtrosAbertos.preferencias} onOpenChange={() => toggleFiltroAberto('preferencias')}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between p-3 h-auto rounded-lg bg-muted/50 hover:bg-muted">
+                          <div className="flex items-center gap-2">
+                            <Heart className="h-4 w-4 text-primary" />
+                            <span className="font-medium">Preferências</span>
+                          </div>
+                          {filtrosAbertos.preferencias ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2 pt-2">
+                        <div className="flex flex-wrap gap-2">
+                          {opcoesFiltro.preferencias.map(pref => {
+                            const isSelected = filtros.preferencias.some(p => p.toLowerCase() === pref.toLowerCase());
+                            return (
+                              <Badge
+                                key={pref}
+                                variant={isSelected ? "default" : "outline"}
+                                className="cursor-pointer font-normal"
+                                onClick={() => toggleFiltro('preferencias', pref)}
+                              >
+                                {pref}
+                              </Badge>
+                            );
+                          })}
                         </div>
-                        {filtrosAbertos.preferencias ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-2 pt-2">
-                      <div className="flex flex-wrap gap-2">
-                        {PREFERENCIAS.map(pref => (
-                          <Badge
-                            key={pref}
-                            variant={filtros.preferencias.includes(pref) ? "default" : "outline"}
-                            className="cursor-pointer font-normal"
-                            onClick={() => toggleFiltro('preferencias', pref)}
-                          >
-                            {pref}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
 
-                  {/* Ingredientes */}
-                  <Collapsible open={filtrosAbertos.ingredientes} onOpenChange={() => toggleFiltroAberto('ingredientes')}>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-between p-3 h-auto rounded-lg bg-muted/50 hover:bg-muted">
-                        <div className="flex items-center gap-2">
-                          <Utensils className="h-4 w-4 text-primary" />
-                          <span className="font-medium">Ingredientes</span>
+                  {opcoesFiltro.ingredientes.length > 0 && (
+                    <Collapsible open={filtrosAbertos.ingredientes} onOpenChange={() => toggleFiltroAberto('ingredientes')}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between p-3 h-auto rounded-lg bg-muted/50 hover:bg-muted">
+                          <div className="flex items-center gap-2">
+                            <Utensils className="h-4 w-4 text-primary" />
+                            <span className="font-medium">Ingredientes</span>
+                          </div>
+                          {filtrosAbertos.ingredientes ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2 pt-2">
+                        <div className="flex flex-wrap gap-2">
+                          {opcoesFiltro.ingredientes.map(ing => {
+                            const isSelected = filtros.ingredientes.some(i => i.toLowerCase() === ing.toLowerCase());
+                            return (
+                              <Badge
+                                key={ing}
+                                variant={isSelected ? "default" : "outline"}
+                                className="cursor-pointer font-normal"
+                                onClick={() => toggleFiltro('ingredientes', ing)}
+                              >
+                                {ing}
+                              </Badge>
+                            );
+                          })}
                         </div>
-                        {filtrosAbertos.ingredientes ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-2 pt-2">
-                      <div className="flex flex-wrap gap-2">
-                        {INGREDIENTES.map(ing => (
-                          <Badge
-                            key={ing}
-                            variant={filtros.ingredientes.includes(ing) ? "default" : "outline"}
-                            className="cursor-pointer font-normal"
-                            onClick={() => toggleFiltro('ingredientes', ing)}
-                          >
-                            {ing}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
 
-                  {/* Tipos de Cozinha */}
-                  <Collapsible open={filtrosAbertos.tiposCozinha} onOpenChange={() => toggleFiltroAberto('tiposCozinha')}>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-between p-3 h-auto rounded-lg bg-muted/50 hover:bg-muted">
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-4 w-4 text-primary" />
-                          <span className="font-medium">Tipos de cozinha</span>
+                  {opcoesFiltro.tiposCozinha.length > 0 && (
+                    <Collapsible open={filtrosAbertos.tiposCozinha} onOpenChange={() => toggleFiltroAberto('tiposCozinha')}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between p-3 h-auto rounded-lg bg-muted/50 hover:bg-muted">
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-primary" />
+                            <span className="font-medium">Tipos de cozinha</span>
+                          </div>
+                          {filtrosAbertos.tiposCozinha ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2 pt-2">
+                        <div className="flex flex-wrap gap-2">
+                          {opcoesFiltro.tiposCozinha.map(tipo => {
+                            const isSelected = filtros.tiposCozinha.some(t => t.toLowerCase() === tipo.toLowerCase());
+                            return (
+                              <Badge
+                                key={tipo}
+                                variant={isSelected ? "default" : "outline"}
+                                className="cursor-pointer font-normal"
+                                onClick={() => toggleFiltro('tiposCozinha', tipo)}
+                              >
+                                {tipo}
+                              </Badge>
+                            );
+                          })}
                         </div>
-                        {filtrosAbertos.tiposCozinha ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-2 pt-2">
-                      <div className="flex flex-wrap gap-2">
-                        {TIPOS_COZINHA.map(tipo => (
-                          <Badge
-                            key={tipo}
-                            variant={filtros.tiposCozinha.includes(tipo) ? "default" : "outline"}
-                            className="cursor-pointer font-normal"
-                            onClick={() => toggleFiltro('tiposCozinha', tipo)}
-                          >
-                            {tipo}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
                 </div>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* Grid de Pratos */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading
             ? Array.from({ length: 9 }).map((_, index) => (
