@@ -1,4 +1,4 @@
-import { useState, useRef, type ComponentPropsWithoutRef } from "react";
+import { useState, useRef, useEffect, type ComponentPropsWithoutRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -87,7 +87,15 @@ const Cadastro = () => {
   const [addressProofFile, setAddressProofFile] = useState<File | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
+
+  // Atribui o stream ao <video> após ele ser montado no DOM
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [cameraActive]);
   const [missingFiles, setMissingFiles] = useState<string[]>([]);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -264,25 +272,26 @@ const Cadastro = () => {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { min: 400 }, height: { min: 400 } }
       });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setCameraActive(true);
-      }
+      streamRef.current = stream;
+      setCameraActive(true); // monta o <video> no DOM; o useEffect acima atribui o srcObject
     } catch (error) {
       toast({
         title: "Erro na câmera",
-        description: "Não foi possível acessar a câmera",
+        description: "Não foi possível acessar a câmera. Verifique as permissões do navegador.",
         variant: "destructive",
       });
     }
   };
 
   const stopCamera = () => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      setCameraActive(false);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
   };
 
   const takePhoto = () => {
@@ -701,6 +710,7 @@ const Cadastro = () => {
                               autoPlay
                               muted
                               className="w-full h-full object-cover"
+                              style={{ transform: "scaleX(-1)" }}
                             />
                             <div className="absolute inset-0 flex items-center justify-center">
                               <div className="w-48 h-64 border-4 border-primary rounded-full border-dashed opacity-50"></div>
