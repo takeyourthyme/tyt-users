@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon, Info, Minus, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { format, addDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { cn } from "@/lib/utils";
@@ -24,14 +24,11 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
   onAvancar,
   onVoltar
 }) => {
+  const minDataEvento = useMemo(() => addDays(startOfDay(new Date()), 7), []);
   const [quantidadePessoas, setQuantidadePessoas] = useState(dados.quantidadePessoas || 1);
-  const [dataEvento, setDataEvento] = useState<Date>(() => {
-    if (dados.dataEvento) {
-      const parsed = new Date(dados.dataEvento);
-      return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-    }
-    return new Date();
-  });
+  const [dataEvento, setDataEvento] = useState<Date | undefined>(
+    dados.dataEvento && dados.dataEvento >= minDataEvento ? dados.dataEvento : undefined
+  );
   const [horarioInicio, setHorarioInicio] = useState(dados.horarioInicio || '');
   const [horarioFim, setHorarioFim] = useState(dados.horarioFim || '');
   const [errors, setErrors] = useState<{
@@ -41,7 +38,7 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
     const newErrors: {
       [key: string]: boolean;
     } = {};
-    if (!dataEvento) {
+    if (!dataEvento || dataEvento < minDataEvento) {
       newErrors.dataEvento = true;
     }
     if (!horarioInicio) {
@@ -53,7 +50,7 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       const missingFields = [];
-      if (newErrors.dataEvento) missingFields.push("Data do evento");
+      if (newErrors.dataEvento) missingFields.push("Data do evento (mínimo 7 dias de antecedência)");
       if (newErrors.horarioInicio) missingFields.push("Horário de início");
       if (newErrors.horarioFim) missingFields.push("Horário de fim");
       toast({
@@ -117,7 +114,7 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
               Data do evento
             </Label>
             <p className="text-sm text-gray-500">
-              Quando o evento acontecerá.
+              Mínimo de 7 dias de antecedência
             </p>
             <Popover>
               <PopoverTrigger asChild>
@@ -150,11 +147,7 @@ export const ConfiguracaoServicosEspeciais: React.FC<Props> = ({
                       }));
                     }
                   }}
-                  disabled={(date) => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    return date < today;
-                  }}
+                  disabled={(date) => date < minDataEvento}
                   initialFocus
                   className="pointer-events-auto"
                 />

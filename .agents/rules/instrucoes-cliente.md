@@ -43,7 +43,7 @@ Todas as páginas do cliente estão sob `src/pages/` e configuradas no roteador 
   * **Etapa 2: Configuração**:
     * *Cozinha Semanal*: Seleção do tamanho da porção (P, M, G), restrições, ingredientes a evitar, preferências, dias e períodos (Manhã/Tarde/Noite) de entrega.
     * *Eventos*: Quantidade de pessoas (5 a 500), data do evento (mínimo de 7 dias de antecedência), horários de início/fim e tema do evento.
-    * *Serviços Especiais*: Essa modalidade **pula** a Etapa 2 de configuração direta e vai para a Etapa 3.
+    * *Serviços Especiais*: Quantidade de pessoas, data do evento (mínimo de 7 dias de antecedência) e horários de início/fim.
   * **Etapa 3: Escolha de Pratos/Detalhamento**:
     * *Cozinha Semanal*: Seleção de pratos sugeridos baseados nas preferências (mínimo de 1 prato). O modal de detalhes do prato exibe as informações reais de categorias, características (preferências), ingredientes principais, tipos de cozinha e galeria de fotos sincronizadas com o cadastro real do prato (`normalizeDish`). Os filtros avançados (Categorias, Preferências, Ingredientes e Tipos de Cozinha) refletem dinamicamente apenas os itens presentes nos pratos disponíveis na plataforma.
     * *Eventos*: Escolha do nível de serviço (*Clássico*: mín. 1 entrada, 1 prato principal, 1 sobremesa; *Banquete*: mín. 2 entradas, 2 pratos principais, 2 sobremesas) e seleção dos itens. O modal de detalhes também exibe dados reais de categorias, características, ingredientes e tipos de cozinha.
@@ -115,7 +115,7 @@ Obtenção de termos normalizados para filtros e cadastros:
 ## 3. Regras de Negócio Importantes (Clientes)
 
 * **RN-C01 (Cidade Obrigatória)**: O fluxo de contratação exige a validação prévia de atendimento da cidade informada na Etapa 1.
-* **RN-C02 (Antecedência de Evento)**: Ao agendar um serviço na categoria *Eventos*, a data no calendário deve ser selecionada com o mínimo de 7 dias de antecedência a partir da data atual.
+* **RN-C02 (Antecedência de Eventos e Serviços Especiais)**: Ao agendar um serviço nas categorias *Eventos* ou *Serviços Especiais*, a data no calendário deve ser selecionada com o mínimo de 7 dias de antecedência a partir da data atual.
 * **RN-C03 (Tamanho de Eventos)**: O formulário de eventos só permite agendamento para capacidades entre 5 e 500 pessoas.
 * **RN-C04 (Mínimo de Pratos)**: O cliente deve selecionar pelo menos 1 prato na categoria *Cozinha Semanal* e compor o menu correspondente ao nível de serviço em *Eventos* (Clássico ou Banquete).
 * **RN-C05 (Serviços Especiais s/ Pagamento Inicial)**: Pedidos de Serviços Especiais são gravados diretamente no status `aguardando_orcamento`. O cliente só efetuará o pagamento na tela `/historico-pagamento` ou `/detalhes-contrato` após um administrador lançar a proposta de orçamento.
