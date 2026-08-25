@@ -47,6 +47,8 @@ import { tokenizeCard, getAsaasCustomerId } from "@/services/asaasService";
 import { AppHeader } from "@/components/AppHeader";
 import Footer from "@/components/Footer";
 import { loadSession } from "@/services/authService";
+import { cn } from "@/lib/utils";
+import { PixPaymentModal } from "@/components/contratacao/PixPaymentModal";
 import {
   cancelKitchenOrder,
   getKitchenOrderDate,
@@ -259,6 +261,9 @@ const DetalheContrato = () => {
 
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [metodoPagamento, setMetodoPagamento] = useState<"CREDIT_CARD" | "PIX">("CREDIT_CARD");
+  const [mostrarPixModal, setMostrarPixModal] = useState(false);
+  const [pixPaymentId, setPixPaymentId] = useState("");
   const [isPaying, setIsPaying] = useState(false);
   const [errosValidacao, setErrosValidacao] = useState<string[]>([]);
 
@@ -450,6 +455,46 @@ const DetalheContrato = () => {
         variant: "destructive",
         title: "Falha no pagamento",
         description: err.response?.data?.error || err.message || "Erro ao processar o pagamento. Verifique seus dados.",
+      });
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  const handlePixPaymentSubmit = async () => {
+    if (!token || !apiOrder) return;
+
+    setIsPaying(true);
+    try {
+      const orderCode = getKitchenOrderCode(apiOrder);
+      const res = await paySpecialServiceOrder({
+        token,
+        code: orderCode,
+        billingType: 'PIX',
+      });
+
+      const resData = res as Record<string, any>;
+      const paymentId = resData?.paymentId || resData?.data?.id_pagamento || (apiOrder as any)?.id_pagamento;
+
+      setIsPaymentModalOpen(false);
+
+      if (paymentId) {
+        setPixPaymentId(String(paymentId));
+        setMostrarPixModal(true);
+      }
+
+      toast({
+        title: "Cobrança Pix gerada!",
+        description: "Escaneie o QR Code ou copie o código Pix para efetuar o pagamento.",
+      });
+
+      loadOrderDetails();
+    } catch (err: any) {
+      console.error("Erro ao gerar Pix para serviço especial:", err);
+      toast({
+        variant: "destructive",
+        title: "Falha ao gerar Pix",
+        description: err.response?.data?.error || err.message || "Não foi possível gerar a cobrança Pix. Tente novamente.",
       });
     } finally {
       setIsPaying(false);
@@ -922,99 +967,164 @@ const DetalheContrato = () => {
                         </DialogTrigger>
                         <DialogContent className="max-w-md bg-white border border-gray-150 rounded-xl shadow-2xl p-6">
                           <DialogHeader>
-                            <DialogTitle className="text-xl font-light text-gray-800">Pagamento com Cartão</DialogTitle>
+                            <DialogTitle className="text-xl font-light text-gray-800">Forma de Pagamento</DialogTitle>
                           </DialogHeader>
-                          <form onSubmit={handlePaymentSubmit} className="space-y-4 pt-2">
-                            {/* Card number */}
-                            <div className="space-y-1">
-                              <Label htmlFor="cardNumber" className="text-xs text-gray-500 font-light">Número do Cartão</Label>
-                              <Input
-                                id="cardNumber"
-                                placeholder="0000 0000 0000 0000"
-                                value={cartao.numero}
-                                onChange={(e) => setCartao({ ...cartao, numero: e.target.value })}
-                                className={`text-sm font-mono ${errosValidacao.includes('cartao_numero') ? 'border-red-500 ring-red-500' : ''}`}
-                              />
-                            </div>
-                            {/* Card Holder Name */}
-                            <div className="space-y-1">
-                              <Label htmlFor="cardName" className="text-xs text-gray-500 font-light">Nome Impresso no Cartão</Label>
-                              <Input
-                                id="cardName"
-                                placeholder="NOME DO TITULAR"
-                                value={cartao.nomeTitular}
-                                onChange={(e) => setCartao({ ...cartao, nomeTitular: e.target.value.toUpperCase() })}
-                                className={`text-sm ${errosValidacao.includes('cartao_nome') ? 'border-red-500 ring-red-500' : ''}`}
-                              />
-                            </div>
-                            {/* Expiry and CVV */}
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-1">
-                                <Label htmlFor="cardExpiry" className="text-xs text-gray-500 font-light">Validade (MM/AA)</Label>
-                                <Input
-                                  id="cardExpiry"
-                                  placeholder="MM/AA"
-                                  value={cartao.validade}
-                                  onChange={(e) => setCartao({ ...cartao, validade: e.target.value })}
-                                  className={`text-sm font-mono ${errosValidacao.includes('cartao_validade') ? 'border-red-500 ring-red-500' : ''}`}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label htmlFor="cardCvv" className="text-xs text-gray-500 font-light">CVV</Label>
-                                <Input
-                                  id="cardCvv"
-                                  placeholder="123"
-                                  value={cartao.cvv}
-                                  onChange={(e) => setCartao({ ...cartao, cvv: e.target.value })}
-                                  className={`text-sm font-mono ${errosValidacao.includes('cartao_cvv') ? 'border-red-500 ring-red-500' : ''}`}
-                                />
-                              </div>
-                            </div>
 
-                            <Separator className="my-2" />
-
-                            {/* Billing Address (CEP & Number) */}
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-1">
-                                <Label htmlFor="billingCep" className="text-xs text-gray-500 font-light">CEP de Cobrança</Label>
-                                <Input
-                                  id="billingCep"
-                                  placeholder="00000-000"
-                                  value={endereco.cep}
-                                  onChange={(e) => setEndereco({ ...endereco, cep: e.target.value })}
-                                  className={`text-sm font-mono ${errosValidacao.includes('cep') ? 'border-red-500 ring-red-500' : ''}`}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label htmlFor="billingNumber" className="text-xs text-gray-500 font-light">Número</Label>
-                                <Input
-                                  id="billingNumber"
-                                  placeholder="123"
-                                  value={endereco.numero}
-                                  onChange={(e) => setEndereco({ ...endereco, numero: e.target.value })}
-                                  className={`text-sm ${errosValidacao.includes('numero') ? 'border-red-500 ring-red-500' : ''}`}
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <Label htmlFor="billingComplement" className="text-xs text-gray-500 font-light">Complemento (Opcional)</Label>
-                              <Input
-                                id="billingComplement"
-                                placeholder="Apto, Bloco, etc."
-                                value={endereco.complemento}
-                                onChange={(e) => setEndereco({ ...endereco, complemento: e.target.value })}
-                                className="text-sm"
-                              />
-                            </div>
-
-                            <Button
-                              type="submit"
-                              disabled={isPaying}
-                              className="w-full bg-[#0A4275] hover:bg-[#08355e] text-white font-light h-11 mt-4"
+                          {/* Payment Method Selector */}
+                          <div className="grid grid-cols-2 gap-3 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => setMetodoPagamento("CREDIT_CARD")}
+                              className={cn(
+                                "flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition-all",
+                                metodoPagamento === "CREDIT_CARD"
+                                  ? "border-[#004B2A] bg-green-50/50 text-[#004B2A] shadow-sm font-semibold"
+                                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                              )}
                             >
-                              {isPaying ? "Processando Pagamento..." : `Confirmar e Pagar ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}`}
-                            </Button>
-                          </form>
+                              <CreditCard className="w-4 h-4" />
+                              <span>Cartão de Crédito</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setMetodoPagamento("PIX")}
+                              className={cn(
+                                "flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition-all",
+                                metodoPagamento === "PIX"
+                                  ? "border-[#004B2A] bg-green-50/50 text-[#004B2A] shadow-sm font-semibold"
+                                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                              )}
+                            >
+                              <QrCode className="w-4 h-4" />
+                              <span>Pix</span>
+                            </button>
+                          </div>
+
+                          {metodoPagamento === "PIX" ? (
+                            <div className="space-y-4 pt-3">
+                              <div className="bg-gray-50 rounded-lg p-4 border border-gray-100 space-y-2 text-center">
+                                <p className="text-xs text-muted-foreground">Valor a pagar</p>
+                                <p className="text-2xl font-bold text-[#004B2A]">
+                                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Ao clicar em gerar Pix, será criado um QR Code e código Copia e Cola para pagamento instantâneo via Asaas.
+                                </p>
+                              </div>
+
+                              <Button
+                                type="button"
+                                onClick={handlePixPaymentSubmit}
+                                disabled={isPaying}
+                                className="w-full bg-[#004B2A] hover:bg-[#003820] text-white font-medium h-11"
+                              >
+                                {isPaying ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Gerando Pix...
+                                  </>
+                                ) : (
+                                  <>
+                                    <QrCode className="w-4 h-4 mr-2" />
+                                    Gerar QR Code Pix
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          ) : (
+                            <form onSubmit={handlePaymentSubmit} className="space-y-4 pt-2">
+                              {/* Card number */}
+                              <div className="space-y-1">
+                                <Label htmlFor="cardNumber" className="text-xs text-gray-500 font-light">Número do Cartão</Label>
+                                <Input
+                                  id="cardNumber"
+                                  placeholder="0000 0000 0000 0000"
+                                  value={cartao.numero}
+                                  onChange={(e) => setCartao({ ...cartao, numero: e.target.value })}
+                                  className={`text-sm font-mono ${errosValidacao.includes('cartao_numero') ? 'border-red-500 ring-red-500' : ''}`}
+                                />
+                              </div>
+                              {/* Card Holder Name */}
+                              <div className="space-y-1">
+                                <Label htmlFor="cardName" className="text-xs text-gray-500 font-light">Nome Impresso no Cartão</Label>
+                                <Input
+                                  id="cardName"
+                                  placeholder="NOME DO TITULAR"
+                                  value={cartao.nomeTitular}
+                                  onChange={(e) => setCartao({ ...cartao, nomeTitular: e.target.value.toUpperCase() })}
+                                  className={`text-sm ${errosValidacao.includes('cartao_nome') ? 'border-red-500 ring-red-500' : ''}`}
+                                />
+                              </div>
+                              {/* Expiry and CVV */}
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <Label htmlFor="cardExpiry" className="text-xs text-gray-500 font-light">Validade (MM/AA)</Label>
+                                  <Input
+                                    id="cardExpiry"
+                                    placeholder="MM/AA"
+                                    value={cartao.validade}
+                                    onChange={(e) => setCartao({ ...cartao, validade: e.target.value })}
+                                    className={`text-sm font-mono ${errosValidacao.includes('cartao_validade') ? 'border-red-500 ring-red-500' : ''}`}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor="cardCvv" className="text-xs text-gray-500 font-light">CVV</Label>
+                                  <Input
+                                    id="cardCvv"
+                                    placeholder="123"
+                                    value={cartao.cvv}
+                                    onChange={(e) => setCartao({ ...cartao, cvv: e.target.value })}
+                                    className={`text-sm font-mono ${errosValidacao.includes('cartao_cvv') ? 'border-red-500 ring-red-500' : ''}`}
+                                  />
+                                </div>
+                              </div>
+
+                              <Separator className="my-2" />
+
+                              {/* Billing Address (CEP & Number) */}
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <Label htmlFor="billingCep" className="text-xs text-gray-500 font-light">CEP de Cobrança</Label>
+                                  <Input
+                                    id="billingCep"
+                                    placeholder="00000-000"
+                                    value={endereco.cep}
+                                    onChange={(e) => setEndereco({ ...endereco, cep: e.target.value })}
+                                    className={`text-sm font-mono ${errosValidacao.includes('cep') ? 'border-red-500 ring-red-500' : ''}`}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor="billingNumber" className="text-xs text-gray-500 font-light">Número</Label>
+                                  <Input
+                                    id="billingNumber"
+                                    placeholder="123"
+                                    value={endereco.numero}
+                                    onChange={(e) => setEndereco({ ...endereco, numero: e.target.value })}
+                                    className={`text-sm ${errosValidacao.includes('numero') ? 'border-red-500 ring-red-500' : ''}`}
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <Label htmlFor="billingComplement" className="text-xs text-gray-500 font-light">Complemento (Opcional)</Label>
+                                <Input
+                                  id="billingComplement"
+                                  placeholder="Apto, Bloco, etc."
+                                  value={endereco.complemento}
+                                  onChange={(e) => setEndereco({ ...endereco, complemento: e.target.value })}
+                                  className="text-sm"
+                                />
+                              </div>
+
+                              <Button
+                                type="submit"
+                                disabled={isPaying}
+                                className="w-full bg-[#0A4275] hover:bg-[#08355e] text-white font-light h-11 mt-4"
+                              >
+                                {isPaying ? "Processando Pagamento..." : `Confirmar e Pagar ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(proposalTotalPrice)}`}
+                              </Button>
+                            </form>
+                          )}
                         </DialogContent>
                       </Dialog>
                       <Button
@@ -1125,6 +1235,28 @@ const DetalheContrato = () => {
         )}
       </main>
       <Footer />
+
+      {/* Modal de Pagamento Pix para Proposta */}
+      {mostrarPixModal && (
+        <PixPaymentModal
+          open={mostrarPixModal}
+          paymentId={pixPaymentId}
+          orderCode={code}
+          totalValue={proposalTotalPrice}
+          onClose={() => {
+            setMostrarPixModal(false);
+            loadOrderDetails();
+          }}
+          onPaymentConfirmed={() => {
+            setMostrarPixModal(false);
+            loadOrderDetails();
+            toast({
+              title: "Pagamento Confirmado!",
+              description: "Seu pagamento via Pix foi confirmado com sucesso.",
+            });
+          }}
+        />
+      )}
     </div>
   );
 };

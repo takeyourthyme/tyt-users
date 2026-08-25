@@ -257,7 +257,8 @@ export async function cancelKitchenOrder(params: { token: string; code: string }
 export async function paySpecialServiceOrder(params: {
   token: string;
   code: string;
-  creditCardToken: string;
+  billingType?: 'CREDIT_CARD' | 'PIX';
+  creditCardToken?: string;
   creditCardHolderInfo?: {
     name: string;
     postalCode: string;
@@ -271,6 +272,7 @@ export async function paySpecialServiceOrder(params: {
   const { data } = await apiClient.put(
     `/api/kitchen-orders/${params.code}/pay`,
     {
+      billingType: params.billingType || 'CREDIT_CARD',
       creditCardToken: params.creditCardToken,
       creditCardHolderInfo: params.creditCardHolderInfo
     },

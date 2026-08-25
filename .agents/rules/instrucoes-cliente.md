@@ -118,7 +118,7 @@ Obtenção de termos normalizados para filtros e cadastros:
 * **RN-C02 (Antecedência de Eventos e Serviços Especiais)**: Ao agendar um serviço nas categorias *Eventos* ou *Serviços Especiais*, a data no calendário deve ser selecionada com o mínimo de 7 dias de antecedência a partir da data atual.
 * **RN-C03 (Tamanho de Eventos)**: O formulário de eventos só permite agendamento para capacidades entre 5 e 500 pessoas.
 * **RN-C04 (Mínimo de Pratos)**: O cliente deve selecionar pelo menos 1 prato na categoria *Cozinha Semanal* e compor o menu correspondente ao nível de serviço em *Eventos* (Clássico ou Banquete).
-* **RN-C05 (Serviços Especiais s/ Pagamento Inicial)**: Pedidos de Serviços Especiais são gravados diretamente no status `aguardando_orcamento`. O cliente só efetuará o pagamento na tela `/historico-pagamento` ou `/detalhes-contrato` após um administrador lançar a proposta de orçamento.
+* **RN-C05 (Serviços Especiais s/ Pagamento Inicial e Pagamento da Proposta)**: Pedidos de Serviços Especiais são gravados diretamente no status `aguardando_orcamento`. O cliente efetuará o pagamento (via Cartão de Crédito ou Pix) na tela `/detalhes-contrato` ou `/historico-pagamento` após um administrador lançar a proposta de orçamento.
 * **RN-C06 (Limite de Cartões)**: Cada cliente pode ter no máximo 5 cartões salvos para evitar riscos operacionais de processamento.
 * **RN-C07 (Campos Imutáveis)**: O CPF do cliente, uma vez gravado no cadastro, não pode ser alterado através da interface de edição de dados pessoais.
 * **RN-C08 (Avaliação Pós-Conclusão)**: A interface de avaliações (dar notas de 1 a 5 e tecer comentários) no detalhe do contrato só fica ativa quando a ordem estiver marcada como `concluido` e liberada pelo fluxo do Chef.
