@@ -434,7 +434,7 @@ const Contratacao = () => {
       const codeCandidate = extracted?.code ?? extracted?.codigo ?? extracted?.order_code ?? extracted?.orderCode;
       const idCandidate = extracted?.id ?? extracted?.kitchen_order_id ?? extracted?.kitchenOrderId;
       const paymentIdCandidate = extracted?.id_pagamento ?? extracted?.asaas_payment_id ?? extracted?.asaasPaymentId ?? extracted?.paymentId;
-      const serviceValueCandidate = extracted?.service_value ?? extracted?.serviceValue ?? extracted?.total;
+      const serviceValueCandidate = extracted?.total_value ?? extracted?.totalValue ?? extracted?.service_value ?? extracted?.serviceValue ?? extracted?.total;
 
       const code =
         typeof codeCandidate === "string" || typeof codeCandidate === "number"
