@@ -45,8 +45,8 @@ Todas as páginas do cliente estão sob `src/pages/` e configuradas no roteador 
     * *Eventos*: Quantidade de pessoas (5 a 500), data do evento (mínimo de 7 dias de antecedência), horários de início/fim e tema do evento.
     * *Serviços Especiais*: Essa modalidade **pula** a Etapa 2 de configuração direta e vai para a Etapa 3.
   * **Etapa 3: Escolha de Pratos/Detalhamento**:
-    * *Cozinha Semanal*: Seleção de pratos sugeridos baseados nas preferências (mínimo de 1 prato).
-    * *Eventos*: Escolha do nível de serviço (*Clássico*: mín. 1 entrada, 1 prato principal, 1 sobremesa; *Banquete*: mín. 2 entradas, 2 pratos principais, 2 sobremesas) e seleção dos itens.
+    * *Cozinha Semanal*: Seleção de pratos sugeridos baseados nas preferências (mínimo de 1 prato). O modal de detalhes do prato exibe as informações reais de categorias, características (preferências), ingredientes principais, tipos de cozinha e galeria de fotos sincronizadas com o cadastro real do prato (`normalizeDish`).
+    * *Eventos*: Escolha do nível de serviço (*Clássico*: mín. 1 entrada, 1 prato principal, 1 sobremesa; *Banquete*: mín. 2 entradas, 2 pratos principais, 2 sobremesas) e seleção dos itens. O modal de detalhes também exibe dados reais de categorias, características, ingredientes e tipos de cozinha.
     * *Serviços Especiais*: Campo de texto aberto para descrever a necessidade (mínimo de 100 caracteres).
   * **Etapa 4: Identificação**: Solicitado apenas se o cliente não estiver logado. Permite fazer login ou efetuar cadastro rápido (se logado, esta etapa é ignorada automaticamente).
   * **Etapa 5: Resumo e Pagamento**:

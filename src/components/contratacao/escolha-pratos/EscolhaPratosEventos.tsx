@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Edit, Heart, Flame, Info, Search, Utensils, ChefHat, Salad, Plus, Users, Crown } from "lucide-react";
+import { Eye, Edit, Heart, Flame, Info, Search, Utensils, ChefHat, Salad, Plus, Users, Crown, Globe, UtensilsCrossed, Tag, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { loadSession } from "@/services/authService";
@@ -29,10 +29,15 @@ type DishOption = {
   nome: string;
   descricao: string;
   foto: string;
+  fotos?: string[];
   preco: number;
   favorito?: boolean;
   frequente?: boolean;
+  categoria?: string;
   categorias: string[];
+  preferencias?: string[];
+  ingredientes?: string[];
+  tiposCozinha?: string[];
   themes?: string[];
   themeIds?: number[];
   servings?: number;
@@ -178,8 +183,13 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
               nome: normalized.name,
               descricao: normalized.description,
               foto: normalized.photoUrl || placeholder,
+              fotos: normalized.photoUrls.length > 0 ? normalized.photoUrls : [normalized.photoUrl || placeholder],
               preco: normalized.price,
+              categoria: normalized.categories[0]?.toLowerCase() || "outros",
               categorias: hasCategories ? normalized.categories : ["prato"],
+              preferencias: normalized.culinaryPreferences,
+              ingredientes: normalized.mainIngredients,
+              tiposCozinha: normalized.cuisineTypes,
               themes: normalized.themes,
               themeIds: normalized.themeIds,
               servings: normalized.servings,
@@ -381,46 +391,132 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
                         <Eye size={16} />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-light">{prato.nome}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
-                        <img src={prato.foto} alt={prato.nome} className="w-full h-64 object-cover rounded-lg" />
-                        <div className="space-y-3">
-                          <div>
-                            <h4 className="font-light text-sm">Descrição</h4>
-                            <p className="text-sm">{prato.descricao}</p>
-                          </div>
+                        <img src={prato.foto} alt={prato.nome} className="w-full h-56 md:h-72 object-cover rounded-lg" />
+                        <div className="space-y-4">
+                          {/* Conheça o prato */}
+                          {prato.descricao && (
+                            <Card>
+                              <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                  <UtensilsCrossed className="h-4 w-4 text-primary" />
+                                  Conheça o prato
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="pt-0">
+                                <p className="text-muted-foreground text-sm leading-relaxed">{prato.descricao}</p>
+                              </CardContent>
+                            </Card>
+                          )}
 
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <h4 className="font-light">Categoria</h4>
-                              <p className="capitalize">{titulo}</p>
-                            </div>
-                          </div>
+                          {/* Categorias */}
+                          {prato.categorias && prato.categorias.length > 0 && (
+                            <Card>
+                              <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                  <Tag className="h-4 w-4 text-primary" />
+                                  Categorias
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="pt-0">
+                                <div className="flex flex-wrap gap-2">
+                                  {prato.categorias.map((categoria) => (
+                                    <Badge key={categoria} variant="secondary" className="text-xs">
+                                      {categoria}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
 
-                          {(prato.favorito || prato.frequente) && <div>
-                            <h4 className="font-light text-sm">Características</h4>
-                            <div className="flex gap-2 mt-1">
-                              {prato.favorito && <Badge variant="outline" className="text-xs">
-                                <Heart className="w-3 h-3 mr-1 text-red-500 fill-current" />
-                                Favorito
-                              </Badge>}
-                              {prato.frequente && <Badge variant="outline" className="text-xs">
-                                <Flame className="w-3 h-3 mr-1 text-orange-500 fill-current" />
-                                Mais pedido
-                              </Badge>}
-                            </div>
-                          </div>}
+                          {/* Características */}
+                          {prato.preferencias && prato.preferencias.length > 0 && (
+                            <Card>
+                              <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                  <Heart className="h-4 w-4 text-primary" />
+                                  Características
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="pt-0">
+                                <div className="flex flex-wrap gap-2">
+                                  {prato.preferencias.map((pref) => (
+                                    <Badge key={pref} variant="secondary" className="text-xs">
+                                      {pref}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
 
-                          <div>
-                            <h4 className="font-light text-sm">Informações adicionais</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Este prato faz parte do nosso cardápio especial para eventos.
-                              Preparado com ingredientes frescos e técnicas culinárias refinadas.
-                            </p>
-                          </div>
+                          {/* Ingredientes Principais */}
+                          {prato.ingredientes && prato.ingredientes.length > 0 && (
+                            <Card>
+                              <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                  <Utensils className="h-4 w-4 text-primary" />
+                                  Ingredientes Principais
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="pt-0">
+                                <div className="flex flex-wrap gap-2">
+                                  {prato.ingredientes.map((ing) => (
+                                    <Badge key={ing} variant="outline" className="text-xs">
+                                      {ing}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* Tipos de Cozinha */}
+                          {prato.tiposCozinha && prato.tiposCozinha.length > 0 && (
+                            <Card>
+                              <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                  <Globe className="h-4 w-4 text-primary" />
+                                  Tipos de Cozinha
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="pt-0">
+                                <div className="flex flex-wrap gap-2">
+                                  {prato.tiposCozinha.map((tipo) => (
+                                    <Badge key={tipo} variant="outline" className="text-xs">
+                                      {tipo}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* Temas */}
+                          {prato.themes && prato.themes.length > 0 && (
+                            <Card>
+                              <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                  <FileText className="h-4 w-4 text-primary" />
+                                  Temas
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="pt-0">
+                                <div className="flex flex-wrap gap-2">
+                                  {prato.themes.map((tema) => (
+                                    <Badge key={tema} variant="outline" className="text-xs">
+                                      {tema}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
                         </div>
                       </div>
                     </DialogContent>
@@ -768,7 +864,7 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
 
     {/* Dialog de Detalhes do Prato do Catálogo */}
     <Dialog open={!!pratoDetalhesDialog} onOpenChange={() => setPratoDetalhesDialog(null)}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         {pratoDetalhesDialog && (
           <>
             <DialogHeader>
@@ -778,28 +874,128 @@ export const EscolhaPratosEventos: React.FC<Props> = ({
               <img
                 src={pratoDetalhesDialog.foto}
                 alt={pratoDetalhesDialog.nome}
-                className="w-full h-64 object-cover rounded-lg"
+                className="w-full h-56 md:h-72 object-cover rounded-lg"
               />
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-light text-sm">Descrição</h4>
-                  <p className="text-sm">{pratoDetalhesDialog.descricao}</p>
-                </div>
+              <div className="space-y-4">
+                {/* Conheça o prato */}
+                {pratoDetalhesDialog.descricao && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <UtensilsCrossed className="h-4 w-4 text-primary" />
+                        Conheça o prato
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-muted-foreground text-sm leading-relaxed">{pratoDetalhesDialog.descricao}</p>
+                    </CardContent>
+                  </Card>
+                )}
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <h4 className="font-light">Preço</h4>
-                    <p>R$ {pratoDetalhesDialog.preco.toFixed(2)}</p>
-                  </div>
-                </div>
+                {/* Categorias */}
+                {pratoDetalhesDialog.categorias && pratoDetalhesDialog.categorias.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Tag className="h-4 w-4 text-primary" />
+                        Categorias
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex flex-wrap gap-2">
+                        {pratoDetalhesDialog.categorias.map((categoria) => (
+                          <Badge key={categoria} variant="secondary" className="text-xs">
+                            {categoria}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
-                <div>
-                  <h4 className="font-light text-sm">Informações adicionais</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Este prato faz parte do nosso catálogo completo.
-                    Preparado com ingredientes frescos e técnicas culinárias refinadas.
-                  </p>
-                </div>
+                {/* Características */}
+                {pratoDetalhesDialog.preferencias && pratoDetalhesDialog.preferencias.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Heart className="h-4 w-4 text-primary" />
+                        Características
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex flex-wrap gap-2">
+                        {pratoDetalhesDialog.preferencias.map((pref) => (
+                          <Badge key={pref} variant="secondary" className="text-xs">
+                            {pref}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Ingredientes Principais */}
+                {pratoDetalhesDialog.ingredientes && pratoDetalhesDialog.ingredientes.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Utensils className="h-4 w-4 text-primary" />
+                        Ingredientes Principais
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex flex-wrap gap-2">
+                        {pratoDetalhesDialog.ingredientes.map((ing) => (
+                          <Badge key={ing} variant="outline" className="text-xs">
+                            {ing}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Tipos de Cozinha */}
+                {pratoDetalhesDialog.tiposCozinha && pratoDetalhesDialog.tiposCozinha.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Globe className="h-4 w-4 text-primary" />
+                        Tipos de Cozinha
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex flex-wrap gap-2">
+                        {pratoDetalhesDialog.tiposCozinha.map((tipo) => (
+                          <Badge key={tipo} variant="outline" className="text-xs">
+                            {tipo}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Temas */}
+                {pratoDetalhesDialog.themes && pratoDetalhesDialog.themes.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <FileText className="h-4 w-4 text-primary" />
+                        Temas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex flex-wrap gap-2">
+                        {pratoDetalhesDialog.themes.map((tema) => (
+                          <Badge key={tema} variant="outline" className="text-xs">
+                            {tema}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               <Button

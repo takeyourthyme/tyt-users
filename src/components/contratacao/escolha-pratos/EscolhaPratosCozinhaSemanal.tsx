@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Eye, Plus, Minus, Edit, Heart, ShoppingCart, Info, Filter, ChevronDown, ChevronUp, Utensils, Fish, Beef, ChefHat, Leaf, Soup, Salad, Wheat, Zap, Tag, Star, Globe, UtensilsCrossed } from "lucide-react";
+import { Search, Eye, Plus, Minus, Edit, Heart, ShoppingCart, Info, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Utensils, Fish, Beef, ChefHat, Leaf, Soup, Salad, Wheat, Zap, Tag, Star, Globe, UtensilsCrossed, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { useToast } from "@/hooks/use-toast";
@@ -35,10 +35,17 @@ interface DishOption {
   descricao: string;
   preco: number;
   foto: string;
+  fotos?: string[];
   categoria: string;
+  categorias?: string[];
+  preferencias?: string[];
+  ingredientes?: string[];
+  tiposCozinha?: string[];
+  temas?: string[];
   favorito: boolean;
   frequente: boolean;
   servings?: number;
+  get_together?: boolean;
 };
 
 const mockDishes: DishOption[] = [];
@@ -108,6 +115,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
   const [textoPersonalizacao, setTextoPersonalizacao] = useState('');
   const [quantidadePersonalizacao, setQuantidadePersonalizacao] = useState(1);
   const [dialogDetalhes, setDialogDetalhes] = useState<string | null>(null);
+  const [fotoDetalhesAtual, setFotoDetalhesAtual] = useState(0);
 
   useEffect(() => {
     const session = loadSession();
@@ -124,6 +132,17 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
       return [];
     };
 
+    const storedFavorites = (() => {
+      const raw = localStorage.getItem("cardapio-favorites");
+      if (!raw) return [];
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        return Array.isArray(parsed) ? (parsed.filter((v) => typeof v === "string") as string[]) : [];
+      } catch {
+        return [];
+      }
+    })();
+
     setIsLoadingDishes(true);
     const request = listDishes(token ? { token } : undefined);
 
@@ -136,8 +155,9 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
             const normalized = normalizeDish(dish);
             const dishId = Number(normalized.id);
             if (!Number.isFinite(dishId)) return undefined;
-            const photo =
-              normalized.photoUrl || "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop";
+            const photoFallback = "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&h=400&fit=crop";
+            const photo = normalized.photoUrl || photoFallback;
+            const fotos = normalized.photoUrls.length > 0 ? normalized.photoUrls : [photo];
             return {
               id: normalized.id,
               dishId,
@@ -145,10 +165,17 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
               descricao: normalized.description,
               preco: normalized.price,
               foto: photo,
+              fotos,
               categoria: normalized.categories[0]?.toLowerCase() || "outros",
-              favorito: false,
+              categorias: normalized.categories,
+              preferencias: normalized.culinaryPreferences,
+              ingredientes: normalized.mainIngredients,
+              tiposCozinha: normalized.cuisineTypes,
+              temas: normalized.themes,
+              favorito: storedFavorites.includes(normalized.id),
               frequente: false,
               servings: normalized.servings,
+              get_together: normalized.get_together,
             };
           })
           .filter(Boolean) as DishOption[];
@@ -166,24 +193,35 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
 
     // Aplicar filtros avançados
     if (filtros.categorias.length > 0) {
-      resultado = resultado.filter(prato => filtros.categorias.includes(prato.categoria));
+      resultado = resultado.filter(prato =>
+        filtros.categorias.some(cat =>
+          prato.categoria.toLowerCase() === cat.toLowerCase() ||
+          (prato.categorias && prato.categorias.some(c => c.toLowerCase() === cat.toLowerCase()))
+        )
+      );
     }
 
     if (filtros.preferencias.length > 0) {
       resultado = resultado.filter(prato =>
-        filtros.preferencias.some(pref => prato.categoria.includes(pref)) // Mock: usando categoria como preferência
+        filtros.preferencias.some(pref =>
+          (prato.preferencias || []).some(p => p.toLowerCase().includes(pref.toLowerCase()) || pref.toLowerCase().includes(p.toLowerCase()))
+        )
       );
     }
 
     if (filtros.ingredientes.length > 0) {
       resultado = resultado.filter(prato =>
-        filtros.ingredientes.some(ing => prato.categoria.includes(ing)) // Mock: usando categoria como ingrediente
+        filtros.ingredientes.some(ing =>
+          (prato.ingredientes || []).some(i => i.toLowerCase().includes(ing.toLowerCase()) || ing.toLowerCase().includes(i.toLowerCase()))
+        )
       );
     }
 
     if (filtros.tiposCozinha.length > 0) {
       resultado = resultado.filter(prato =>
-        filtros.tiposCozinha.some(tipo => prato.categoria.includes(tipo)) // Mock: usando categoria como tipo cozinha
+        filtros.tiposCozinha.some(tipo =>
+          (prato.tiposCozinha || []).some(t => t.toLowerCase().includes(tipo.toLowerCase()) || tipo.toLowerCase().includes(t.toLowerCase()))
+        )
       );
     }
 
@@ -339,6 +377,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
   };
 
   const abrirDetalhes = (pratoId: string) => {
+    setFotoDetalhesAtual(0);
     setDialogDetalhes(pratoId);
   };
   const getPratosConsolidados = () => {
@@ -862,7 +901,7 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
     <Dialog open={!!dialogDetalhes} onOpenChange={() => setDialogDetalhes(null)}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg">
+          <DialogTitle className="text-xl font-light">
             {dialogDetalhes ? availableDishes.find(p => p.id === dialogDetalhes)?.nome : ""}
           </DialogTitle>
         </DialogHeader>
@@ -870,87 +909,181 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
           const prato = availableDishes.find(p => p.id === dialogDetalhes);
           if (!prato) return null;
 
-          const categoriaDados = CATEGORIAS_ICONES[prato.categoria as keyof typeof CATEGORIAS_ICONES];
-          const IconeCategoria = categoriaDados?.icon || Utensils;
+          const fotos = prato.fotos && prato.fotos.length > 0 ? prato.fotos : [prato.foto];
 
           return (
             <div className="space-y-4">
-              <img src={prato.foto} alt={prato.nome} className="w-full h-48 object-cover rounded-lg" />
+              {/* Foto ou Galeria */}
+              <div className="relative rounded-lg overflow-hidden">
+                <img
+                  src={fotos[fotoDetalhesAtual] || prato.foto}
+                  alt={prato.nome}
+                  className="w-full h-56 md:h-72 object-cover rounded-lg"
+                />
+                {fotos.length > 1 && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFotoDetalhesAtual((prev) => (prev - 1 + fotos.length) % fotos.length);
+                      }}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFotoDetalhesAtual((prev) => (prev + 1) % fotos.length);
+                      }}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <div className="flex justify-center gap-2 mt-2">
+                      {fotos.map((_, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          className={`w-2 h-2 rounded-full transition-colors ${
+                            index === fotoDetalhesAtual ? "bg-primary" : "bg-muted-foreground/30"
+                          }`}
+                          onClick={() => setFotoDetalhesAtual(index)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* Conheça o prato */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <UtensilsCrossed className="h-4 w-4 text-primary" />
-                    Conheça o prato
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-muted-foreground text-sm leading-relaxed">{prato.descricao}</p>
-                </CardContent>
-              </Card>
+              {prato.descricao && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <UtensilsCrossed className="h-4 w-4 text-primary" />
+                      Conheça o prato
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-muted-foreground text-sm leading-relaxed">{prato.descricao}</p>
+                  </CardContent>
+                </Card>
+              )}
 
-              {/* Categoria */}
+              {/* Categorias */}
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Tag className="h-4 w-4 text-primary" />
-                    Categoria
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Badge variant="default" className={`text-xs gap-1 ${categoriaDados?.color}`}>
-                    <IconeCategoria className="h-3 w-3" />
-                    {prato.categoria}
-                  </Badge>
-                </CardContent>
-              </Card>
-
-              {/* Características (mock data) */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Heart className="h-4 w-4 text-primary" />
-                    Características
+                    Categorias
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary" className="text-xs">rica em proteínas</Badge>
-                    <Badge variant="secondary" className="text-xs">sem fritura</Badge>
+                    {(prato.categorias && prato.categorias.length > 0 ? prato.categorias : [prato.categoria]).map((categoria) => {
+                      const key = categoria.toLowerCase();
+                      const entry = CATEGORIAS_ICONES[key as keyof typeof CATEGORIAS_ICONES];
+                      const CategoryIcon = entry?.icon ?? Tag;
+                      const categoryColor = entry?.color ?? "bg-muted text-foreground border-border";
+                      return (
+                        <Badge key={categoria} variant="secondary" className={`text-xs gap-1 ${categoryColor}`}>
+                          <CategoryIcon className="h-3 w-3" />
+                          {categoria}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Ingredientes (mock data) */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Utensils className="h-4 w-4 text-primary" />
-                    Ingredientes Principais
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="text-xs">principais ingredientes</Badge>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Características (Preferências) */}
+              {prato.preferencias && prato.preferencias.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Heart className="h-4 w-4 text-primary" />
+                      Características
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap gap-2">
+                      {prato.preferencias.map((pref) => (
+                        <Badge key={pref} variant="secondary" className="text-xs">
+                          {pref}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-              {/* Tipos de Cozinha (mock data) */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Globe className="h-4 w-4 text-primary" />
-                    Tipos de Cozinha
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="default" className="text-xs">internacional</Badge>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Ingredientes Principais */}
+              {prato.ingredientes && prato.ingredientes.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Utensils className="h-4 w-4 text-primary" />
+                      Ingredientes Principais
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap gap-2">
+                      {prato.ingredientes.map((ing) => (
+                        <Badge key={ing} variant="outline" className="text-xs">
+                          {ing}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Tipos de Cozinha */}
+              {prato.tiposCozinha && prato.tiposCozinha.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Globe className="h-4 w-4 text-primary" />
+                      Tipos de Cozinha
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap gap-2">
+                      {prato.tiposCozinha.map((tipo) => (
+                        <Badge key={tipo} variant="outline" className="text-xs">
+                          {tipo}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Temas */}
+              {prato.get_together && prato.temas && prato.temas.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <FileText className="h-4 w-4 text-primary" />
+                      Temas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap gap-2">
+                      {prato.temas.map((tema) => (
+                        <Badge key={tema} variant="outline" className="text-xs">
+                          {tema}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           );
         })()}
