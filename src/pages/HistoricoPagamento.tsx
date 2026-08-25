@@ -305,7 +305,7 @@ const HistoricoPagamento = () => {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pt-20">
+    <div className="min-h-screen max-w-4xl mx-auto flex flex-col bg-background pt-20">
       <AppMenu />
 
       <div className="flex-1 container mx-auto px-4 py-6">
@@ -422,7 +422,6 @@ const HistoricoPagamento = () => {
                   <TableHead>Pagamento</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
