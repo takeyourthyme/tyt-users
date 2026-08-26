@@ -108,7 +108,8 @@ Obtenção de termos normalizados para filtros e cadastros:
 * `listCuisineTypes()` -> `GET /api/tipos-cozinha`
 * `listCulinaryPreferences()` -> `GET /api/pref-culinarias`
 * `listMainIngredients()` -> `GET /api/ingredientes-principais`
-* `listThemes()` -> `GET /api/temas`
+### 2.6 Configurações Gerais e Documentos Legais ([configuracaoService.ts](file:///Users/viniciussantiago/Matilha/tyt-users/src/services/configuracaoService.ts))
+* `getConfiguracaoGeral()` -> `GET /api/configuracao-geral`. Retorna as preferências da plataforma e as URLs públicas dos documentos legais cadastrados no painel administrativo (`termos_politicas`, `lgpd`, `lgpd_show`, `cookies`). Utilizado no aceite de termos do checkout (`EtapaResumoePagamento.tsx`), nas rotas `/termos` e `/termos-de-uso` ([TermosRedirect.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/TermosRedirect.tsx)) e no rodapé unificado.
 
 ---
 
@@ -125,6 +126,7 @@ Obtenção de termos normalizados para filtros e cadastros:
 * **RN-C09 (Cancelamento Dinâmico de Pedidos)**: Se o cliente tentar cancelar um pedido que já teve o pagamento processado (status `CONFIRMED`, `COMPLETED` ou com chave `id_pagamento` preenchida), o botão "Cancelar Pedido" redirecionará o cliente para o WhatsApp oficial de suporte (`5511999999999`) com uma mensagem automática contendo o código do serviço e o nome do cliente. Se o pedido não estiver pago, o cancelamento é realizado diretamente pela interface após confirmação.
 * **RN-C10 (Mensagens de Erro Amigáveis e Proteção de Regras de Negócio)**: Mensagens de erro de pagamento, gateway ou validações de backend exibidas ao cliente ou chef NUNCA devem expor termos internos de arquitetura/negócio (tais como *split*, *subconta*, *escrow*, *wallets*, taxas internas ou valores detalhados de repasse). Erros não mapeados ou técnicos devem ser traduzidos para mensagens amigáveis e orientativas (ex.: "Não foi possível processar o pagamento. Verifique os dados do cartão ou tente outra forma de pagamento.").
 * **RN-C11 (Aceite de Disponibilidade de Chef e Estorno no Checkout)**: Na etapa de Resumo e Pagamento, o cliente deve obrigatoriamente aceitar o termo de que o serviço está "sujeito à disponibilidade de chef e que, se em 24h a 48h não houver chef disponível, o dinheiro será estornado integralmente". No pagamento com Cartão de Crédito, os campos para inserção dos dados do cartão ficam bloqueados/desabilitados até que o cliente marque esse aceite.
+* **RN-C12 (Termos de Uso e Política de Privacidade Dinâmicos)**: Os links para termos de uso e política de privacidade no checkout e no rodapé consomem dinamicamente o arquivo PDF hospedado e configurado no painel administrativo via `/api/configuracao-geral` (`termos_politicas`).
 
 ---
 

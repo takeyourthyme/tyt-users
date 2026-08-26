@@ -14,6 +14,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { getAsaasCustomerId, getAsaasTokenizationConfig, tokenizeCard, simulatePayment, type AsaasSimulationResult } from "@/services/asaasService";
 import { calculateServicePrice, fetchPricingTiers, type PricingTier } from "@/services/pricingService";
+import { useConfiguracaoGeral } from "@/hooks/useConfiguracaoGeral";
 
 interface Props {
   dados: DadosContratacao;
@@ -65,6 +66,8 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
   });
   const [usarEnderecoMesmoCadastro, setUsarEnderecoMesmoCadastro] = useState(false);
   const [aceitouTermos, setAceitouTermos] = useState(false);
+  const { data: configGeral } = useConfiguracaoGeral();
+  const termosUrl = configGeral?.termos_politicas;
   const [aceitouDisponibilidadeChef, setAceitouDisponibilidadeChef] = useState(dados.aceitouDisponibilidadeChef || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfileAddress, setIsLoadingProfileAddress] = useState(false);
@@ -980,7 +983,22 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
             />
             <Label htmlFor="aceitar-termos" className={`text-sm ${errosValidacao.includes('termos') ? 'text-red-600' : ''}`}>
               Aceito os{" "}
-              <a href="/termos" target="_blank" className="text-blue-600 hover:underline">
+              <a
+                href={termosUrl || "/termos"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  if (!termosUrl) {
+                    e.preventDefault();
+                    toast({
+                      title: "Documento indisponível",
+                      description: "O documento de termos de uso e política de privacidade ainda não foi cadastrado.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                className="text-blue-600 hover:underline"
+              >
                 Termos de Uso e Política de Privacidade
               </a>
             </Label>

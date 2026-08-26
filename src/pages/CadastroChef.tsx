@@ -20,6 +20,7 @@ import LogoText from "@/components/LogoText";
 import Footer from "@/components/Footer";
 import IllustrationOrder from "@/assets/illustration-order";
 import { createChefUser } from "@/services/chefService";
+import { useConfiguracaoGeral } from "@/hooks/useConfiguracaoGeral";
 
 // Validation schemas
 const toDigits = (value: string) => value.replace(/\D/g, "");
@@ -155,6 +156,8 @@ const CadastroChef = () => {
     toast
   } = useToast();
   const navigate = useNavigate();
+  const { data: configGeral } = useConfiguracaoGeral();
+  const termosUrl = configGeral?.termos_politicas;
   const formA = useForm<StepAData>({
     resolver: zodResolver(stepASchema),
     defaultValues: {
@@ -992,11 +995,41 @@ const CadastroChef = () => {
                     <div className="space-y-1 leading-none">
                       <FormLabel className="text-sm cursor-pointer font-normal">
                         Li e aceito os{' '}
-                        <a href="/termos-de-uso" target="_blank" className="text-blue-600 hover:underline">
+                        <a
+                          href={termosUrl || "/termos-de-uso"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            if (!termosUrl) {
+                              e.preventDefault();
+                              toast({
+                                title: "Documento indisponível",
+                                description: "O documento de termos de uso e política de privacidade ainda não foi configurado.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          className="text-blue-600 hover:underline"
+                        >
                           termos de uso
                         </a>
                         {' '}e o{' '}
-                        <a href="/contrato-prestacao-servicos" target="_blank" className="text-blue-600 hover:underline">
+                        <a
+                          href={termosUrl || "/contrato-prestacao-servicos"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            if (!termosUrl) {
+                              e.preventDefault();
+                              toast({
+                                title: "Documento indisponível",
+                                description: "O documento de termos de uso e política de privacidade ainda não foi configurado.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          className="text-blue-600 hover:underline"
+                        >
                           contrato de prestação de serviços
                         </a>
                         {' '}de cozinha do TYT

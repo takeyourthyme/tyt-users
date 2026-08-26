@@ -60,6 +60,9 @@ O frontend interage com a API RESTful através dos seguintes serviços:
 ### 2.4 Dados do Usuário ([userService.ts](file:///Users/viniciussantiago/Matilha/tyt-users/src/services/userService.ts))
 * `getUserById({ token, userId })` -> `GET /api/users/${userId}`. Retorna os dados agregados do perfil e do relacionamento do Chef (`usuario_chef`).
 
+### 2.5 Configurações Gerais e Documentos Legais ([configuracaoService.ts](file:///Users/viniciussantiago/Matilha/tyt-users/src/services/configuracaoService.ts))
+* `getConfiguracaoGeral()` -> `GET /api/configuracao-geral`. Retorna as preferências do sistema e os links dos documentos legais (`termos_politicas`, `lgpd`, `lgpd_show`, `cookies`). Utilizado no aceite de termos do cadastro de chefs (`CadastroChef.tsx`) e rodapés.
+
 ---
 
 ## 3. Regras de Negócio Importantes (Chefs)

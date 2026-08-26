@@ -32,6 +32,7 @@ import GerenciarCartoes from "./pages/GerenciarCartoes";
 import Contratacao from "./pages/Contratacao";
 import EsqueciSenha from "./pages/EsqueciSenha";
 import NotFound from "./pages/NotFound";
+import TermosRedirect from "./pages/TermosRedirect";
 import { ClientRoute, ChefRoute, PublicClientRoute, GuestRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,10 @@ const AppContent = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Index />} />
+      <Route path="/termos" element={<TermosRedirect />} />
+      <Route path="/termos-de-uso" element={<TermosRedirect />} />
+      <Route path="/politica-de-privacidade" element={<TermosRedirect />} />
+      <Route path="/contrato-prestacao-servicos" element={<TermosRedirect />} />
       <Route path="*" element={<NotFound />} />
 
       {/* Guest/Auth Routes */}
