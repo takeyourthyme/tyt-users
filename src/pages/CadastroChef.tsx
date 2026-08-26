@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type ChangeEvent, type ComponentPropsWithoutRef, type FocusEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldErrors, type FieldPath, type FieldValues, type UseFormSetFocus } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { isAxiosError } from "axios";
@@ -43,11 +43,21 @@ const validateCpf = (value: string) => {
   const d2 = calcDigit(cpf.slice(0, 9) + String(d1), 11);
   return cpf.endsWith(`${d1}${d2}`);
 };
+const validateBirthDate = (value: string) => {
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return false;
+  const [, day, month, year] = match.map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date <= new Date()
+    && date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day;
+};
 
 const stepASchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   cpf: z.string().refine((val) => validateCpf(val), "CPF inválido"),
-  birthDate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Data inválida (dd/mm/aaaa)"),
+  birthDate: z.string().refine(validateBirthDate, "Data inválida (dd/mm/aaaa)"),
   whatsapp: z.string().regex(/^\+55 \(\d{2}\) \d{5}-\d{4}$/, "WhatsApp inválido"),
   email: z.string().email("E-mail inválido"),
   password: z.string().min(8, "Senha deve ter pelo menos 8 caracteres")
@@ -133,6 +143,12 @@ const availableLanguages = [{
   flag: "🇯🇵"
 }];
 const cuisineSpecialties = ["Brasileira", "Italiana", "Francesa", "Japonesa", "Chinesa", "Tailandesa", "Indiana", "Árabe", "Mexicana", "Peruana", "Mediterrânea", "Vegetariana", "Vegana", "Sem Glúten", "Doces e Sobremesas", "Panificação"];
+const focusFirstInvalid = <T extends FieldValues>(errors: FieldErrors<T>, setFocus: UseFormSetFocus<T>) => {
+  const firstField = Object.keys(errors)[0] as FieldPath<T> | undefined;
+  if (!firstField) return;
+  setFocus(firstField);
+  requestAnimationFrame(() => document.activeElement?.scrollIntoView({ behavior: "smooth", block: "center" }));
+};
 const CadastroChef = () => {
   const [currentStep, setCurrentStep] = useState<"A" | "B" | "C">("A");
   const [stepAData, setStepAData] = useState<StepAData | null>(null);
@@ -140,6 +156,7 @@ const CadastroChef = () => {
   const [photoPreview, setPhotoPreview] = useState<string>("");
   const [characterCount, setCharacterCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cepMessage, setCepMessage] = useState<string>("");
   const lastCepLookupRef = useRef<string>("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -206,6 +223,15 @@ const CadastroChef = () => {
       acceptTerms: false
     }
   });
+  const updateAvailability = (value: StepCData["availability"]) => {
+    formC.setValue("availability", value, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    formC.clearErrors("availability");
+    void formC.trigger("availability");
+  };
   const onSubmitStepA = async (data: StepAData) => {
     setStepAData(data);
     setCurrentStep("B");
@@ -216,17 +242,23 @@ const CadastroChef = () => {
   };
   const fetchAddressByCEP = async (cep: string) => {
     try {
+      setCepMessage("");
       const sanitizedCep = cep.replace(/\D/g, "");
       const response = await fetch(`https://viacep.com.br/ws/${sanitizedCep}/json/`);
+      if (!response.ok) throw new Error("CEP service unavailable");
       const data = await response.json();
-      if (!data.erro) {
-        formB.setValue("street", data.logradouro || "");
-        formB.setValue("neighborhood", data.bairro || "");
-        formB.setValue("city", data.localidade || "");
-        formB.setValue("state", data.uf || "");
+      if (data.erro) {
+        setCepMessage("CEP não encontrado. Confira o número ou preencha o endereço manualmente.");
+        return;
       }
+      const options = { shouldValidate: true, shouldDirty: true, shouldTouch: true } as const;
+      formB.setValue("street", data.logradouro || "", options);
+      formB.setValue("neighborhood", data.bairro || "", options);
+      formB.setValue("city", data.localidade || "", options);
+      formB.setValue("state", data.uf || "", options);
+      await formB.trigger(["street", "neighborhood", "city", "state"]);
     } catch (error) {
-      console.error("Erro ao buscar CEP:", error);
+      setCepMessage("Não foi possível consultar o CEP. Você pode preencher o endereço manualmente.");
     }
   };
   const onSubmitStepB = async (data: StepBData) => {
@@ -376,6 +408,8 @@ const CadastroChef = () => {
       });
       navigate("/chef/cadastro/status", { state: { status: "analise" } });
     } catch (error) {
+      let errorCode: string | undefined;
+      let errorField: string | undefined;
       const apiMessage = (() => {
         if (isAxiosError(error)) {
           const data = error.response?.data;
@@ -384,6 +418,8 @@ const CadastroChef = () => {
             const record = data as Record<string, unknown>;
             const message = record.message;
             const err = record.error;
+            errorCode = typeof record.code === "string" ? record.code : undefined;
+            errorField = typeof record.field === "string" ? record.field : undefined;
             if (typeof message === "string") return message;
             if (typeof err === "string") return err;
           }
@@ -393,6 +429,31 @@ const CadastroChef = () => {
         if (error instanceof Error) return error.message;
         return "Tente novamente em alguns instantes";
       })();
+
+      const fieldMap: Record<string, { step: "A" | "B" | "C"; name: string }> = {
+        nome: { step: "A", name: "name" }, cpf: { step: "A", name: "cpf" }, email: { step: "A", name: "email" },
+        senha: { step: "A", name: "password" }, data_nascimento: { step: "A", name: "birthDate" }, whatsapp: { step: "A", name: "whatsapp" },
+        cep: { step: "B", name: "cep" }, endereco: { step: "B", name: "street" }, numero: { step: "B", name: "number" },
+        bairro: { step: "B", name: "neighborhood" }, cidade: { step: "B", name: "city" }, estado: { step: "B", name: "state" },
+        tipo_transporte: { step: "B", name: "transportType" }, idiomas: { step: "C", name: "languages" },
+        especialidades: { step: "C", name: "specialties" }, disponibilidade: { step: "C", name: "availability" },
+        disponivel_para: { step: "C", name: "availableFor" }
+      };
+      if (errorField && fieldMap[errorField]) {
+        const target = fieldMap[errorField];
+        setCurrentStep(target.step);
+        const targetForm = target.step === "A" ? formA : target.step === "B" ? formB : formC;
+        targetForm.setError(target.name as never, { type: "server", message: String(apiMessage) });
+        requestAnimationFrame(() => targetForm.setFocus(target.name as never));
+      } else if (errorCode === "USER_CPF_ALREADY_EXISTS") {
+        setCurrentStep("A");
+        formA.setError("cpf", { type: "server", message: String(apiMessage) });
+        requestAnimationFrame(() => formA.setFocus("cpf"));
+      } else if (errorCode === "USER_EMAIL_ALREADY_EXISTS") {
+        setCurrentStep("A");
+        formA.setError("email", { type: "server", message: String(apiMessage) });
+        requestAnimationFrame(() => formA.setFocus("email"));
+      }
 
       toast({
         title: "Erro ao criar conta",
@@ -404,7 +465,7 @@ const CadastroChef = () => {
     }
   };
   const progressValue = currentStep === "A" ? 33 : currentStep === "B" ? 67 : 100;
-  return <div className="min-h-screen flex flex-col">
+  return <div className="min-h-dvh flex flex-col overflow-x-hidden">
     {/* Header with blue background for chef */}
     <header className="bg-[#0E4684] border-b border-[#0a3769] px-4 py-4">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -447,7 +508,7 @@ const CadastroChef = () => {
 
           <CardContent>
             <Form {...formA}>
-              <form onSubmit={formA.handleSubmit(onSubmitStepA)} className="space-y-4">
+              <form onSubmit={formA.handleSubmit(onSubmitStepA, (errors) => focusFirstInvalid(errors, formA.setFocus))} className="space-y-4">
                 <FormField control={formA.control} name="name" render={({
                   field
                 }) => <FormItem>
@@ -534,7 +595,7 @@ const CadastroChef = () => {
 
           <CardContent>
             <Form {...formB}>
-              <form onSubmit={formB.handleSubmit(onSubmitStepB)} className="space-y-4">
+              <form onSubmit={formB.handleSubmit(onSubmitStepB, (errors) => focusFirstInvalid(errors, formB.setFocus))} className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <MapPin className="w-5 h-5 text-[#0E4684]" />
                   <h3 className="text-h3">Endereço</h3>
@@ -564,10 +625,11 @@ const CadastroChef = () => {
                       </InputMask>
                     </FormControl>
                     <FormMessage />
+                    {cepMessage && <p role="status" className="text-sm text-amber-700">{cepMessage}</p>}
                   </FormItem>} />
 
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="col-span-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                  <div className="sm:col-span-3">
                     <FormField control={formB.control} name="street" render={({
                       field
                     }) => <FormItem>
@@ -599,7 +661,7 @@ const CadastroChef = () => {
                     <FormMessage />
                   </FormItem>} />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField control={formB.control} name="neighborhood" render={({
                     field
                   }) => <FormItem>
@@ -648,7 +710,7 @@ const CadastroChef = () => {
                     field
                   }) => <FormItem>
                       <FormLabel>Tipo de transporte</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione seu tipo de transporte" />
@@ -684,7 +746,7 @@ const CadastroChef = () => {
 
           <CardContent>
             <Form {...formC}>
-              <form onSubmit={formC.handleSubmit(onSubmitStepC)} className="space-y-6">
+              <form onSubmit={formC.handleSubmit(onSubmitStepC, (errors) => focusFirstInvalid(errors, formC.setFocus))} className="space-y-6">
                 <FormField
                   control={formC.control}
                   name="photo"
@@ -781,7 +843,7 @@ const CadastroChef = () => {
                   field
                 }) => <FormItem>
                     <FormLabel>Idiomas que fala</FormLabel>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="grid grid-cols-1 gap-2 mt-2 sm:grid-cols-2">
                       {availableLanguages.map(lang => <div key={lang.id} className="flex items-center space-x-2">
                         <Checkbox id={lang.id} checked={field.value.includes(lang.id)} onCheckedChange={checked => {
                           if (checked) {
@@ -803,7 +865,7 @@ const CadastroChef = () => {
                   field
                 }) => <FormItem>
                     <FormLabel>Especialidades</FormLabel>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="grid grid-cols-1 gap-2 mt-2 sm:grid-cols-2">
                       {cuisineSpecialties.map(specialty => <div key={specialty} className="flex items-center space-x-2">
                         <Checkbox id={specialty} checked={field.value.includes(specialty)} onCheckedChange={checked => {
                           if (checked) {
@@ -850,14 +912,14 @@ const CadastroChef = () => {
                 <FormField control={formC.control} name="availability" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Configurar Disponibilidade</FormLabel>
-                    <div className="border rounded-lg overflow-hidden">
-                      <table className="w-full">
+                    <div className="max-w-full overflow-hidden rounded-lg border">
+                      <table className="w-full table-fixed">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="text-left p-2 text-sm font-medium">Dia</th>
-                            <th className="text-center p-2 text-sm font-medium">Manhã</th>
-                            <th className="text-center p-2 text-sm font-medium">Tarde</th>
-                            <th className="text-center p-2 text-sm font-medium">Noite</th>
+                            <th className="w-[42%] p-1 text-left text-xs font-medium sm:p-2 sm:text-sm">Dia</th>
+                            <th className="p-1 text-center text-xs font-medium sm:p-2 sm:text-sm">Manhã</th>
+                            <th className="p-1 text-center text-xs font-medium sm:p-2 sm:text-sm">Tarde</th>
+                            <th className="p-1 text-center text-xs font-medium sm:p-2 sm:text-sm">Noite</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -893,7 +955,7 @@ const CadastroChef = () => {
                                           evening: false
                                         };
                                       }
-                                      field.onChange(newValue);
+                                      updateAvailability(newValue);
                                     }}
                                   />
                                   <Label htmlFor={key} className="text-sm cursor-pointer">
@@ -911,7 +973,7 @@ const CadastroChef = () => {
                                       ...newValue[key],
                                       morning: !!checked
                                     };
-                                    field.onChange(newValue);
+                                    updateAvailability(newValue);
                                   }}
                                 />
                               </td>
@@ -925,7 +987,7 @@ const CadastroChef = () => {
                                       ...newValue[key],
                                       afternoon: !!checked
                                     };
-                                    field.onChange(newValue);
+                                    updateAvailability(newValue);
                                   }}
                                 />
                               </td>
@@ -939,7 +1001,7 @@ const CadastroChef = () => {
                                       ...newValue[key],
                                       evening: !!checked
                                     };
-                                    field.onChange(newValue);
+                                    updateAvailability(newValue);
                                   }}
                                 />
                               </td>
@@ -959,7 +1021,8 @@ const CadastroChef = () => {
                     <div className="space-y-2">
                       {[
                         { label: "Meal Prep", value: "cozinha_semanal" },
-                        { label: "Get Together", value: "eventos" }
+                        { label: "Get Together", value: "eventos" },
+                        { label: "Serviços especiais", value: "servicos_especiais" }
                       ].map((option) => (
                         <div key={option.value} className="flex items-center space-x-2">
                           <Checkbox
@@ -985,14 +1048,14 @@ const CadastroChef = () => {
 
                 {/* Aceite dos termos */}
                 <FormField control={formC.control} name="acceptTerms" render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormItem className="flex min-w-0 flex-row items-start gap-3 space-y-0">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <div className="space-y-1 leading-none">
+                    <div className="min-w-0 flex-1 space-y-1 leading-relaxed break-words">
                       <FormLabel className="text-sm cursor-pointer font-normal">
                         Li e aceito os{' '}
                         <a
@@ -1039,7 +1102,7 @@ const CadastroChef = () => {
                   </FormItem>
                 )} />
 
-                <Button type="submit" className="w-full bg-[#0E4684] hover:bg-[#0a3769] text-white" size="lg" disabled={isSubmitting}>
+                <Button type="submit" className="mb-[env(safe-area-inset-bottom)] w-full bg-[#0E4684] hover:bg-[#0a3769] text-white" size="lg" disabled={isSubmitting}>
                   {isSubmitting ? "Enviando..." : "Finalizar cadastro"}
                 </Button>
               </form>

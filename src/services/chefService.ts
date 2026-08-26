@@ -40,7 +40,7 @@ export type ChefUserFormInput = FormData | Record<string, UserFormValue | UserFo
 export async function createChefUser(input: ChefUserFormInput) {
   const formData = input instanceof FormData ? input : buildFormData(input);
   formData.set("tipo_usuario", "chef");
-  const { data } = await apiClient.post("/api/users", formData);
+  const { data } = await apiClient.post("/api/users/chef", formData);
   return data;
 }
 
