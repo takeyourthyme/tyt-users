@@ -542,7 +542,7 @@ const EditarCadastroChef = () => {
         formData.append("tipo_transporte", data.transportType);
       }
 
-      if (data.instagram?.trim()) formData.append("instagram", data.instagram.trim());
+      formData.append("instagram", data.instagram ? data.instagram.trim() : "");
       formData.append("escola_formacao", data.education.trim());
       formData.append("conte_sobre_voce", data.about.trim());
 

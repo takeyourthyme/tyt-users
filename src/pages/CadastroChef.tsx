@@ -364,7 +364,7 @@ const CadastroChef = () => {
       formData.append("disponivel_viajar", String(stepBData.canTravel));
       formData.append("tipo_transporte", stepBData.transportType);
 
-      if (data.instagram?.trim()) formData.append("instagram", data.instagram.trim());
+      formData.append("instagram", data.instagram ? data.instagram.trim() : "");
       formData.append("escola_formacao", data.education.trim());
       formData.append("conte_sobre_voce", data.about.trim());
 
