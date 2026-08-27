@@ -26,7 +26,7 @@ const tamanhosPorcao = [{
   nome: 'Grande (5–6 pessoas)'
 }];
 const diasSemana = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
-const periodos = ['Manhã', 'Tarde', 'Indiferente'];
+const periodos = ['Manhã', 'Tarde', 'Noite'];
 
 const fallbackCategories: LookupOption[] = [
   { id: "Entradas", label: "Entradas" },
