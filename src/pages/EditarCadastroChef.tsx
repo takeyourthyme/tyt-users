@@ -126,6 +126,7 @@ const normalizeAvailableFor = (value: string) => {
   const lower = value.toLowerCase();
   if (lower.includes("cozinha") && lower.includes("seman")) return "cozinha_semanal";
   if (lower.includes("event")) return "eventos";
+  if (lower.includes("especia") || lower.includes("special")) return "servicos_especiais";
   return value;
 };
 
@@ -275,6 +276,16 @@ const EditarCadastroChef = () => {
       videoRef.current.srcObject = streamRef.current;
     }
   }, [cameraActive]);
+
+  // Garante que a câmera seja desligada e os tracks de mídia liberados ao desmontar o componente ou sair da tela
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -416,10 +427,11 @@ const EditarCadastroChef = () => {
       const response = await fetch(`https://viacep.com.br/ws/${toDigits(cep)}/json/`);
       const data = await response.json();
       if (!data.erro) {
-        form.setValue("street", data.logradouro || "");
-        form.setValue("neighborhood", data.bairro || "");
-        form.setValue("city", data.localidade || "");
-        form.setValue("state", data.uf || "");
+        form.setValue("street", data.logradouro || "", { shouldValidate: true, shouldDirty: true });
+        form.setValue("neighborhood", data.bairro || "", { shouldValidate: true, shouldDirty: true });
+        form.setValue("city", data.localidade || "", { shouldValidate: true, shouldDirty: true });
+        form.setValue("state", data.uf || "", { shouldValidate: true, shouldDirty: true });
+        form.trigger(["street", "neighborhood", "city", "state"]);
       }
     } catch (error) {
       console.error("Erro ao buscar CEP:", error);
@@ -432,16 +444,32 @@ const EditarCadastroChef = () => {
   };
 
   const startCamera = async () => {
+    stopCamera();
+
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      document.getElementById("file-upload")?.click();
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-      streamRef.current = stream;
-      setCameraActive(true); // monta o <video> no DOM; o useEffect acima atribui o srcObject
+      let stream: MediaStream | null = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+
+      if (stream) {
+        streamRef.current = stream;
+        setCameraActive(true); // monta o <video> no DOM; o useEffect acima atribui o srcObject
+      }
     } catch (error) {
       toast({
         title: "Erro na câmera",
-        description: "Não foi possível acessar a câmera. Verifique as permissões do navegador.",
+        description: "Não foi possível acessar a câmera diretamente. Use o botão de enviar arquivo.",
         variant: "destructive"
       });
+      document.getElementById("file-upload")?.click();
     }
   };
 
@@ -1130,7 +1158,8 @@ const EditarCadastroChef = () => {
                         <div className="space-y-2">
                           {[
                             { label: "Meal Prep", value: "cozinha_semanal" },
-                            { label: "Get Together", value: "eventos" }
+                            { label: "Get Together", value: "eventos" },
+                            { label: "Serviços Especiais", value: "servicos_especiais" }
                           ].map((option) => (
                             <div key={option.value} className="flex items-center space-x-2">
                               <Checkbox

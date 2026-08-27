@@ -18,7 +18,7 @@ Todas as páginas do cliente estão sob `src/pages/` e configuradas no roteador 
   * Validações: Formato de e-mail e senha (mínimo de 6 caracteres).
   * Redireciona para `/inicio` em caso de sucesso.
 * **`/cadastro` ([Cadastro.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/Cadastro.tsx))**: Criação de novas contas de cliente.
-  * Requer: Nome, E-mail, Telefone/WhatsApp, CPF, Senha e Confirmação.
+  * Requer: Nome, E-mail, Telefone/WhatsApp, CPF, Senha, Confirmação e Endereço. Foto de perfil e comprovante de endereço são campos opcionais.
   * Validações: CPF válido e único, formato de e-mail único, senha com mínimo de 8 caracteres contendo letras e números, aceite dos Termos de Uso.
   * Redireciona para `/entrar` em caso de sucesso.
 * **`/recuperar-senha` ([EsqueciSenha.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/EsqueciSenha.tsx))**: Recuperação de senha do cliente via e-mail.
@@ -41,7 +41,7 @@ Todas as páginas do cliente estão sob `src/pages/` e configuradas no roteador 
     * *Eventos*: Jantares e celebrações presenciais.
     * *Serviços Especiais*: Demandas customizadas fora do catálogo.
   * **Etapa 2: Configuração**:
-    * *Cozinha Semanal*: Seleção do tamanho da porção (P, M, G), restrições, ingredientes a evitar, preferências, dias e períodos (Manhã/Tarde/Noite) de entrega.
+    * *Cozinha Semanal*: Seleção do tamanho da porção (P, M, G), restrições, ingredientes a evitar, preferências, dias e períodos (Manhã = 10:00, Tarde = 14:00, Noite = 19:00) de atendimento.
     * *Eventos*: Quantidade de pessoas (5 a 500), data do evento (mínimo de 7 dias de antecedência), horários de início/fim e tema do evento.
     * *Serviços Especiais*: Quantidade de pessoas, data do evento (mínimo de 7 dias de antecedência) e horários de início/fim.
   * **Etapa 3: Escolha de Pratos/Detalhamento**:

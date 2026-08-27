@@ -357,15 +357,6 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
           [chavePersonalizacao]: { texto: '', quantidade: 1 }
         }));
 
-        // Scroll suave para o botão Avançar após selecionar
-        setTimeout(() => {
-          if (avancarButtonRef.current) {
-            avancarButtonRef.current.scrollIntoView({
-              behavior: 'smooth',
-              block: 'end'
-            });
-          }
-        }, 200);
       } else {
         toast({
           title: "Limite atingido",

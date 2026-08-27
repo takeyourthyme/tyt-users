@@ -17,9 +17,9 @@ Todas as páginas do chef estão localizadas sob `src/pages/` e configuradas no 
   * Validações: Formato de e-mail e senha (mínimo de 6 caracteres).
   * Redireciona para `/chef/inicio` em caso de sucesso.
 * **`/chef/cadastro` ([CadastroChef.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/CadastroChef.tsx))**: Cadastro profissional completo.
-  * Requer dados pessoais (Nome, CPF, Data de Nascimento, WhatsApp, E-mail, CEP e Endereço completo) e profissionais (Especialidades, Idiomas, Formação escolar, Biografia/Sobre, Tipo de Transporte, Disponibilidade semanal e Upload de foto).
+  * Requer dados pessoais (Nome, CPF, Data de Nascimento, WhatsApp, E-mail, CEP e Endereço completo) e profissionais (Especialidades, Idiomas, Formação escolar, Biografia/Sobre, Tipo de Transporte, Disponibilidade semanal, Serviços disponíveis: Meal Prep, Get Together e Serviços Especiais, e Upload de foto profissional com captura por câmera e fallback nativo).
   * Validações (Zod): CPF e CEP válidos, WhatsApp no formato `+55 (XX) XXXXX-XXXX`, data de nascimento no formato `DD/MM/AAAA`, biografia contendo de 10 a 500 caracteres, foto de perfil obrigatória. Se marcar deslocamento como ativo (`canTravel`), o preenchimento do tipo de transporte torna-se obrigatório.
-  * Em caso de sucesso, o cadastro é criado no status `Pendente` e o usuário é redirecionado para `/chef/cadastro/status`.
+  * Em caso de sucesso, o cadastro é criado no status `Pendente`, o e-mail de confirmação de inscrição (`sendG2InscricaoChef`) é disparado, e o usuário é redirecionado para `/chef/cadastro/status`. A conta Asaas é gerenciada de forma white-label como subconta da plataforma.
 * **`/chef/cadastro/status` ([CadastroChefSucesso.tsx](file:///Users/viniciussantiago/Matilha/tyt-users/src/pages/CadastroChefSucesso.tsx))**: Tela informativa avisando que o cadastro está em auditoria (prazo de 48h a 72h). Bloqueia o login direto até aprovação.
 
 ### 1.2 Telas Autenticadas do Chef

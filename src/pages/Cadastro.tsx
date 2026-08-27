@@ -96,6 +96,16 @@ const Cadastro = () => {
       videoRef.current.srcObject = streamRef.current;
     }
   }, [cameraActive]);
+
+  // Garante que a câmera seja desligada e os tracks de mídia liberados ao desmontar o componente ou sair da tela
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
   const [missingFiles, setMissingFiles] = useState<string[]>([]);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -147,10 +157,11 @@ const Cadastro = () => {
       const data = await response.json();
 
       if (!data.erro) {
-        formB.setValue("street", data.logradouro || "");
-        formB.setValue("neighborhood", data.bairro || "");
-        formB.setValue("city", data.localidade || "");
-        formB.setValue("state", data.uf || "");
+        formB.setValue("street", data.logradouro || "", { shouldValidate: true, shouldDirty: true });
+        formB.setValue("neighborhood", data.bairro || "", { shouldValidate: true, shouldDirty: true });
+        formB.setValue("city", data.localidade || "", { shouldValidate: true, shouldDirty: true });
+        formB.setValue("state", data.uf || "", { shouldValidate: true, shouldDirty: true });
+        formB.trigger(["street", "neighborhood", "city", "state"]);
       }
     } catch (error) {
       console.error("Erro ao buscar CEP:", error);
@@ -197,13 +208,7 @@ const Cadastro = () => {
       return;
     }
 
-    const missing: string[] = [];
-    if (!photoFile) missing.push("sua foto");
-    setMissingFiles(missing);
-
-    if (missing.length > 0) {
-      return;
-    }
+    setMissingFiles([]);
 
     try {
       setIsSubmitting(true);
@@ -268,18 +273,34 @@ const Cadastro = () => {
   };
 
   const startCamera = async () => {
+    stopCamera();
+
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      document.getElementById("photo-upload-input")?.click();
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { min: 400 }, height: { min: 400 } }
-      });
-      streamRef.current = stream;
-      setCameraActive(true); // monta o <video> no DOM; o useEffect acima atribui o srcObject
+      let stream: MediaStream | null = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { min: 400 }, height: { min: 400 } }
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+
+      if (stream) {
+        streamRef.current = stream;
+        setCameraActive(true); // monta o <video> no DOM; o useEffect acima atribui o srcObject
+      }
     } catch (error) {
       toast({
         title: "Erro na câmera",
-        description: "Não foi possível acessar a câmera. Verifique as permissões do navegador.",
+        description: "Não foi possível acessar a câmera diretamente. Use o botão de enviar arquivo.",
         variant: "destructive",
       });
+      document.getElementById("photo-upload-input")?.click();
     }
   };
 
@@ -672,7 +693,7 @@ const Cadastro = () => {
                         Sua foto
                       </h3>
 
-                      <div className={`relative bg-muted rounded-lg aspect-video overflow-hidden ${attemptedSubmit && !photoPreview ? 'border-2 border-destructive' : ''}`}>
+                      <div className="relative bg-muted rounded-lg aspect-video overflow-hidden">
                         {!cameraActive && !photoPreview && (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="flex flex-col items-center gap-3">

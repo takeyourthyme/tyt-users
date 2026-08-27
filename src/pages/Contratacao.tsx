@@ -240,7 +240,7 @@ const Contratacao = () => {
 
   const getTimeFromPeriod = (period: string) => {
     const normalized = period.toLowerCase();
-    if (normalized.includes("manha")) return "09:00";
+    if (normalized.includes("manha") || normalized.includes("manhã")) return "10:00";
     if (normalized.includes("tarde")) return "14:00";
     return "19:00";
   };

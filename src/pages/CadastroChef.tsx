@@ -152,6 +152,16 @@ const CadastroChef = () => {
       videoRef.current.srcObject = streamRef.current;
     }
   }, [cameraActive]);
+
+  // Garante que a câmera seja desligada e os tracks de mídia liberados ao desmontar o componente ou sair da tela
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
   const {
     toast
   } = useToast();
@@ -220,10 +230,11 @@ const CadastroChef = () => {
       const response = await fetch(`https://viacep.com.br/ws/${sanitizedCep}/json/`);
       const data = await response.json();
       if (!data.erro) {
-        formB.setValue("street", data.logradouro || "");
-        formB.setValue("neighborhood", data.bairro || "");
-        formB.setValue("city", data.localidade || "");
-        formB.setValue("state", data.uf || "");
+        formB.setValue("street", data.logradouro || "", { shouldValidate: true, shouldDirty: true });
+        formB.setValue("neighborhood", data.bairro || "", { shouldValidate: true, shouldDirty: true });
+        formB.setValue("city", data.localidade || "", { shouldValidate: true, shouldDirty: true });
+        formB.setValue("state", data.uf || "", { shouldValidate: true, shouldDirty: true });
+        formB.trigger(["street", "neighborhood", "city", "state"]);
       }
     } catch (error) {
       console.error("Erro ao buscar CEP:", error);
@@ -243,18 +254,39 @@ const CadastroChef = () => {
     formC.setValue("photo", file, { shouldValidate: true });
   };
   const startCamera = async () => {
+    stopCamera();
+
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      // Fallback para abrir captura nativa de imagem do dispositivo
+      document.getElementById("chefPhotoUploadInput")?.click();
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" }
-      });
-      streamRef.current = stream;
-      setCameraActive(true); // monta o <video> no DOM; o useEffect acima atribui o srcObject
+      let stream: MediaStream | null = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" }
+        });
+      } catch {
+        // Tenta sem restrição estrita de facingMode
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true
+        });
+      }
+
+      if (stream) {
+        streamRef.current = stream;
+        setCameraActive(true); // monta o <video> no DOM; o useEffect acima atribui o srcObject
+      }
     } catch (error) {
       toast({
         title: "Erro na câmera",
-        description: "Não foi possível acessar a câmera. Verifique as permissões do navegador.",
+        description: "Não foi possível acessar a câmera diretamente. Use o botão de enviar arquivo.",
         variant: "destructive"
       });
+      // Fallback para seletor de arquivos/câmera nativa
+      document.getElementById("chefPhotoUploadInput")?.click();
     }
   };
   const stopCamera = () => {
@@ -707,6 +739,7 @@ const CadastroChef = () => {
                                 </div>
                               </Button>
                               <input
+                                id="chefPhotoUploadInput"
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => {
@@ -772,7 +805,7 @@ const CadastroChef = () => {
                 }) => <FormItem>
                     <FormLabel>Instagram (opcional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="@seuusuario" {...field} />
+                      <Input placeholder="@seu.perfil" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -780,21 +813,20 @@ const CadastroChef = () => {
                 <FormField control={formC.control} name="languages" render={({
                   field
                 }) => <FormItem>
-                    <FormLabel>Idiomas que fala</FormLabel>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
+                    <FormLabel>Idiomas que domina</FormLabel>
+                    <div className="grid grid-cols-2 gap-2">
                       {availableLanguages.map(lang => <div key={lang.id} className="flex items-center space-x-2">
-                        <Checkbox id={lang.id} checked={field.value.includes(lang.id)} onCheckedChange={checked => {
-                          if (checked) {
-                            field.onChange([...field.value, lang.id]);
-                          } else {
-                            field.onChange(field.value.filter((id: string) => id !== lang.id));
-                          }
-                        }} />
-                        <Label htmlFor={lang.id} className="text-sm">
-                          <span className="mr-2">{lang.flag}</span>
-                          {lang.name}
-                        </Label>
-                      </div>)}
+                          <Checkbox id={`lang-${lang.id}`} checked={field.value.includes(lang.id)} onCheckedChange={checked => {
+                        if (checked) {
+                          field.onChange([...field.value, lang.id]);
+                        } else {
+                          field.onChange(field.value.filter((id: string) => id !== lang.id));
+                        }
+                      }} />
+                          <Label htmlFor={`lang-${lang.id}`} className="text-sm cursor-pointer">
+                            {lang.flag} {lang.name}
+                          </Label>
+                        </div>)}
                     </div>
                     <FormMessage />
                   </FormItem>} />
@@ -802,20 +834,20 @@ const CadastroChef = () => {
                 <FormField control={formC.control} name="specialties" render={({
                   field
                 }) => <FormItem>
-                    <FormLabel>Especialidades</FormLabel>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
+                    <FormLabel>Especialidades culinárias</FormLabel>
+                    <div className="grid grid-cols-2 gap-2">
                       {cuisineSpecialties.map(specialty => <div key={specialty} className="flex items-center space-x-2">
-                        <Checkbox id={specialty} checked={field.value.includes(specialty)} onCheckedChange={checked => {
-                          if (checked) {
-                            field.onChange([...field.value, specialty]);
-                          } else {
-                            field.onChange(field.value.filter((s: string) => s !== specialty));
-                          }
-                        }} />
-                        <Label htmlFor={specialty} className="text-sm">
-                          {specialty}
-                        </Label>
-                      </div>)}
+                          <Checkbox id={`spec-${specialty}`} checked={field.value.includes(specialty)} onCheckedChange={checked => {
+                        if (checked) {
+                          field.onChange([...field.value, specialty]);
+                        } else {
+                          field.onChange(field.value.filter((s: string) => s !== specialty));
+                        }
+                      }} />
+                          <Label htmlFor={`spec-${specialty}`} className="text-sm cursor-pointer">
+                            {specialty}
+                          </Label>
+                        </div>)}
                     </div>
                     <FormMessage />
                   </FormItem>} />
@@ -823,9 +855,9 @@ const CadastroChef = () => {
                 <FormField control={formC.control} name="education" render={({
                   field
                 }) => <FormItem>
-                    <FormLabel>Escola de Formação / Origem de conhecimento</FormLabel>
+                    <FormLabel>Escola / Formação gastronômica</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Le Cordon Bleu, autodidata, família..." {...field} />
+                      <Input placeholder="Ex: Le Cordon Bleu, Anhembi Morumbi, Autodidata..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
@@ -833,70 +865,71 @@ const CadastroChef = () => {
                 <FormField control={formC.control} name="about" render={({
                   field
                 }) => <FormItem>
-                    <FormLabel>Nos fale um pouco sobre você, sua experiência e especialidades</FormLabel>
+                    <FormLabel>Conte sobre você e sua experiência</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Conte sua história, experiências e o que te inspira na cozinha..." {...field} onChange={e => {
-                        field.onChange(e);
-                        setCharacterCount(e.target.value.length);
-                      }} maxLength={500} rows={4} />
+                      <Textarea placeholder="Compartilhe sua trajetória na gastronomia, suas paixões culinárias e o que te motiva como Personal Chef..." className="min-h-[120px]" maxLength={500} {...field} onChange={e => {
+                      field.onChange(e);
+                      setCharacterCount(e.target.value.length);
+                    }} />
                     </FormControl>
-                    <div className="text-sm text-gray-500 text-right">
-                      {characterCount}/500 caracteres
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Mínimo 10 caracteres</span>
+                      <span className={characterCount > 500 ? "text-destructive" : ""}>
+                        {characterCount}/500
+                      </span>
                     </div>
                     <FormMessage />
                   </FormItem>} />
 
-                {/* Configurar Disponibilidade */}
+                {/* Disponibilidade Semanal */}
                 <FormField control={formC.control} name="availability" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Configurar Disponibilidade</FormLabel>
+                    <FormLabel>Disponibilidade semanal</FormLabel>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Marque os dias e períodos em que você está disponível para atendimento
+                    </p>
                     <div className="border rounded-lg overflow-hidden">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/50">
                           <tr>
-                            <th className="text-left p-2 text-sm font-medium">Dia</th>
-                            <th className="text-center p-2 text-sm font-medium">Manhã</th>
-                            <th className="text-center p-2 text-sm font-medium">Tarde</th>
-                            <th className="text-center p-2 text-sm font-medium">Noite</th>
+                            <th className="text-left p-2 font-medium">Dia</th>
+                            <th className="text-center p-2 font-medium">Manhã</th>
+                            <th className="text-center p-2 font-medium">Tarde</th>
+                            <th className="text-center p-2 font-medium">Noite</th>
                           </tr>
                         </thead>
                         <tbody>
                           {[
-                            { key: 'monday', label: 'Segunda-feira' },
-                            { key: 'tuesday', label: 'Terça-feira' },
-                            { key: 'wednesday', label: 'Quarta-feira' },
-                            { key: 'thursday', label: 'Quinta-feira' },
-                            { key: 'friday', label: 'Sexta-feira' },
-                            { key: 'saturday', label: 'Sábado' },
-                            { key: 'sunday', label: 'Domingo' }
+                            { key: "monday", label: "Segunda-feira" },
+                            { key: "tuesday", label: "Terça-feira" },
+                            { key: "wednesday", label: "Quarta-feira" },
+                            { key: "thursday", label: "Quinta-feira" },
+                            { key: "friday", label: "Sexta-feira" },
+                            { key: "saturday", label: "Sábado" },
+                            { key: "sunday", label: "Domingo" },
                           ].map(({ key, label }) => (
                             <tr key={key} className="border-t">
                               <td className="p-2">
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
-                                    id={key}
+                                    id={`day-${key}`}
                                     checked={field.value[key]?.enabled || false}
                                     onCheckedChange={(checked) => {
                                       const newValue = { ...field.value };
-                                      if (checked) {
-                                        newValue[key] = {
-                                          enabled: true,
-                                          morning: true,
-                                          afternoon: true,
-                                          evening: true
-                                        };
-                                      } else {
-                                        newValue[key] = {
-                                          enabled: false,
-                                          morning: false,
-                                          afternoon: false,
-                                          evening: false
-                                        };
-                                      }
+                                      newValue[key] = {
+                                        ...newValue[key],
+                                        enabled: !!checked,
+                                        morning: !!checked && newValue[key]?.morning,
+                                        afternoon: !!checked && newValue[key]?.afternoon,
+                                        evening: !!checked && newValue[key]?.evening,
+                                      };
                                       field.onChange(newValue);
                                     }}
                                   />
-                                  <Label htmlFor={key} className="text-sm cursor-pointer">
+                                  <Label
+                                    htmlFor={`day-${key}`}
+                                    className="cursor-pointer font-normal"
+                                  >
                                     {label}
                                   </Label>
                                 </div>
@@ -959,7 +992,8 @@ const CadastroChef = () => {
                     <div className="space-y-2">
                       {[
                         { label: "Meal Prep", value: "cozinha_semanal" },
-                        { label: "Get Together", value: "eventos" }
+                        { label: "Get Together", value: "eventos" },
+                        { label: "Serviços Especiais", value: "servicos_especiais" }
                       ].map((option) => (
                         <div key={option.value} className="flex items-center space-x-2">
                           <Checkbox

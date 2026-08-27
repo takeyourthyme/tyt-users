@@ -305,10 +305,10 @@ const HistoricoPagamento = () => {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen max-w-4xl mx-auto flex flex-col bg-background pt-20">
+    <div className="min-h-screen mx-auto flex flex-col bg-background pt-20">
       <AppMenu />
 
-      <div className="flex-1 container mx-auto px-4 py-6">
+      <div className="flex-1 container mx-auto max-w-4xl px-4 py-6">
         {/* Título */}
         <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate("/inicio")}>
