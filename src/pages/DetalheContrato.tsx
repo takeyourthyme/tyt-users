@@ -723,10 +723,14 @@ const DetalheContrato = () => {
                 </p>
                 {time && <p className="text-xs text-gray-500">{time}</p>}
               </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">Menu</p>
-                <p className="text-sm font-medium text-gray-800">{menuName}</p>
-              </div>
+              {
+                menuName !== "—" && (
+                  <div>
+                    <p className="text-xs text-gray-400 mb-0.5">Menu</p>
+                    <p className="text-sm font-medium text-gray-800">{menuName}</p>
+                  </div>
+                )
+              }
               <div>
                 <p className="text-xs text-gray-400 mb-0.5">Tipo</p>
                 <p className="text-sm font-medium text-gray-800">{serviceLevel !== "—" ? serviceLevel : type}</p>
