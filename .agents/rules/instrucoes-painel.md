@@ -42,6 +42,25 @@ O TyT conecta clientes a Personal Chefs parceiros. O ecossistema possui 3 pilare
 *   `destaque_site`: Exibição na página inicial institucional.
 *   **Classificações:** Categorias de prato, tipos de cozinha, temas (apenas Get Together), ingredientes principais, preferências culinárias (tags) e ingredientes individuais (insumos).
 
+### 2.5. Regra de Unidades de Ingredientes (Insumos)
+
+> [!IMPORTANT]
+> **Unidades aceitas para o campo `unidade` de ingredientes**: apenas `g` (gramas), `ml` (mililitros) ou `un` (unidades).
+> - `kg` e `l` (litros) **não são aceitos**. O ingrediente deve ser cadastrado na unidade base com o tamanho da embalagem em `volume_peso`.
+> - *Exemplo correto*: Farinha de Trigo → `unidade: "g"`, `volume_peso: "1000"`, `valor: 6.50` (1kg a R$ 6,50).
+> - *Exemplo incorreto*: `unidade: "kg"`, `volume_peso: "1"`.
+
+**Modelo de Custo (Quantidade Mínima de Compra):**
+- O custo de um ingrediente em uma receita é calculado pelo número de **embalagens inteiras** necessárias:
+  $$\text{unitsRequired} = \lceil \text{quantidade\_receita} / \text{volume\_peso} \rceil$$
+  $$\text{custo\_calculado} = \text{unitsRequired} \times \text{valor}$$
+- `volume_peso` default quando ausente: `1000` para `g`/`ml`, `1` para `un`.
+
+**Upload em Lote (Planilha XLSX):**
+- Linhas com `UND` inválido (`kg`, `l`, etc.) são **ignoradas** e listadas no aviso de retorno da API.
+- A API retorna: `{ importados: N, avisos: "X item(ns) ignorado(s)...", ignorados: [{descricao, motivo}] }`.
+- Os demais itens com unidade válida são importados normalmente.
+
 ---
 
 ## 3. Particularidades Críticas da API (Erros de Grafia)
