@@ -21,6 +21,8 @@ import Footer from "@/components/Footer";
 import IllustrationOrder from "@/assets/illustration-order";
 import { createChefUser } from "@/services/chefService";
 import { useConfiguracaoGeral } from "@/hooks/useConfiguracaoGeral";
+import { PhoneInput } from "@/components/PhoneInput";
+import { isValidInternationalPhone } from "@/lib/phone";
 
 // Validation schemas
 const toDigits = (value: string) => value.replace(/\D/g, "");
@@ -48,7 +50,7 @@ const stepASchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   cpf: z.string().refine((val) => validateCpf(val), "CPF inválido"),
   birthDate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Data inválida (dd/mm/aaaa)"),
-  whatsapp: z.string().regex(/^\+55 \(\d{2}\) \d{5}-\d{4}$/, "WhatsApp inválido"),
+  whatsapp: z.string().refine(isValidInternationalPhone, "WhatsApp inválido"),
   email: z.string().email("E-mail inválido"),
   password: z.string().min(8, "Senha deve ter pelo menos 8 caracteres")
 });
@@ -352,7 +354,7 @@ const CadastroChef = () => {
       formData.append("cpf", onlyDigits(stepAData.cpf));
       formData.append("email", stepAData.email.trim());
       formData.append("senha", stepAData.password);
-      formData.append("whatsapp", onlyDigits(stepAData.whatsapp));
+      formData.append("whatsapp", stepAData.whatsapp);
       formData.append("data_nascimento", parseBirthDateToISOString(stepAData.birthDate));
       formData.append("cep", onlyDigits(stepBData.cep));
       formData.append("endereco", stepBData.street.trim());
@@ -519,9 +521,7 @@ const CadastroChef = () => {
                 }) => <FormItem>
                     <FormLabel>WhatsApp</FormLabel>
                     <FormControl>
-                      <InputMask mask="+55 (99) 99999-9999" value={field.value} onChange={field.onChange}>
-                        {(inputProps: ComponentPropsWithoutRef<"input">) => <Input {...inputProps} placeholder="+55 (11) 99999-9999" inputMode="tel" />}
-                      </InputMask>
+                      <PhoneInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>} />
