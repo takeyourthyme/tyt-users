@@ -90,18 +90,31 @@ const Cadastro = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
 
+  // Interrompe a câmera caso o usuário saia do Step C (ex: ao clicar em voltar)
+  useEffect(() => {
+    if (currentStep !== "C") {
+      stopCamera();
+    }
+  }, [currentStep]);
+
   // Atribui o stream ao <video> após ele ser montado no DOM
   useEffect(() => {
     if (cameraActive && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
     }
-  }, [cameraActive]);
+  }, [cameraActive, currentStep]);
 
   // Garante que a câmera seja desligada e os tracks de mídia liberados ao desmontar o componente ou sair da tela
   useEffect(() => {
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch (e) {
+            console.error("Erro ao fechar track:", e);
+          }
+        });
         streamRef.current = null;
       }
     };
@@ -276,7 +289,7 @@ const Cadastro = () => {
     stopCamera();
 
     if (!navigator?.mediaDevices?.getUserMedia) {
-      document.getElementById("photo-upload-input")?.click();
+      document.getElementById("photoUpload")?.click();
       return;
     }
 
@@ -284,7 +297,7 @@ const Cadastro = () => {
       let stream: MediaStream | null = null;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { min: 400 }, height: { min: 400 } }
+          video: { facingMode: "user" },
         });
       } catch {
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -295,18 +308,25 @@ const Cadastro = () => {
         setCameraActive(true); // monta o <video> no DOM; o useEffect acima atribui o srcObject
       }
     } catch (error) {
+      console.error("Erro ao acessar câmera:", error);
       toast({
         title: "Erro na câmera",
         description: "Não foi possível acessar a câmera diretamente. Use o botão de enviar arquivo.",
         variant: "destructive",
       });
-      document.getElementById("photo-upload-input")?.click();
+      document.getElementById("photoUpload")?.click();
     }
   };
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (e) {
+          console.error("Erro ao parar track:", e);
+        }
+      });
       streamRef.current = null;
     }
     if (videoRef.current) {
@@ -737,10 +757,19 @@ const Cadastro = () => {
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <div className="w-48 h-64 border-4 border-primary rounded-full border-dashed opacity-50"></div>
                             </div>
-                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex gap-2">
                               <Button type="button" onClick={takePhoto} size="lg">
                                 <Camera className="w-5 h-5 mr-2" />
                                 Capturar foto
+                              </Button>
+                              <Button
+                                type="button"
+                                onClick={stopCamera}
+                                variant="outline"
+                                size="lg"
+                                className="bg-white/90 hover:bg-white text-gray-800"
+                              >
+                                Cancelar
                               </Button>
                             </div>
                           </div>
@@ -853,7 +882,10 @@ const Cadastro = () => {
                         variant="outline"
                         className="flex-1"
                         size="lg"
-                        onClick={() => setCurrentStep("B")}
+                        onClick={() => {
+                          stopCamera();
+                          setCurrentStep("B");
+                        }}
                       >
                         Voltar
                       </Button>

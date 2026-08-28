@@ -273,7 +273,13 @@ const EditarCadastroChef = () => {
   useEffect(() => {
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch (e) {
+            console.error("Erro ao fechar track:", e);
+          }
+        });
         streamRef.current = null;
       }
     };
@@ -467,7 +473,13 @@ const EditarCadastroChef = () => {
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (e) {
+          console.error("Erro ao fechar track:", e);
+        }
+      });
       streamRef.current = null;
     }
     if (videoRef.current) {

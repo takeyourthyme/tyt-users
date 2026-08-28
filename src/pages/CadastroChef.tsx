@@ -148,18 +148,31 @@ const CadastroChef = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
 
+  // Interrompe a câmera caso o usuário saia do Step C
+  useEffect(() => {
+    if (currentStep !== "C") {
+      stopCamera();
+    }
+  }, [currentStep]);
+
   // Atribui o stream ao <video> após ele ser montado no DOM
   useEffect(() => {
     if (cameraActive && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
     }
-  }, [cameraActive]);
+  }, [cameraActive, currentStep]);
 
   // Garante que a câmera seja desligada e os tracks de mídia liberados ao desmontar o componente ou sair da tela
   useEffect(() => {
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch (e) {
+            console.error("Erro ao fechar track:", e);
+          }
+        });
         streamRef.current = null;
       }
     };
@@ -293,7 +306,13 @@ const CadastroChef = () => {
   };
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (e) {
+          console.error("Erro ao fechar track:", e);
+        }
+      });
       streamRef.current = null;
     }
     if (videoRef.current) {
