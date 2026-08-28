@@ -23,6 +23,8 @@ import { Lock } from "lucide-react";
 import { loadSession, saveSession, changePassword } from "@/services/authService";
 import { updateChefUser } from "@/services/chefService";
 import { getUserById } from "@/services/userService";
+import { PhoneInput } from "@/components/PhoneInput";
+import { isValidInternationalPhone } from "@/lib/phone";
 
 // Validation schema
 const toDigits = (value: string) => value.replace(/\D/g, "");
@@ -56,16 +58,6 @@ const formatCep = (value: string) => {
   const digits = toDigits(value).slice(0, 8);
   if (digits.length !== 8) return value;
   return `${digits.slice(0, 5)}-${digits.slice(5, 8)}`;
-};
-
-const formatWhatsapp = (value: string) => {
-  const digits = toDigits(value);
-  const brDigits = digits.startsWith("55") ? digits.slice(2) : digits;
-  if (brDigits.length !== 11) return value;
-  const ddd = brDigits.slice(0, 2);
-  const part1 = brDigits.slice(2, 7);
-  const part2 = brDigits.slice(7, 11);
-  return `+55 (${ddd}) ${part1}-${part2}`;
 };
 
 const formatIsoToBrDate = (value: string) => {
@@ -190,7 +182,7 @@ const editChefSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   cpf: z.string().refine((val) => validateCpf(val), "CPF inválido"),
   birthDate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Data inválida (dd/mm/aaaa)"),
-  whatsapp: z.string().regex(/^\+55 \(\d{2}\) \d{5}-\d{4}$/, "WhatsApp inválido"),
+  whatsapp: z.string().refine(isValidInternationalPhone, "WhatsApp inválido"),
   email: z.string().email("E-mail inválido"),
 
   // Etapa B - Localização
@@ -383,7 +375,7 @@ const EditarCadastroChef = () => {
         name: ((user.nome as string | undefined) ?? (user.name as string | undefined) ?? "").trim(),
         cpf: formatCpf(String(user.cpf ?? "")),
         birthDate: dataNascimento ? formatIsoToBrDate(dataNascimento) : "",
-        whatsapp: formatWhatsapp(String(user.whatsapp ?? "")),
+        whatsapp: String(user.whatsapp ?? ""),
         email: ((user.email as string | undefined) ?? "").trim(),
         cep: formatCep(String(user.cep ?? "")),
         street: ((user.endereco as string | undefined) ?? "").trim(),
@@ -528,7 +520,7 @@ const EditarCadastroChef = () => {
       formData.append("nome", data.name.trim());
       formData.append("cpf", toDigits(data.cpf));
       formData.append("email", data.email.trim());
-      formData.append("whatsapp", toDigits(data.whatsapp));
+      formData.append("whatsapp", data.whatsapp);
       formData.append("data_nascimento", parseBrDateToIso(data.birthDate));
       formData.append("cep", toDigits(data.cep));
       formData.append("endereco", data.street.trim());
@@ -740,9 +732,7 @@ const EditarCadastroChef = () => {
                       <FormItem>
                         <FormLabel>WhatsApp</FormLabel>
                         <FormControl>
-                          <InputMask mask="+55 (99) 99999-9999" value={field.value} onChange={field.onChange}>
-                            {(inputProps: ComponentPropsWithoutRef<"input">) => <Input {...inputProps} placeholder="+55 (11) 99999-9999" inputMode="tel" />}
-                          </InputMask>
+                          <PhoneInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
