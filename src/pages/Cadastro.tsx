@@ -725,34 +725,35 @@ const Cadastro = () => {
                         )}
 
                         {cameraActive && (
-                          <>
+                          <div className="absolute inset-0 flex items-center justify-center">
                             <video
                               ref={videoRef}
                               autoPlay
                               muted
-                              className="w-full h-full object-cover"
+                              playsInline
+                              className="w-full h-full object-cover object-center"
                               style={{ transform: "scaleX(-1)" }}
                             />
-                            <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <div className="w-48 h-64 border-4 border-primary rounded-full border-dashed opacity-50"></div>
                             </div>
-                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
                               <Button type="button" onClick={takePhoto} size="lg">
                                 <Camera className="w-5 h-5 mr-2" />
                                 Capturar foto
                               </Button>
                             </div>
-                          </>
+                          </div>
                         )}
 
                         {photoPreview && (
-                          <div className="relative">
+                          <div className="absolute inset-0 flex items-center justify-center">
                             <img
                               src={photoPreview}
                               alt="Foto capturada"
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover object-center"
                             />
-                            <div className="absolute top-4 right-4">
+                            <div className="absolute top-4 right-4 z-10">
                               <Button
                                 type="button"
                                 onClick={() => {
@@ -763,6 +764,7 @@ const Cadastro = () => {
                                 }}
                                 variant="outline"
                                 size="sm"
+                                className="bg-white/90 hover:bg-white text-gray-800 shadow-sm"
                               >
                                 Tirar nova foto
                               </Button>

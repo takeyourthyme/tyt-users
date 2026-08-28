@@ -897,9 +897,9 @@ const EditarCadastroChef = () => {
                     <div className="space-y-3">
                       <Label>Foto de perfil</Label>
                       <div className="flex flex-col items-center gap-4">
-                        <div className="w-32 h-32 rounded-full bg-gray-100 overflow-hidden">
+                        <div className="w-32 h-32 rounded-full bg-gray-100 overflow-hidden border-2 border-primary/20 shadow-sm flex items-center justify-center">
                           {photoPreview ? (
-                            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover object-center" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <Camera className="w-12 h-12 text-gray-400" />

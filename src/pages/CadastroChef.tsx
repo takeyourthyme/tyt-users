@@ -753,7 +753,16 @@ const CadastroChef = () => {
 
                           {cameraActive && (
                             <div className="space-y-4">
-                              <video ref={videoRef} autoPlay playsInline className="w-full rounded-lg" style={{ transform: "scaleX(-1)" }} />
+                              <div className="relative bg-muted rounded-lg aspect-video overflow-hidden flex items-center justify-center">
+                                <video
+                                  ref={videoRef}
+                                  autoPlay
+                                  playsInline
+                                  muted
+                                  className="w-full h-full object-cover object-center"
+                                  style={{ transform: "scaleX(-1)" }}
+                                />
+                              </div>
                               <div className="flex gap-4">
                                 <Button
                                   type="button"
@@ -770,12 +779,14 @@ const CadastroChef = () => {
                           )}
                         </div>
                       ) : (
-                        <div className="space-y-4">
-                          <img
-                            src={photoPreview}
-                            alt="Foto do chef"
-                            className="w-32 h-32 rounded-full object-cover mx-auto"
-                          />
+                        <div className="flex flex-col items-center justify-center space-y-4">
+                          <div className="w-36 h-36 rounded-full overflow-hidden border-2 border-primary/20 shadow-sm flex items-center justify-center bg-muted">
+                            <img
+                              src={photoPreview}
+                              alt="Foto do chef"
+                              className="w-full h-full object-cover object-center"
+                            />
+                          </div>
                           <Button
                             type="button"
                             variant="outline"
@@ -783,7 +794,7 @@ const CadastroChef = () => {
                               setPhotoPreview("");
                               formC.setValue("photo", undefined, { shouldValidate: true });
                             }}
-                            className="w-full"
+                            className="w-full max-w-xs"
                           >
                             Alterar foto
                           </Button>
