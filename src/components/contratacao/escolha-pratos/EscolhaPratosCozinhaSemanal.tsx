@@ -7,21 +7,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Eye, Plus, Minus, Edit, Heart, ShoppingCart, Info, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Utensils, Fish, Beef, ChefHat, Leaf, Soup, Salad, Wheat, Zap, Tag, Star, Globe, UtensilsCrossed, FileText } from "lucide-react";
+import { Search, Eye, Plus, Minus, Edit, Heart, ShoppingCart, Info, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Utensils, Fish, Beef, ChefHat, Leaf, Soup, Salad, Wheat, Zap, Tag, Globe, UtensilsCrossed, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DadosContratacao } from "@/pages/Contratacao";
 import { useToast } from "@/hooks/use-toast";
 import { loadSession } from "@/services/authService";
-import { listDishes, listHighlightedDishes, normalizeDish, type Dish } from "@/services/dishService";
+import { listDishes, normalizeDish, type Dish } from "@/services/dishService";
 import { calculateServicePrice, fetchPricingTiers, type PricingTier } from "@/services/pricingService";
+import { listDishCategories, listCulinaryPreferences, listMainIngredients, listCuisineTypes, type LookupOption } from "@/services/lookupService";
 
 // Import das imagens
-import yakisobaFrango from "@/assets/yakisoba-frango.jpg";
-import tacosCarnitas from "@/assets/tacos-carnitas.jpg";
-import moussakaGrega from "@/assets/moussaka-grega.jpg";
-import schnitzelVienense from "@/assets/schnitzel-vienense.jpg";
-import hummusVegetais from "@/assets/hummus-vegetais.jpg";
-import lagostaThermidor from "@/assets/lagosta-thermidor.jpg";
 interface Props {
   dados: DadosContratacao;
   onAvancar: (dados: Partial<DadosContratacao>) => void;
@@ -72,6 +67,10 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
   const avancarButtonRef = useRef<HTMLDivElement>(null);
   const [availableDishes, setAvailableDishes] = useState<DishOption[]>([]);
   const [isLoadingDishes, setIsLoadingDishes] = useState(true);
+  const [lookupCategorias, setLookupCategorias] = useState<LookupOption[]>([]);
+  const [lookupPreferencias, setLookupPreferencias] = useState<LookupOption[]>([]);
+  const [lookupIngredientes, setLookupIngredientes] = useState<LookupOption[]>([]);
+  const [lookupTiposCozinha, setLookupTiposCozinha] = useState<LookupOption[]>([]);
 
   const diasEntrega = dados.diasEntrega || [];
   const totalPratosNecessarios = diasEntrega.length * 6;
@@ -88,20 +87,26 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
 
   const [diaAtualSelecionando, setDiaAtualSelecionando] = useState(0);
   const [filtroNome, setFiltroNome] = useState('');
-  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const hasPreSelectedFilters = !!(
+    (dados.categorias && dados.categorias.length > 0) ||
+    (dados.preferencias && dados.preferencias.length > 0) ||
+    (dados.ingredientes && dados.ingredientes.length > 0) ||
+    (dados.tiposCozinha && dados.tiposCozinha.length > 0)
+  );
+  const [mostrarFiltros, setMostrarFiltros] = useState(hasPreSelectedFilters);
   const [filtrosAbertos, setFiltrosAbertos] = useState({
-    categorias: false,
-    preferencias: false,
-    ingredientes: false,
-    tiposCozinha: false
+    categorias: !!(dados.categorias && dados.categorias.length > 0),
+    preferencias: !!(dados.preferencias && dados.preferencias.length > 0),
+    ingredientes: !!(dados.ingredientes && dados.ingredientes.length > 0),
+    tiposCozinha: !!(dados.tiposCozinha && dados.tiposCozinha.length > 0)
   });
-  const [filtros, setFiltros] = useState({
-    categorias: [] as string[],
-    preferencias: [] as string[],
-    ingredientes: [] as string[],
-    tiposCozinha: [] as string[],
+  const [filtros, setFiltros] = useState(() => ({
+    categorias: (dados.categorias || []) as string[],
+    preferencias: (dados.preferencias || []) as string[],
+    ingredientes: (dados.ingredientes || []) as string[],
+    tiposCozinha: (dados.tiposCozinha || []) as string[],
     apenasavoritos: false
-  });
+  }));
   const [personalizacoes, setPersonalizacoes] = useState<{
     [key: string]: { texto: string; quantidade: number };
   }>({});
@@ -111,69 +116,13 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
   const [dialogDetalhes, setDialogDetalhes] = useState<string | null>(null);
   const [fotoDetalhesAtual, setFotoDetalhesAtual] = useState(0);
 
-  // Extrair dinamicamente os filtros existentes na lista geral de pratos
-  const opcoesFiltro = React.useMemo(() => {
-    const categoriasMap = new Map<string, string>();
-    const preferenciasMap = new Map<string, string>();
-    const ingredientesMap = new Map<string, string>();
-    const tiposCozinhaMap = new Map<string, string>();
-
-    availableDishes.forEach(prato => {
-      // Categorias
-      const cats = (prato.categorias && prato.categorias.length > 0)
-        ? prato.categorias
-        : (prato.categoria ? [prato.categoria] : []);
-      cats.forEach(c => {
-        const trimmed = c.trim();
-        if (trimmed) {
-          const key = trimmed.toLowerCase();
-          if (!categoriasMap.has(key)) {
-            categoriasMap.set(key, trimmed);
-          }
-        }
-      });
-
-      // Preferências / Características
-      (prato.preferencias || []).forEach(p => {
-        const trimmed = p.trim();
-        if (trimmed) {
-          const key = trimmed.toLowerCase();
-          if (!preferenciasMap.has(key)) {
-            preferenciasMap.set(key, trimmed);
-          }
-        }
-      });
-
-      // Ingredientes Principais
-      (prato.ingredientes || []).forEach(i => {
-        const trimmed = i.trim();
-        if (trimmed) {
-          const key = trimmed.toLowerCase();
-          if (!ingredientesMap.has(key)) {
-            ingredientesMap.set(key, trimmed);
-          }
-        }
-      });
-
-      // Tipos de Cozinha
-      (prato.tiposCozinha || []).forEach(t => {
-        const trimmed = t.trim();
-        if (trimmed) {
-          const key = trimmed.toLowerCase();
-          if (!tiposCozinhaMap.has(key)) {
-            tiposCozinhaMap.set(key, trimmed);
-          }
-        }
-      });
-    });
-
-    return {
-      categorias: Array.from(categoriasMap.values()).sort((a, b) => a.localeCompare(b, "pt-BR")),
-      preferencias: Array.from(preferenciasMap.values()).sort((a, b) => a.localeCompare(b, "pt-BR")),
-      ingredientes: Array.from(ingredientesMap.values()).sort((a, b) => a.localeCompare(b, "pt-BR")),
-      tiposCozinha: Array.from(tiposCozinhaMap.values()).sort((a, b) => a.localeCompare(b, "pt-BR")),
-    };
-  }, [availableDishes]);
+  // Opções de filtro vindas da mesma API de lookups usada na Etapa 2
+  const opcoesFiltro = React.useMemo(() => ({
+    categorias: lookupCategorias.map(l => l.label),
+    preferencias: lookupPreferencias.map(l => l.label),
+    ingredientes: lookupIngredientes.map(l => l.label),
+    tiposCozinha: lookupTiposCozinha.map(l => l.label),
+  }), [lookupCategorias, lookupPreferencias, lookupIngredientes, lookupTiposCozinha]);
 
   useEffect(() => {
     const session = loadSession();
@@ -202,11 +151,26 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
     })();
 
     setIsLoadingDishes(true);
-    const request = listDishes(token ? { token } : undefined);
 
-    request
-      .then((data) => {
-        const list = extractList(data);
+    // Carregar pratos e lookups em paralelo (mesma fonte da Etapa 2)
+    const dishesPromise = listDishes(token ? { token } : undefined);
+    const lookupsPromise = Promise.all([
+      listDishCategories({ token: token || undefined }),
+      listCulinaryPreferences({ token: token || undefined }),
+      listMainIngredients({ token: token || undefined }),
+      listCuisineTypes({ token: token || undefined }),
+    ]);
+
+    Promise.all([dishesPromise, lookupsPromise])
+      .then(([dishData, [cats, prefs, ings, cuisines]]) => {
+        // Carregar lookups
+        setLookupCategorias(cats);
+        setLookupPreferencias(prefs);
+        setLookupIngredientes(ings);
+        setLookupTiposCozinha(cuisines);
+
+        // Carregar pratos
+        const list = extractList(dishData);
         if (!Array.isArray(list) || list.length === 0) throw new Error("empty");
         const mapped: DishOption[] = list
           .map((dish) => {
@@ -793,82 +757,125 @@ export const EscolhaPratosCozinhaSemanal: React.FC<Props> = ({
         </div>
 
         {/* Lista de Pratos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
           {isLoadingDishes
-            ? Array.from({ length: 6 }).map((_, index) => (
-              <Card key={index} className="overflow-hidden">
-                <Skeleton className="w-full h-48" />
-                <CardContent className="p-4 space-y-3">
-                  <Skeleton className="h-5 w-2/3" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-6 w-28" />
-                  <div className="flex gap-2">
-                    <Skeleton className="h-8 w-20" />
-                    <Skeleton className="h-8 w-28" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-            : filtrarPratos().map(prato => {
-              const selecionado = isPratoSelecionadoNoDia(prato.id, diaAtualSelecionando);
-              const chavePersonalizacao = `${diaAtualSelecionando}_${prato.id}`;
-              const temPersonalizacao = personalizacoes[chavePersonalizacao];
-              const categoriaDados = CATEGORIAS_ICONES[prato.categoria as keyof typeof CATEGORIAS_ICONES];
-              const IconeCategoria = categoriaDados?.icon || Utensils;
-
-              return <Card key={prato.id} className="overflow-hidden flex flex-col h-full">
-                <div className="relative">
-                  <img src={prato.foto} alt={prato.nome} className="w-full h-48 object-cover" />
-                  {prato.favorito && <Heart className="absolute top-2 right-2 text-red-500 fill-current" size={20} />}
-                  {prato.frequente && <ShoppingCart className="absolute top-2 left-2 text-orange-500 fill-current" size={20} />}
-                </div>
-
-                <CardContent className="p-4 flex-1 flex flex-col">
-                  <div className="flex-1 pb-3">
-                    <h3 className="font-light text-lg">{prato.nome}</h3>
-                    <p className="text-muted-foreground text-sm">{prato.descricao}</p>
-                  </div>
-
-                  <div className="space-y-3">
-                    {/* Tag da categoria */}
-                    <div>
-                      <Badge className={`${categoriaDados?.color} border font-normal`}>
-                        <IconeCategoria className="h-3 w-3 mr-1" />
-                        <span>{prato.categoria}</span>
-                      </Badge>
+            ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="overflow-hidden">
+                  <Skeleton className="w-full h-48" />
+                  <CardContent className="p-4 space-y-3">
+                    <Skeleton className="h-5 w-2/3" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-6 w-28" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-8 w-20" />
+                      <Skeleton className="h-8 w-28" />
                     </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            : (() => {
+              const pratosFiltrados = filtrarPratos();
+              const temFiltrosAtivos =
+                filtros.categorias.length > 0 ||
+                filtros.preferencias.length > 0 ||
+                filtros.ingredientes.length > 0 ||
+                filtros.tiposCozinha.length > 0 ||
+                filtros.apenasavoritos;
+              const semResultados = pratosFiltrados.length === 0 && temFiltrosAtivos;
+              const pratosParaExibir = semResultados ? availableDishes : pratosFiltrados;
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => abrirDetalhes(prato.id)}>
-                          <Eye size={16} />
-                        </Button>
-
-                        {selecionado && (
-                          <Button
-                            variant={temPersonalizacao ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => abrirPersonalizacao(prato.id)}
-                          >
-                            <Edit size={16} />
-                          </Button>
-                        )}
+              return (
+                <>
+                  {semResultados && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+                      <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-amber-800">
+                          Nenhum prato corresponde às suas preferências selecionadas.
+                        </p>
+                        <p className="text-xs text-amber-600 mt-1">
+                          Exibindo todos os pratos disponíveis para que você possa escolher. Você também pode ajustar seus filtros acima.
+                        </p>
                       </div>
-
-                      <Button
-                        variant={selecionado ? "default" : "outline"}
-                        size="sm"
-                        className={selecionado ? "bg-green-600 hover:bg-green-700" : ""}
-                        onClick={() => togglePratoSelecionado(prato)}
-                        disabled={!selecionado && calcularQuantidadeTotalDia(diaAtualSelecionando) >= 6}
-                      >
-                        {selecionado ? "Selecionado" : "Selecionar"}
-                      </Button>
                     </div>
+                  )}
+                  {temFiltrosAtivos && pratosFiltrados.length > 0 && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <p className="text-sm text-green-700">
+                        Mostrando <strong>{pratosFiltrados.length}</strong> {pratosFiltrados.length === 1 ? 'prato que corresponde' : 'pratos que correspondem'} às suas preferências.
+                      </p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pratosParaExibir.map(prato => {
+                      const selecionado = isPratoSelecionadoNoDia(prato.id, diaAtualSelecionando);
+                      const chavePersonalizacao = `${diaAtualSelecionando}_${prato.id}`;
+                      const temPersonalizacao = personalizacoes[chavePersonalizacao];
+                      const categoriaDados = CATEGORIAS_ICONES[prato.categoria as keyof typeof CATEGORIAS_ICONES];
+                      const IconeCategoria = categoriaDados?.icon || Utensils;
+
+                      return (
+                        <Card key={prato.id} className="overflow-hidden flex flex-col h-full">
+                          <div className="relative">
+                            <img src={prato.foto} alt={prato.nome} className="w-full h-48 object-cover" />
+                            {prato.favorito && <Heart className="absolute top-2 right-2 text-red-500 fill-current" size={20} />}
+                            {prato.frequente && <ShoppingCart className="absolute top-2 left-2 text-orange-500 fill-current" size={20} />}
+                          </div>
+
+                          <CardContent className="p-4 flex-1 flex flex-col">
+                            <div className="flex-1 pb-3">
+                              <h3 className="font-light text-lg">{prato.nome}</h3>
+                              <p className="text-muted-foreground text-sm">{prato.descricao}</p>
+                            </div>
+
+                            <div className="space-y-3">
+                              {/* Tag da categoria */}
+                              <div>
+                                <Badge className={`${categoriaDados?.color} border font-normal`}>
+                                  <IconeCategoria className="h-3 w-3 mr-1" />
+                                  <span>{prato.categoria}</span>
+                                </Badge>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex gap-2">
+                                  <Button variant="outline" size="sm" onClick={() => abrirDetalhes(prato.id)}>
+                                    <Eye size={16} />
+                                  </Button>
+
+                                  {selecionado && (
+                                    <Button
+                                      variant={temPersonalizacao ? "default" : "outline"}
+                                      size="sm"
+                                      onClick={() => abrirPersonalizacao(prato.id)}
+                                    >
+                                      <Edit size={16} />
+                                    </Button>
+                                  )}
+                                </div>
+
+                                <Button
+                                  variant={selecionado ? "default" : "outline"}
+                                  size="sm"
+                                  className={selecionado ? "bg-green-600 hover:bg-green-700" : ""}
+                                  onClick={() => togglePratoSelecionado(prato)}
+                                  disabled={!selecionado && calcularQuantidadeTotalDia(diaAtualSelecionando) >= 6}
+                                >
+                                  {selecionado ? "Selecionado" : "Selecionar"}
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
-                </CardContent>
-              </Card>;
-            })}
+                </>
+              );
+            })()}
         </div>
       </div>
 
