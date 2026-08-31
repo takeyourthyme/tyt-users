@@ -444,7 +444,7 @@ const DetalheContrato = () => {
 
       toast({
         title: "Pagamento Aprovado!",
-        description: "Seu serviço especial foi pago e confirmado com sucesso.",
+        description: "Seu special service foi pago e confirmado com sucesso.",
       });
 
       setIsPaymentModalOpen(false);
@@ -490,7 +490,7 @@ const DetalheContrato = () => {
 
       loadOrderDetails();
     } catch (err: any) {
-      console.error("Erro ao gerar Pix para serviço especial:", err);
+      console.error("Erro ao gerar Pix para special service:", err);
       toast({
         variant: "destructive",
         title: "Falha ao gerar Pix",
