@@ -354,8 +354,7 @@ const DashboardCliente = () => {
                   <h4 className="text-xl font-bodoni font-normal text-gray-800">Contratar novo serviço</h4>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Meal Prep, eventos ou serviços especiais
-                  personalizados
+                  Meal Prep, Get Together ou Special Services
                 </p>
                 <p></p>
                 <Button

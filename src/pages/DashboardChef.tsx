@@ -17,14 +17,20 @@ import {
   AlertCircle,
   Settings,
   Wallet,
-  User
+  User,
+  CheckSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { clearSession, loadSession } from "@/services/authService";
 import { getUserById } from "@/services/userService";
-import { listKitchenOrders, normalizeKitchenOrderStatusLabel, type KitchenOrder } from "@/services/kitchenOrderService";
+import {
+  listKitchenOrders,
+  normalizeKitchenOrderStatusLabel,
+  normalizeKitchenOrderTypeLabel,
+  type KitchenOrder,
+} from "@/services/kitchenOrderService";
 import { ChefMenu } from "@/components/ChefMenu";
 import Footer from "@/components/Footer";
 
@@ -156,6 +162,26 @@ const DashboardChef = () => {
   const chefFirstName = chefName.split(" ")[0] ?? "Chef";
   const chefPhotoUrl = getUserPhotoUrl(chefUser ?? undefined);
 
+  const pendingCounts = useMemo(() => {
+    let total = 0;
+    const byType: Record<string, number> = {
+      "Meal Prep": 0,
+      "Get Together": 0,
+      "Special Service": 0,
+    };
+
+    kitchenOrders.forEach((order) => {
+      const status = normalizeKitchenOrderStatusLabel(order);
+      if (status === "pendente") {
+        total += 1;
+        const type = normalizeKitchenOrderTypeLabel(order);
+        byType[type] = (byType[type] || 0) + 1;
+      }
+    });
+
+    return { total, byType };
+  }, [kitchenOrders]);
+
   const stats = useMemo(() => {
     const orders = kitchenOrders;
     const byStatus: Record<string, number> = {};
@@ -168,11 +194,11 @@ const DashboardChef = () => {
     return {
       servicosRealizados: byStatus.concluido ?? 0,
       agendados: orders.length,
-      aguardandoAprovacao: byStatus.pendente ?? 0,
+      aguardandoAprovacao: pendingCounts.total,
       pendenteComprovante: 0,
       avaliacaoMedia: 0,
     };
-  }, [kitchenOrders]);
+  }, [kitchenOrders, pendingCounts.total]);
 
   const handleNavigateToAgenda = (filter?: string) => {
     navigate('/chef/agenda', { state: { filter, scrollTo: 'proximos-compromissos' } });
@@ -194,10 +220,20 @@ const DashboardChef = () => {
 
   const actionButtons = [
     {
+      icon: CheckSquare,
+      label: "Aprovações Pendentes",
+      description: "Serviços aguardando seu aceite",
+      onClick: () => navigate('/chef/pendentes'),
+      badge: pendingCounts.total > 0 ? `${pendingCounts.total} para aceitar` : undefined,
+      color: "from-amber-500 to-amber-600",
+      highlight: pendingCounts.total > 0,
+    },
+    {
       icon: CalendarCheck,
       label: "Meal Prep",
       description: "Veja seus Meal Preps",
       onClick: () => handleNavigateToAgenda("servicos-semanais"),
+      badge: pendingCounts.byType["Meal Prep"] > 0 ? `${pendingCounts.byType["Meal Prep"]} pendente de aceite` : undefined,
       color: "from-green-500 to-green-600",
     },
     {
@@ -205,6 +241,7 @@ const DashboardChef = () => {
       label: "Get Together",
       description: "Veja seus Get Togethers",
       onClick: () => handleNavigateToAgenda("eventos"),
+      badge: pendingCounts.byType["Get Together"] > 0 ? `${pendingCounts.byType["Get Together"]} pendente de aceite` : undefined,
       color: "from-purple-500 to-purple-600",
     },
     {
@@ -212,6 +249,7 @@ const DashboardChef = () => {
       label: "Special Service",
       description: "Veja seus Special Services",
       onClick: () => handleNavigateToAgenda("servicos-especiais"),
+      badge: pendingCounts.byType["Special Service"] > 0 ? `${pendingCounts.byType["Special Service"]} pendente de aceite` : undefined,
       color: "from-orange-500 to-orange-600",
     },
     {
@@ -323,7 +361,7 @@ const DashboardChef = () => {
               }
               onClick={button.disabled ? undefined : button.onClick}
             >
-              <CardContent className="p-4">
+              <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-gray-200 p-2 rounded-full">
                     <button.icon className="h-5 w-5 text-gray-500" />
@@ -332,6 +370,13 @@ const DashboardChef = () => {
                     <h3 className="font-light text-base text-gray-800">{button.label}</h3>
                   </div>
                 </div>
+
+                {button.badge && (
+                  <span className="bg-amber-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {button.badge}
+                  </span>
+                )}
               </CardContent>
             </Card>
           ))}

@@ -132,6 +132,8 @@ const ServicosAtivos = () => {
         return "bg-blue-100 text-blue-800";
       case "confirmado":
         return "bg-green-100 text-green-800";
+      case "pendente":
+        return "bg-amber-100 text-amber-800 border border-amber-300";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -142,6 +144,8 @@ const ServicosAtivos = () => {
         return "Em Andamento";
       case "confirmado":
         return "Confirmado";
+      case "pendente":
+        return "Pendente de Aceite";
       default:
         return status;
     }

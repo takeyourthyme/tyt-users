@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -20,6 +20,7 @@ import logoWhite from "@/assets/tyt-logo-white.png";
 import logoCompleta from "@/assets/logo-completa.webp";
 import { loadSession, clearSession } from "@/services/authService";
 import { getUserPhotoUrl } from "@/services/userService";
+import { listKitchenOrders, normalizeKitchenOrderStatusLabel, type KitchenOrder } from "@/services/kitchenOrderService";
 
 export interface ChefMenuProps {
   hasActiveFilter?: boolean;
@@ -30,6 +31,34 @@ export interface ChefMenuProps {
 export const ChefMenu = ({ hasActiveFilter = false, onGoAgenda, activeItem }: ChefMenuProps) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const session = useMemo(() => loadSession(), []);
+  const chefName = (session?.user?.nome as string | undefined) ?? (session?.user?.name as string | undefined) ?? "Chef";
+  const chefPhotoUrl = getUserPhotoUrl(session?.user);
+
+  useEffect(() => {
+    if (!session?.token) return;
+    listKitchenOrders({ token: session.token })
+      .then((data) => {
+        const orders = Array.isArray(data)
+          ? data
+          : (data as { data?: unknown })?.data ?? (data as { orders?: unknown })?.orders;
+        if (Array.isArray(orders)) {
+          const sessionUser = session.user as { id?: number; usuario_chef?: { id?: number }; chef?: { id?: number } } | undefined;
+          const chefUserId = session.userId ?? sessionUser?.id;
+          const chefProfileId = sessionUser?.usuario_chef?.id ?? sessionUser?.chef?.id;
+          const pending = (orders as KitchenOrder[]).filter((order) => {
+            const orderChefId = (order.chef as { id?: number } | null)?.id;
+            const matchesChef = Number(orderChefId) === Number(chefUserId) || Number(orderChefId) === Number(chefProfileId);
+            const status = normalizeKitchenOrderStatusLabel(order);
+            return matchesChef && status === "pendente";
+          });
+          setPendingCount(pending.length);
+        }
+      })
+      .catch(() => {});
+  }, [session]);
 
   const handleMenuAction = (action: string) => {
     setOpen(false);
@@ -70,10 +99,6 @@ export const ChefMenu = ({ hasActiveFilter = false, onGoAgenda, activeItem }: Ch
     }
   };
 
-  const session = useMemo(() => loadSession(), []);
-  const chefName = (session?.user?.nome as string | undefined) ?? (session?.user?.name as string | undefined) ?? "Chef";
-  const chefPhotoUrl = getUserPhotoUrl(session?.user);
-
   return (
     <header className="fixed top-0 left-0 right-0 bg-[#0E4684] border-b border-[#0a3769] px-4 py-3 z-50 shadow-md">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -93,9 +118,12 @@ export const ChefMenu = ({ hasActiveFilter = false, onGoAgenda, activeItem }: Ch
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-white/20 animate-none flex-shrink-0"
+              className="text-white hover:bg-white/20 animate-none flex-shrink-0 relative"
             >
               <Menu className="w-5 h-5" />
+              {pendingCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-amber-400 rounded-full ring-2 ring-[#0E4684]" />
+              )}
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-80 flex flex-col max-h-screen">
@@ -163,13 +191,20 @@ export const ChefMenu = ({ hasActiveFilter = false, onGoAgenda, activeItem }: Ch
               <Button
                 variant={activeItem === 'aprovacoes' ? 'default' : 'ghost'}
                 className={activeItem === 'aprovacoes'
-                  ? "w-full justify-start h-12 text-base bg-[#0E4684] hover:bg-[#0a3769] text-white"
-                  : "w-full justify-start h-12 text-base hover:bg-gray-100"
+                  ? "w-full justify-between h-12 text-base bg-[#0E4684] hover:bg-[#0a3769] text-white"
+                  : "w-full justify-between h-12 text-base hover:bg-gray-100"
                 }
                 onClick={() => handleMenuAction('aprovacoes')}
               >
-                <CheckSquare className="w-5 h-5 mr-3" />
-                Aprovações Pendentes
+                <div className="flex items-center">
+                  <CheckSquare className="w-5 h-5 mr-3" />
+                  Aprovações Pendentes
+                </div>
+                {pendingCount > 0 && (
+                  <span className="bg-amber-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
+                    {pendingCount}
+                  </span>
+                )}
               </Button>
 
               <Button

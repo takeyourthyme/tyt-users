@@ -799,17 +799,15 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                     )}
 
                     {/* Aviso de Disponibilidade de Chef */}
-                    <div className={`p-3.5 rounded-lg border transition-all ${
-                      aceitouDisponibilidadeChef
+                    <div className={`p-3.5 rounded-lg border transition-all ${aceitouDisponibilidadeChef
                         ? 'bg-amber-50/60 border-amber-200'
                         : errosValidacao.includes('disponibilidade_chef')
                           ? 'bg-red-50 border-red-300 ring-1 ring-red-300'
                           : 'bg-amber-50/90 border-amber-200'
-                    }`}>
+                      }`}>
                       <div className="flex items-start gap-2.5">
-                        <AlertCircle className={`w-4 h-4 mt-0.5 shrink-0 ${
-                          errosValidacao.includes('disponibilidade_chef') ? 'text-red-600' : 'text-amber-600'
-                        }`} />
+                        <AlertCircle className={`w-4 h-4 mt-0.5 shrink-0 ${errosValidacao.includes('disponibilidade_chef') ? 'text-red-600' : 'text-amber-600'
+                          }`} />
                         <div className="space-y-2 flex-1">
                           <p className="text-xs text-amber-900 leading-relaxed">
                             <strong>Aviso importante:</strong> Sujeito a disponibilidade de chef. Se entre 24h e 48h não tivermos chef disponível, seu dinheiro será estornado integralmente.
@@ -829,9 +827,8 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                             />
                             <Label
                               htmlFor="aceitar-disponibilidade-chef"
-                              className={`text-xs cursor-pointer select-none ${
-                                errosValidacao.includes('disponibilidade_chef') ? 'text-red-700 font-semibold' : 'text-amber-950 font-medium'
-                              }`}
+                              className={`text-xs cursor-pointer select-none ${errosValidacao.includes('disponibilidade_chef') ? 'text-red-700 font-semibold' : 'text-amber-950 font-medium'
+                                }`}
                             >
                               Estou ciente e aceito as condições de disponibilidade e estorno
                             </Label>
@@ -841,9 +838,8 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
                     </div>
 
                     {/* Card fields */}
-                    <div className={`space-y-3 transition-all ${
-                      !aceitouDisponibilidadeChef ? 'opacity-50 pointer-events-none select-none' : ''
-                    }`}>
+                    <div className={`space-y-3 transition-all ${!aceitouDisponibilidadeChef ? 'opacity-50 pointer-events-none select-none' : ''
+                      }`}>
                       {!aceitouDisponibilidadeChef && (
                         <p className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
                           <Info className="w-3.5 h-3.5 shrink-0" />
@@ -967,7 +963,7 @@ export const EtapaResumoePagamento: React.FC<Props> = ({ dados, onVoltar, onConc
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Para Serviços Especiais, o pagamento será solicitado após a aprovação do orçamento pela equipe TYT.
+                  Para Special Services, o pagamento será solicitado após a aprovação do orçamento pela equipe TYT.
                 </p>
               </CardContent>
             </Card>

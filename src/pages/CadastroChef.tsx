@@ -846,17 +846,17 @@ const CadastroChef = () => {
                     <FormLabel>Idiomas que domina</FormLabel>
                     <div className="grid grid-cols-2 gap-2">
                       {availableLanguages.map(lang => <div key={lang.id} className="flex items-center space-x-2">
-                          <Checkbox id={`lang-${lang.id}`} checked={field.value.includes(lang.id)} onCheckedChange={checked => {
-                        if (checked) {
-                          field.onChange([...field.value, lang.id]);
-                        } else {
-                          field.onChange(field.value.filter((id: string) => id !== lang.id));
-                        }
-                      }} />
-                          <Label htmlFor={`lang-${lang.id}`} className="text-sm cursor-pointer">
-                            {lang.flag} {lang.name}
-                          </Label>
-                        </div>)}
+                        <Checkbox id={`lang-${lang.id}`} checked={field.value.includes(lang.id)} onCheckedChange={checked => {
+                          if (checked) {
+                            field.onChange([...field.value, lang.id]);
+                          } else {
+                            field.onChange(field.value.filter((id: string) => id !== lang.id));
+                          }
+                        }} />
+                        <Label htmlFor={`lang-${lang.id}`} className="text-sm cursor-pointer">
+                          {lang.flag} {lang.name}
+                        </Label>
+                      </div>)}
                     </div>
                     <FormMessage />
                   </FormItem>} />
@@ -867,17 +867,17 @@ const CadastroChef = () => {
                     <FormLabel>Especialidades culinárias</FormLabel>
                     <div className="grid grid-cols-2 gap-2">
                       {cuisineSpecialties.map(specialty => <div key={specialty} className="flex items-center space-x-2">
-                          <Checkbox id={`spec-${specialty}`} checked={field.value.includes(specialty)} onCheckedChange={checked => {
-                        if (checked) {
-                          field.onChange([...field.value, specialty]);
-                        } else {
-                          field.onChange(field.value.filter((s: string) => s !== specialty));
-                        }
-                      }} />
-                          <Label htmlFor={`spec-${specialty}`} className="text-sm cursor-pointer">
-                            {specialty}
-                          </Label>
-                        </div>)}
+                        <Checkbox id={`spec-${specialty}`} checked={field.value.includes(specialty)} onCheckedChange={checked => {
+                          if (checked) {
+                            field.onChange([...field.value, specialty]);
+                          } else {
+                            field.onChange(field.value.filter((s: string) => s !== specialty));
+                          }
+                        }} />
+                        <Label htmlFor={`spec-${specialty}`} className="text-sm cursor-pointer">
+                          {specialty}
+                        </Label>
+                      </div>)}
                     </div>
                     <FormMessage />
                   </FormItem>} />
@@ -898,9 +898,9 @@ const CadastroChef = () => {
                     <FormLabel>Conte sobre você e sua experiência</FormLabel>
                     <FormControl>
                       <Textarea placeholder="Compartilhe sua trajetória na gastronomia, suas paixões culinárias e o que te motiva como Personal Chef..." className="min-h-[120px]" maxLength={500} {...field} onChange={e => {
-                      field.onChange(e);
-                      setCharacterCount(e.target.value.length);
-                    }} />
+                        field.onChange(e);
+                        setCharacterCount(e.target.value.length);
+                      }} />
                     </FormControl>
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Mínimo 10 caracteres</span>
@@ -1023,7 +1023,7 @@ const CadastroChef = () => {
                       {[
                         { label: "Meal Prep", value: "cozinha_semanal" },
                         { label: "Get Together", value: "eventos" },
-                        { label: "Serviços Especiais", value: "servicos_especiais" }
+                        { label: "Special Services", value: "servicos_especiais" }
                       ].map((option) => (
                         <div key={option.value} className="flex items-center space-x-2">
                           <Checkbox

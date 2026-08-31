@@ -1235,7 +1235,7 @@ const EditarCadastroChef = () => {
                           {[
                             { label: "Meal Prep", value: "cozinha_semanal" },
                             { label: "Get Together", value: "eventos" },
-                            { label: "Serviços Especiais", value: "servicos_especiais" }
+                            { label: "Special Services", value: "servicos_especiais" }
                           ].map((option) => (
                             <div key={option.value} className="flex items-center space-x-2">
                               <Checkbox
