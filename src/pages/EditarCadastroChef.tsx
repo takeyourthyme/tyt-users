@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import InputMask from "react-input-mask";
 import { isAxiosError } from "axios";
-import { Camera, MapPin, Upload, ArrowLeft, ChefHat } from "lucide-react";
+import { Camera, MapPin, Upload, ArrowLeft, ChefHat, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -437,8 +437,31 @@ const EditarCadastroChef = () => {
   };
 
   const handleFileUpload = (file: File) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Formato inválido",
+        description: "A foto deve estar em formato JPEG, PNG ou WebP.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "A foto deve ter no máximo 5 MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setPhotoPreview(URL.createObjectURL(file));
     form.setValue("photo", file, { shouldValidate: true });
+    toast({
+      title: "Foto selecionada",
+      description: "Lembre-se de salvar as alterações para concluir a atualização.",
+    });
   };
 
   const startCamera = async () => {
@@ -510,6 +533,10 @@ const EditarCadastroChef = () => {
         setPhotoPreview(URL.createObjectURL(file));
         form.setValue("photo", file, { shouldValidate: true });
         stopCamera();
+        toast({
+          title: "Foto capturada com sucesso!",
+          description: "Clique em 'Salvar Alterações' para confirmar a nova foto de perfil.",
+        });
       }, "image/jpeg", 0.92);
     }
   };
@@ -582,15 +609,18 @@ const EditarCadastroChef = () => {
         formData.append("foto", data.photo, data.photo.name);
       }
 
-      await updateChefUser({ token, userId, input: formData });
+      const updated = await updateChefUser({ token, userId, input: formData });
 
-      getUserById({ token, userId })
-        .then((fresh) => {
-          if (fresh && typeof fresh === "object" && !Array.isArray(fresh)) {
-            saveSession({ token, userId, user: fresh as Record<string, unknown> });
-          }
-        })
-        .catch(() => { });
+      const updatedUser =
+        updated && typeof updated === "object" && "user" in updated && (updated as Record<string, unknown>).user
+          ? ((updated as Record<string, unknown>).user as Record<string, unknown>)
+          : updated && typeof updated === "object" && !Array.isArray(updated)
+            ? (updated as Record<string, unknown>)
+            : session?.user ?? undefined;
+
+      if (updatedUser) {
+        saveSession({ token, userId, user: updatedUser });
+      }
 
       toast({
         title: "Cadastro atualizado!",
@@ -899,55 +929,99 @@ const EditarCadastroChef = () => {
                     <div className="space-y-3">
                       <Label>Foto de perfil</Label>
                       <div className="flex flex-col items-center gap-4">
-                        <div className="w-32 h-32 rounded-full bg-gray-100 overflow-hidden border-2 border-primary/20 shadow-sm flex items-center justify-center">
-                          {photoPreview ? (
-                            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover object-center" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Camera className="w-12 h-12 text-gray-400" />
+                        {!cameraActive ? (
+                          <>
+                            <div className="w-32 h-32 rounded-full bg-gray-100 overflow-hidden border-2 border-[#0E4684]/20 shadow-sm flex items-center justify-center">
+                              {photoPreview ? (
+                                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover object-center" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Camera className="w-12 h-12 text-gray-400" />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
 
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => document.getElementById('file-upload')?.click()}
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
-                            Upload
-                          </Button>
-                          <input
-                            id="file-upload"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleFileUpload(file);
-                            }}
-                          />
+                            <div className="flex flex-wrap items-center justify-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => document.getElementById('file-upload')?.click()}
+                              >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Enviar foto
+                              </Button>
 
-                          {!cameraActive ? (
-                            <Button type="button" variant="outline" size="sm" onClick={startCamera}>
-                              <Camera className="w-4 h-4 mr-2" />
-                              Câmera
-                            </Button>
-                          ) : (
-                            <Button type="button" variant="outline" size="sm" onClick={takePhoto}>
-                              Capturar
-                            </Button>
-                          )}
-                        </div>
+                              <Button type="button" variant="outline" size="sm" onClick={startCamera}>
+                                <Camera className="w-4 h-4 mr-2" />
+                                Abrir câmera
+                              </Button>
 
-                        {cameraActive && (
-                          <div className="relative">
-                            <video ref={videoRef} autoPlay className="rounded-lg" style={{ width: '320px', transform: "scaleX(-1)" }} />
-                            <canvas ref={canvasRef} className="hidden" />
+                              {form.watch("photo") && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-muted-foreground hover:text-destructive"
+                                  onClick={() => {
+                                    form.setValue("photo", undefined, { shouldValidate: true });
+                                    setPhotoPreview(getPhotoUrl(session?.user ?? {}) ?? "");
+                                  }}
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Descartar foto nova
+                                </Button>
+                              )}
+                            </div>
+
+                            <input
+                              id="file-upload"
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/jpg"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload(file);
+                                e.target.value = "";
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <div className="w-full space-y-4">
+                            <div className="relative bg-muted rounded-lg aspect-video max-h-80 overflow-hidden flex items-center justify-center">
+                              <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="w-full h-full object-cover object-center"
+                                style={{ transform: "scaleX(-1)" }}
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-44 h-56 border-4 border-[#0E4684] rounded-full border-dashed opacity-50"></div>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-center gap-3">
+                              <Button
+                                type="button"
+                                onClick={takePhoto}
+                                className="bg-[#0E4684] hover:bg-[#0a3769] text-white"
+                              >
+                                <Camera className="h-4 w-4 mr-2" />
+                                Capturar foto
+                              </Button>
+                              <Button
+                                type="button"
+                                onClick={stopCamera}
+                                variant="outline"
+                              >
+                                Cancelar
+                              </Button>
+                            </div>
                           </div>
                         )}
+                        <canvas ref={canvasRef} className="hidden" />
                       </div>
                     </div>
 
