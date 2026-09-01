@@ -294,7 +294,7 @@ export const ConfiguracaoEventos: React.FC<Props> = ({
             <Button variant="ghost" size="sm" onClick={() => setQuantidadePessoas(Math.min(30, quantidadePessoas + 1))} className="h-8 w-8 p-0 border border-gray-300 hover:bg-gray-50">
               <Plus size={14} />
             </Button>
-            <span className="text-xs text-gray-500">(Máximo: 30 pessoas)</span>
+            <span className="text-xs text-gray-500">(Máximo: 30 pessoas) - Para grupos acima de 30 pessoas, oferecemos o Special Service.</span>
           </div>
           {quantidadePessoas >= 21 && (
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
